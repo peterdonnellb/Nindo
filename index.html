@@ -2488,6 +2488,36 @@ function getImg(filename) {
 
 // Draw one frame from a 4-frame horizontal sprite sheet.
 // Guards against zero-dimension images that would throw on ctx.drawImage.
+// Returns an img element src data-url of a sprite's south-facing frame, or empty string
+function getEnemySpriteDataURL(typeKey, size) {
+  const img = getImg(enemySheetKey(typeKey));
+  if (!img || img.naturalWidth <= 0) return '';
+  try {
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx2 = c.getContext('2d');
+    const fw = img.naturalWidth / 4;
+    const fh = img.naturalHeight;
+    // South = frame 0
+    ctx2.drawImage(img, 0, 0, fw, fh, 0, 0, size, size);
+    return c.toDataURL();
+  } catch(e) { return ''; }
+}
+
+function getClassSpriteDataURL(classKey, size) {
+  const img = getImg(classPng(classKey));
+  if (!img || img.naturalWidth <= 0) return '';
+  try {
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx2 = c.getContext('2d');
+    const fw = img.naturalWidth / 4;
+    const fh = img.naturalHeight;
+    ctx2.drawImage(img, 0, 0, fw, fh, 0, 0, size, size);
+    return c.toDataURL();
+  } catch(e) { return ''; }
+}
+
 function drawSpriteFrame(ctx, img, facing, dx, dy, dw, dh) {
   const fw = img.naturalWidth / 4;
   const fh = img.naturalHeight;
@@ -4088,7 +4118,10 @@ function renderEnemyList() {
       ? `<span style="font-size:0.5rem;color:var(--gold);border:1px solid var(--gold);padding:0.05rem 0.25rem">\u{1F4E6} CARRIER</span>`
       : '';
     return `<div class="combatant-card ${e.hp <= 0 ? 'dead' : ''}">
-      <div class="combatant-name">${e.emoji} ${e.name} ${e.isBoss ? '\u{1F451}' : ''}${badge}</div>
+      <div class="combatant-name" style="display:flex;align-items:center;gap:0.3rem">
+        ${buildEnemySpriteImg(e.type, e.emoji, 22)}
+        <span>${e.name} ${e.isBoss ? '\u{1F451}' : ''}${badge}</span>
+      </div>
       <div style="font-size:0.6rem;color:var(--mist)">${e.hp}/${e.maxHp} HP${e.status ? ' · ' + e.status : ''}</div>
       <div style="margin-top:1px">${wInfo}</div>
       <div class="combatant-mini-hp"><div class="combatant-mini-hp-fill" style="width:${hpPct}%;background:${e.isTarget ? 'var(--crimson-bright)' : 'var(--crimson)'}"></div></div>
@@ -4530,6 +4563,19 @@ function setAction(action) {
   renderCombat();
 }
 
+
+function buildEnemySpriteImg(typeKey, emoji, size) {
+  const src = getEnemySpriteDataURL(typeKey, size);
+  if (!src) return '<span style="font-size:' + (size * 0.7) + 'px">' + emoji + '</span>';
+  return '<img src="' + src + '" width="' + size + '" height="' + size + '" style="border-radius:50%;border:1px solid rgba(220,80,80,0.45);object-fit:cover">';
+}
+
+function buildEnemySpriteImgLg(typeKey, emoji, size) {
+  const src = getEnemySpriteDataURL(typeKey, size);
+  if (!src) return '<span style="font-size:' + Math.round(size * 0.8) + 'px">' + emoji + '</span>';
+  return '<img src="' + src + '" width="' + size + '" height="' + size + '" style="border-radius:4px;border:1px solid rgba(255,255,255,0.1);object-fit:cover">';
+}
+
 // Bresenham line-of-sight check — returns false if a wall blocks the path between two tiles.
 // Tiles on non-passable terrain block LoS; forest/rubble do NOT (they're concealing, not blocking).
 function hasLineOfSight(x1, y1, x2, y2) {
@@ -4843,11 +4889,16 @@ function executeSpecial(caster, move, target, allyTarget) {
       });
       addLog(`✦ ${move.name}: hits all nearby enemies!`, 'special'); break;
     case 'aoe_thrown': {
-      if (!weaponUsable(caster)) { addLog('✦ ' + move.name + ': no ammo!', 'system'); break; }
+      // Level-scaled base damage — works with or without a thrown weapon equipped
+      const _aoeBaseDmg = 8 + (caster.level || 1) * 3;
       const hitsAoe = CS.enemies.filter(e => e.hp > 0 && Math.abs(e.x - caster.x) <= 2 && Math.abs(e.y - caster.y) <= 2);
-      hitsAoe.forEach(e => { const d = Math.floor(calcDamage(caster, e) * 0.5); applyDamage(e, d, caster.name); });
-      if (hitsAoe.length) consumeWeaponUse(caster, hitsAoe.length);
-      addLog('✦ ' + move.name + ': fan of knives!', 'special'); break;
+      if (hitsAoe.length === 0) { addLog('✦ ' + move.name + ': no enemies in range!', 'system'); break; }
+      hitsAoe.forEach(e => {
+        const d = Math.floor((caster.weapon && weaponUsable(caster) ? calcDamage(caster, e) : _aoeBaseDmg) * 0.5);
+        applyDamage(e, Math.max(1, d), caster.name);
+      });
+      if (caster.weapon && weaponUsable(caster)) consumeWeaponUse(caster, hitsAoe.length);
+      addLog('✦ ' + move.name + ': ' + hitsAoe.length + ' target' + (hitsAoe.length > 1 ? 's' : '') + ' hit!', 'special'); break;
     }
     case 'poison':
       if (target) { target.status = 'poisoned'; addLog(`✦ ${move.name}: ${target.name} poisoned!`, 'special'); } break;
@@ -4873,16 +4924,19 @@ function executeSpecial(caster, move, target, allyTarget) {
     case 'life_drain':
       if (target) { const d = 20; applyDamage(target, d, caster.name); caster.hp = Math.min(caster.maxHp, caster.hp + d); addLog(`✦ ${move.name}: drained ${d} HP!`, 'special'); } break;
     case 'multi_thrown': {
-      if (!weaponUsable(caster)) { addLog('✦ ' + move.name + ': no ammo!', 'system'); break; }
+      const _multiBaseDmg = 10 + (caster.level || 1) * 4;
+      const _multiTargets = CS.enemies.filter(e => e.hp > 0);
+      if (!_multiTargets.length) { addLog('✦ ' + move.name + ': no enemies!', 'system'); break; }
       let hits = 0;
       for (let i = 0; i < 5; i++) {
-        const rand = CS.enemies.filter(e => e.hp > 0);
-        if (!rand.length) break;
-        const e = rand[Math.floor(Math.random() * rand.length)];
-        const d = Math.floor(calcDamage(caster, e) * 0.6); applyDamage(e, d, caster.name); hits++;
+        const _alive = CS.enemies.filter(e => e.hp > 0);
+        if (!_alive.length) break;
+        const e = _alive[Math.floor(Math.random() * _alive.length)];
+        const d = Math.floor((caster.weapon && weaponUsable(caster) ? calcDamage(caster, e) : _multiBaseDmg) * 0.65);
+        applyDamage(e, Math.max(1, d), caster.name); hits++;
       }
-      if (hits) consumeWeaponUse(caster, hits);
-      addLog('✦ ' + move.name + ': shuriken storm!', 'special'); break;
+      if (hits && caster.weapon && weaponUsable(caster)) consumeWeaponUse(caster, hits);
+      addLog('✦ ' + move.name + ': ' + hits + ' shurikens fly!', 'special'); break;
     }
     case 'rage':
       caster.buffs.push({ type: 'rage', turns: 2 }); addLog(`✦ ${move.name}: ${caster.name} enters RAGE!`, 'special'); break;
@@ -6096,8 +6150,14 @@ function advanceFloor() {
   // Regenerate grid terrain for the new floor
   CS.grid = generateGrid(mission.floors[CS.currentFloor]?.terrain || mission.terrain || 'village');
   CS.exitTiles = [];
+  // Inter-floor exits are on the RIGHT edge (enemies came from the left)
   const exitYs = [2, Math.floor(CS.gridH / 2), CS.gridH - 3].filter(y => y >= 0 && y < CS.gridH);
-  exitYs.forEach(y => { CS.grid[y][0] = 'exit'; CS.exitTiles.push({ x: 0, y }); });
+  const exitX = CS.gridW - 1;
+  exitYs.forEach(y => {
+    // Clear any wall that was generated there
+    if (CS.grid[y]) CS.grid[y][exitX] = 'exit';
+    CS.exitTiles.push({ x: exitX, y });
+  });
 
   // Re-place allies back on the left side using current formation
   const partyIds = CS.allies.filter(a => !a.perished).map(a => a.id);
@@ -6158,24 +6218,20 @@ function endCombat(result) {
       const completedArc = STORY_ARCS.find(a => a.capstone === mission.id);
       if (completedArc) {
         const nextArc = STORY_ARCS.find(a => a.arc === completedArc.arc + 1);
+        // Store arc completion info — show AFTER hub navigation via Mission Complete button
         if (nextArc) {
-          setTimeout(() => {
-            openModal(
-              '⭐ Arc ' + completedArc.arc + ' Complete!',
-              '<div style="font-family:Cinzel,serif;font-size:0.9rem;color:var(--gold);margin-bottom:0.8rem">' + completedArc.name + '</div>'
-              + '<div class="text-xs text-mist" style="margin-bottom:1rem">All ten missions of this arc have been completed. Your shadow grows longer.</div>'
-              + '<div style="font-family:Cinzel,serif;font-size:0.75rem;color:var(--jade-bright)">★ New Arc Unlocked: Arc ' + nextArc.arc + ' — ' + nextArc.name + '</div>',
-              [{ label: 'Continue', fn: closeModal, cls: 'confirm' }]
-            );
-          }, 1000);
+          CS._pendingArcModal = {
+            title: '⭐ Arc ' + completedArc.arc + ' Complete!',
+            body: '<div style="font-family:Cinzel,serif;font-size:0.9rem;color:var(--gold);margin-bottom:0.8rem">' + completedArc.name + '</div>'
+              + '<div class="text-xs text-mist" style="margin-bottom:1rem">All ten missions completed. Your shadow grows longer.</div>'
+              + '<div style="font-family:Cinzel,serif;font-size:0.75rem;color:var(--jade-bright)">★ New Arc Unlocked: Arc ' + nextArc.arc + ' — ' + nextArc.name + '</div>'
+          };
         } else {
-          setTimeout(() => {
-            openModal('🏆 All Arcs Complete!',
-              '<div style="font-family:Cinzel,serif;font-size:0.9rem;color:var(--gold);margin-bottom:0.8rem">The Shadow Dynasty falls. Your legend is written into history.</div>'
-              + '<div class="text-xs text-mist">All 50 story missions completed. The realm is yours.</div>',
-              [{ label: 'Honour the Fallen', fn: closeModal, cls: 'confirm' }]
-            );
-          }, 1000);
+          CS._pendingArcModal = {
+            title: '🏆 All Arcs Complete!',
+            body: '<div style="font-family:Cinzel,serif;font-size:0.9rem;color:var(--gold);margin-bottom:0.8rem">The Shadow Dynasty falls. Your legend is written into history.</div>'
+              + '<div class="text-xs text-mist">All 50 story missions completed. The realm is yours.</div>'
+          };
         }
       }
     } else {
@@ -6251,7 +6307,14 @@ function endCombat(result) {
       `<b style="color:var(--jade-bright)">Victory!</b><br><br>
       Mission: ${mission.name}<br>
       Gold earned: <b style="color:var(--gold)">+${mission.reward} G</b>${recruitMsg}${repLine}`,
-      [{ label: 'Return to Hub', fn: () => { closeModal(); showScreen('hub'); showHubSection('clan'); selectedMissionId = null; selectedParty = []; }, cls: 'confirm' }]
+      [{ label: 'Return to Hub', fn: () => {
+        closeModal(); showScreen('hub'); showHubSection('clan'); selectedMissionId = null; selectedParty = [];
+        // Show pending arc completion modal after navigation
+        if (CS._pendingArcModal) {
+          const _am = CS._pendingArcModal; CS._pendingArcModal = null;
+          setTimeout(() => openModal(_am.title, _am.body, [{ label: 'Onwards!', fn: closeModal, cls: 'confirm' }]), 300);
+        }
+      }, cls: 'confirm' }]
     );
   } else {
     // Return uncollected doom bags
@@ -6914,7 +6977,7 @@ function renderCodexContent() {
     const prefs = ENEMY_WEAPON_PREFS[key] || ['blades'];
     return card(`
       <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem">
-        <span style="font-size:1.4rem">${e.emoji}</span>
+        ${buildEnemySpriteImgLg(key, e.emoji, 40)}
         <div>
           <div style="font-family:'Cinzel',serif;font-size:0.8rem;color:var(--white)">${e.name}</div>
           <div style="font-size:0.6rem;color:var(--mist)">${e.ai.toUpperCase()} · ${e.isBoss ? '\u{1F451} BOSS' : e.isAlly ? '⚠ TARGET' : 'ENEMY'}</div>
