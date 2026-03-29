@@ -5690,7 +5690,10 @@ function triggerPermadeath(ally) {
   ally.perished = true;
   ally.hp = 0;
 
-  // Notify
+  // Persist removal immediately so save state is correct even if combat ends abnormally
+  saveGame();
+
+  // Notify and check if all dead
   if (GS.clan.length === 0) {
     setTimeout(() => endCombat('defeat'), 800);
   }
@@ -6187,6 +6190,7 @@ function advanceFloor() {
 }
 
 function endCombat(result) {
+  if (!CS.active) return;  // already ended — block duplicate calls from queued setTimeout
   CS.active = false;
   CS.phase = 'result';
   const mission = CS.mission;
@@ -6244,6 +6248,9 @@ function endCombat(result) {
     let recruitMsg = '';
     if (mission.recruitReward) {
       const rec = mission.recruitReward;
+      // Guard: don't add if already in clan (prevents double-add from race conditions)
+      const alreadyInClan = GS.clan.some(n => n.name === rec.name && n.class === rec.class);
+      if (!alreadyInClan) {
       const cls = CLASSES[rec.class];
       const special = cls.specialMoves[Math.floor(Math.random() * cls.specialMoves.length)];
       const newNinja = {
@@ -6263,6 +6270,7 @@ function endCombat(result) {
       };
       GS.clan.push(newNinja);
       recruitMsg = `<br><br><b style="color:var(--jade-bright)">${cls.emoji} ${rec.name} (${cls.name}) joins your clan!</b>`;
+      } // end alreadyInClan guard
     }
 
     // Return uncollected doom bag items to inventory
@@ -6328,8 +6336,12 @@ function endCombat(result) {
     CS.doomBags = [];
 
     // Final purge of perished allies from roster
+    // Remove perished allies from roster permanently (belt-and-suspenders after triggerPermadeath)
     const defPeriSet = new Set(CS.allies.filter(a => a.perished).map(a => a.id));
-    if (defPeriSet.size) GS.clan = GS.clan.filter(n => !defPeriSet.has(n.id));
+    if (defPeriSet.size) {
+      GS.clan = GS.clan.filter(n => !defPeriSet.has(n.id));
+      defPeriSet.forEach(id => addLog('Removed perished ninja from roster.', 'system'));
+    }
 
     // Sync HP for surviving (non-perished) allies
     CS.allies.filter(a => !a.perished).forEach(a => {
@@ -6338,10 +6350,13 @@ function endCombat(result) {
         gn.hp = Math.max(5, Math.floor(gn.maxHp * 0.1));
         gn.carriedItems = a.doomed ? [] : (a.carriedItems || []);
         gn.weapon = (!a.doomed && a.weapon) ? { ...a.weapon } : null;
+        if (a.jobs) gn.jobs = { ...a.jobs };
+        if (a.unlockedAbilities) gn.unlockedAbilities = [...a.unlockedAbilities];
+        if (a.equippedAbilities) gn.equippedAbilities = { ...a.equippedAbilities };
       }
     });
     applyMissionReputation(result, mission);
-    saveGame();
+    saveGame();  // save AFTER purge so roster is correct on disk
     const defeatMsg = result === 'timedout'
       ? `<b style="color:var(--crimson-bright)">Time's Up!</b><br><br>You failed to complete the mission in time.<br>Return to the hub and try again.`
       : `<b style="color:var(--crimson-bright)">Defeat.</b><br><br>All your ninja have fallen.<br>Return to the hub to heal and regroup.`;
