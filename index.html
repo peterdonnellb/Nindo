@@ -269,7 +269,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
   width: 200px; background: var(--ink2); border-right: 1px solid rgba(255,255,255,0.05);
   padding: 0.8rem; overflow-y: auto; flex-shrink: 0;
 }
-.combat-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; background: var(--ink); position: relative; overflow: hidden; }
+.combat-main { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding: 0; background: var(--ink); position: relative; overflow: auto; }
 .combat-sidebar-right {
   width: 200px; background: var(--ink2); border-left: 1px solid rgba(255,255,255,0.05);
   padding: 0.8rem; overflow-y: auto; flex-shrink: 0;
@@ -784,9 +784,9 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
   #screen-combat { height: 100dvh; overflow: hidden; }
   .combat-layout { flex-direction: column; overflow: hidden; }
   .combat-sidebar-left, .combat-sidebar-right { display: none; }
-  .combat-main { padding: 0.3rem; flex: 1; justify-content: flex-start; }
+  .combat-main { padding: 0; flex: 1; justify-content: flex-start; overflow: auto; }
   .combat-panel-toggle { display: block; }
-  #combatCanvas { max-width: 100%; }
+  #combatCanvas { display: block; }
   .combat-header { padding: 0.35rem 0.6rem; gap: 0.5rem; flex-wrap: wrap; font-size: 0.6rem; }
   .turn-display { font-size: 0.7rem; }
   .combat-controls {
@@ -862,6 +862,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
   <div id="screen-hub" class="screen">
     <nav class="hub-nav">
       <div class="hub-logo">NIN<span>DO</span></div>
+      <div id="lastSavedDisplay" style="font-family:Cinzel,serif;font-size:0.55rem;color:var(--mist);letter-spacing:0.05em;display:flex;align-items:center;gap:0.3rem;opacity:0.7"></div>
       <button class="nav-btn" onclick="showHubSection('clan')" id="nav-clan">Clan</button>
       <button class="nav-btn" onclick="showHubSection('recruit')" id="nav-recruit">Recruit</button>
       <button class="nav-btn" onclick="showHubSection('missions')" id="nav-missions">Missions</button>
@@ -871,6 +872,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
       <button class="nav-btn" onclick="showHubSection('itemShop')" id="nav-itemShop">Supplies</button>
       <button class="nav-btn" onclick="showHubSection('exchange')" id="nav-exchange">Exchange</button>
       <button class="nav-btn" onclick="openCodex()" id="nav-codex">Codex</button>
+      <button onclick="saveGame(false)" title="Save game" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--mist);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;padding:0.25rem 0.7rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(201,162,39,0.4)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='var(--mist)'">&#128190; Save</button>
       <div class="gold-display">⚜ <span id="goldDisplay">0</span> Gold</div>
       <button class="nav-btn" onclick="showScreen('menu')" style="margin-left:0.5rem;color:var(--blood)">⬡ Menu</button>
     </nav>
@@ -923,7 +925,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
         <div class="section-title" style="font-size:0.55rem">CT Gauge</div>
         <div id="ctBars" style="padding:0.2rem 0"></div>
       </div>
-      <div class="combat-main" style="position:relative">
+      <div class="combat-main" id="combatMainArea" style="position:relative">
         <!-- Mobile panel toggles -->
         <button class="combat-panel-toggle left" onclick="toggleCombatPanel('left')">🥷 Allies</button>
         <button class="combat-panel-toggle right" onclick="toggleCombatPanel('right')">⚔ Log</button>
@@ -944,7 +946,9 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
           <div class="section-title" style="font-size:0.55rem">Battle Log</div>
           <div class="combat-log" id="combatLogMobile" style="height:160px"></div>
         </div>
-        <canvas id="combatCanvas"></canvas>
+        <div id="combatScrollWrap" style="overflow:auto;width:100%;height:100%;display:flex;align-items:flex-start;justify-content:flex-start;">
+          <canvas id="combatCanvas" style="flex-shrink:0;display:block;cursor:pointer;"></canvas>
+        </div>
       </div>
       <div class="combat-sidebar-right">
         <div class="section-title" style="font-size:0.55rem">Enemies</div>
@@ -2200,8 +2204,8 @@ function repBar(value, posColor, negColor, label) {
   const col = value >= 0 ? posColor : negColor;
   return '<div style="margin-bottom:0.5rem">'
     + '<div style="display:flex;justify-content:space-between;margin-bottom:2px">'
-    + '<span style="font-family:\'Cinzel\',serif;font-size:0.6rem;color:var(--mist)">' + label + '</span>'
-    + '<span style="font-family:\'Cinzel\',serif;font-size:0.6rem;color:' + col + '">' + (value >= 0 ? '+' : '') + value + '</span>'
+    + '<span style="font-family:Cinzel,serif;font-size:0.6rem;color:var(--mist)">' + label + '</span>'
+    + '<span style="font-family:Cinzel,serif;font-size:0.6rem;color:' + col + '">' + (value >= 0 ? '+' : '') + value + '</span>'
     + '</div>'
     + '<div style="height:6px;background:rgba(255,255,255,0.08);border-radius:2px;position:relative">'
     + '<div style="position:absolute;' + (value >= 0 ? 'left:50%;width:' + (pct/2) + '%' : 'right:50%;width:' + (pct/2) + '%') + ';height:6px;background:' + col + ';border-radius:2px"></div>'
@@ -2215,7 +2219,7 @@ function renderRepWidget() {
   const st = getStealthTier();
   const ht = getHonorTier();
   return '<div style="background:var(--ink2);border:1px solid rgba(255,255,255,0.07);padding:0.8rem;margin-bottom:1rem">'
-    + '<div style="font-family:\'Cinzel\',serif;font-size:0.65rem;color:var(--gold);margin-bottom:0.6rem">Shadow Reputation</div>'
+    + '<div style="font-family:Cinzel,serif;font-size:0.65rem;color:var(--gold);margin-bottom:0.6rem">Shadow Reputation</div>'
     + repBar(rep.stealth, '#88aaff', '#ff6644', 'Stealth')
     + '<div style="font-size:0.6rem;margin-bottom:0.6rem">'
     + '<span style="color:' + st.color + '">' + st.icon + ' ' + st.name + '</span>'
@@ -2452,8 +2456,8 @@ let GS = {
 
 const IMG_CACHE = {};  // key → HTMLImageElement (null if failed/not ready)
 
-// Sprite sheet layout: 4 frames horizontal — south(0) east(1) west(2) north(3)
-const FACING_FRAME = { south: 0, east: 1, west: 2, north: 3 };
+// Rotation angles for single-image sprites — image default is south-facing (0 rad)
+const FACING_ANGLE = { south: 0, east: -Math.PI / 2, west: Math.PI / 2, north: Math.PI };
 
 function classPng(className) {
   return className.charAt(0).toUpperCase() + className.slice(1) + '.png';
@@ -2466,8 +2470,7 @@ function enemySheetKey(typeName) {
 // All filenames the game may ever need — loaded once at page open
 function getAllGameImages() {
   const files = new Set();
-  files.add('floor.png');
-  files.add('wall.png');
+  Object.values(TILE_PNG).forEach(f => files.add(f));
   Object.keys(CLASSES).forEach(k => files.add(classPng(k)));
   Object.keys(ENEMY_TYPES).forEach(k => files.add(enemySheetKey(k)));
   return [...files];
@@ -2490,40 +2493,43 @@ function getImg(filename) {
 // Guards against zero-dimension images that would throw on ctx.drawImage.
 // Returns an img element src data-url of a sprite's south-facing frame, or empty string
 function getEnemySpriteDataURL(typeKey, size) {
+  // Single image — draw it directly (south-facing is the default orientation)
   const img = getImg(enemySheetKey(typeKey));
   if (!img || img.naturalWidth <= 0) return '';
   try {
     const c = document.createElement('canvas');
     c.width = size; c.height = size;
     const ctx2 = c.getContext('2d');
-    const fw = img.naturalWidth / 4;
-    const fh = img.naturalHeight;
-    // South = frame 0
-    ctx2.drawImage(img, 0, 0, fw, fh, 0, 0, size, size);
+    ctx2.drawImage(img, 0, 0, size, size);
     return c.toDataURL();
   } catch(e) { return ''; }
 }
 
 function getClassSpriteDataURL(classKey, size) {
+  // Single image — draw it directly (south-facing default)
   const img = getImg(classPng(classKey));
   if (!img || img.naturalWidth <= 0) return '';
   try {
     const c = document.createElement('canvas');
     c.width = size; c.height = size;
     const ctx2 = c.getContext('2d');
-    const fw = img.naturalWidth / 4;
-    const fh = img.naturalHeight;
-    ctx2.drawImage(img, 0, 0, fw, fh, 0, 0, size, size);
+    ctx2.drawImage(img, 0, 0, size, size);
     return c.toDataURL();
   } catch(e) { return ''; }
 }
 
 function drawSpriteFrame(ctx, img, facing, dx, dy, dw, dh) {
-  const fw = img.naturalWidth / 4;
-  const fh = img.naturalHeight;
-  if (fw <= 0 || fh <= 0 || dw <= 0 || dh <= 0) return; // not decoded yet
-  const frameIdx = FACING_FRAME[facing] ?? 0;
-  ctx.drawImage(img, frameIdx * fw, 0, fw, fh, dx, dy, dw, dh);
+  // Single image — rotate around its centre to face the correct direction.
+  // Image default orientation is south (facing down).
+  if (img.naturalWidth <= 0 || img.naturalHeight <= 0 || dw <= 0 || dh <= 0) return;
+  const angle = FACING_ANGLE[facing] ?? 0;
+  const cx = dx + dw / 2;
+  const cy = dy + dh / 2;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
+  ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+  ctx.restore();
 }
 
 // Called once at DOMContentLoaded — no longer needed per-combat
@@ -2534,10 +2540,26 @@ function preloadAllImages() {
 // No-op kept for compatibility (images now preloaded globally)
 function preloadCombatImages() {}
 
-// Terrain key → png file
+// Terrain key → unique png filename — one file per tile type
+const TILE_PNG = {
+  empty:  'tile_stone_floor.png',
+  wall:   'tile_fortress_wall.png',
+  forest: 'tile_forest_canopy.png',
+  rubble: 'tile_rubble_debris.png',
+  exit:   'tile_exit_arch.png',
+  roof:   'tile_rooftop_low.png',
+  roof3:  'tile_rooftop_high.png',
+  shadow: 'tile_shadow_hollow.png',
+  water:  'tile_shallow_water.png',
+  floor1: 'tile_platform_l1.png',
+  floor2: 'tile_platform_l2.png',
+  floor3: 'tile_platform_l3.png',
+  cliff:  'tile_cliff_ledge.png',
+  gate:   'tile_gate_archway.png',
+  stone:  'tile_dressed_stone.png',
+};
 function tilePng(tileKey) {
-  if (tileKey === 'wall') return 'wall.png';
-  return 'floor.png';
+  return TILE_PNG[tileKey] || 'tile_stone_floor.png';
 }
 
 let CS = {
@@ -2552,7 +2574,7 @@ let CS = {
   selectedAction: null,
   log: [],
   highlightedTiles: [],
-  gridW: 14, gridH: 9,
+  gridW: 14, gridH: 12,
   cellSize: 56,
 
   // ATB / CT system
@@ -2560,6 +2582,7 @@ let CS = {
   unitMoved: false,
   unitActed: false,
   savedMove: null,   // { x, y, facing } snapshot before move — cleared on act or end-turn
+  selectedEnemy: null, // enemy id being inspected (shows range overlay)
 
   // Objective state
   objectivePhase: 'fight',
@@ -2594,6 +2617,8 @@ function showScreen(id) {
 }
 
 function showHubSection(id) {
+  // Ensure autosave is active whenever the hub is shown with an active game
+  if (GS.clan.length > 0 && !_gameActive) _gameActive = true;
   document.querySelectorAll('.hub-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
@@ -2721,7 +2746,12 @@ function startGame() {
 }
 
 function loadGame() {
-  const saved = localStorage.getItem('nindo_save');
+  let saved = null;
+  try { saved = localStorage.getItem('nindo_save'); }
+  catch(e) {
+    toast('⚠ Storage unavailable — cannot load save. Try a different browser or disable private mode.', 'error');
+    return;
+  }
   if (saved) {
     try {
       GS = JSON.parse(saved);
@@ -2729,15 +2759,36 @@ function loadGame() {
       showScreen('hub');
       showHubSection('clan');
       toast('Game loaded! Welcome back, Shadow.');
-    } catch(e) { toast('No valid save found.', 'error'); }
+    } catch(e) {
+      toast('Save file corrupted. Starting fresh is recommended.', 'error');
+      console.error('[NINDO] Load failed:', e);
+    }
   } else {
     toast('No save file found. Begin a new journey.', 'error');
   }
 }
 
 function saveGame(silent = true) {
-  localStorage.setItem('nindo_save', JSON.stringify(GS));
-  if (!silent) toast('Game saved.', 'success');
+  try {
+    const payload = JSON.stringify(GS);
+    localStorage.setItem('nindo_save', payload);
+    if (!silent) toast('✓ Game saved.', 'success');
+    // Update last-saved indicator
+    const el = document.getElementById('lastSavedDisplay');
+    if (el) {
+      const now = new Date();
+      el.textContent = 'Saved ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+    }
+  } catch (e) {
+    // localStorage unavailable (private browsing, file://, quota exceeded, etc.)
+    console.warn('[NINDO] Save failed:', e.message);
+    if (!silent) toast('⚠ Save failed: ' + (e.name === 'QuotaExceededError' ? 'Storage full' : 'Storage unavailable'), 'error');
+    // Show persistent warning if this is the first failure
+    if (!window._saveWarned) {
+      window._saveWarned = true;
+      toast('⚠ Auto-save unavailable. Progress may be lost if you close the tab.', 'error');
+    }
+  }
 }
 
 function renderClassGrid() {
@@ -3508,19 +3559,29 @@ let selectedFormation = 'line'; // 'line' | 'wedge' | 'spread' | 'stagger'
 
 const FORMATIONS = {
   line:    { label: 'Line',    icon: '▮▮▮', desc: 'Stacked column. All advance together.',
-             positions: (n, h) => Array.from({length: n}, (_, i) => ({ x: 1, y: Math.floor(h/2) - Math.floor(n/2) + i })) },
+             positions: (n, h) => Array.from({length: n}, (_, i) => ({
+               x: 1,
+               y: Math.max(1, Math.min(h - 2, Math.floor(h/2) - Math.floor(n/2) + i))
+             })) },
   wedge:   { label: 'Wedge',   icon: '◀▮▷', desc: 'Leader at front, flanks offset behind.',
              positions: (n, h) => {
                const mid = Math.floor(h/2);
-               const pts = [{ x: 1, y: mid }];
-               if (n > 1) pts.push({ x: 2, y: mid - 1 });
-               if (n > 2) pts.push({ x: 2, y: mid + 1 });
+               const clamp = (y) => Math.max(1, Math.min(h - 2, y));
+               const pts = [{ x: 1, y: clamp(mid) }];
+               if (n > 1) pts.push({ x: 2, y: clamp(mid - 1) });
+               if (n > 2) pts.push({ x: 2, y: clamp(mid + 1) });
                return pts.slice(0, n);
              }},
   spread:  { label: 'Spread',  icon: '▮ ▮ ▮', desc: 'Wide spread across the flank.',
-             positions: (n, h) => Array.from({length: n}, (_, i) => ({ x: 1 + (i % 2), y: 1 + Math.floor(i * (h-2) / Math.max(1, n-1)) })) },
+             positions: (n, h) => Array.from({length: n}, (_, i) => ({
+               x: 1 + (i % 2),
+               y: Math.max(1, Math.min(h - 3, 1 + Math.floor(i * (h - 3) / Math.max(1, n - 1))))
+             })) },
   stagger: { label: 'Stagger', icon: '▮▮ ▮', desc: 'Alternating depth for flanking options.',
-             positions: (n, h) => Array.from({length: n}, (_, i) => ({ x: 1 + (i % 2), y: Math.floor(h/2) - Math.floor(n/2) + i })) },
+             positions: (n, h) => Array.from({length: n}, (_, i) => ({
+               x: 1 + (i % 2),
+               y: Math.max(1, Math.min(h - 2, Math.floor(h/2) - Math.floor(n/2) + i))
+             })) },
 };
 
 function renderMissions() {
@@ -3632,7 +3693,7 @@ function renderMissions() {
         <div style="font-family:'Cinzel',serif;font-size:0.6rem;color:var(--mist);margin-bottom:0.4rem">Formation</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.3rem;margin-bottom:0.6rem" id="formationPicker">
           ${Object.entries(FORMATIONS).map(([key, f]) =>
-            '<button onclick="selectFormation(\'' + key + '\')" style="background:' + (selectedFormation===key?'rgba(201,162,39,0.15)':'') + ';border:1px solid ' + (selectedFormation===key?'rgba(201,162,39,0.5)':' rgba(255,255,255,0.1)') + ';color:' + (selectedFormation===key?'var(--gold)':' var(--steel)') + ';font-family:\'Cinzel\',serif;font-size:0.55rem;padding:0.25rem 0.3rem;cursor:pointer;text-align:left">' + f.icon + ' ' + f.label + '<br><span style="font-size:0.48rem;opacity:0.7">' + f.desc + '</span></button>'
+            '<button onclick="selectFormation(\'' + key + '\')" style="background:' + (selectedFormation===key?'rgba(201,162,39,0.15)':'') + ';border:1px solid ' + (selectedFormation===key?'rgba(201,162,39,0.5)':' rgba(255,255,255,0.1)') + ';color:' + (selectedFormation===key?'var(--gold)':' var(--steel)') + ';font-family:Cinzel,serif;font-size:0.55rem;padding:0.25rem 0.3rem;cursor:pointer;text-align:left">' + f.icon + ' ' + f.label + '<br><span style="font-size:0.48rem;opacity:0.7">' + f.desc + '</span></button>'
           ).join('')}</div>
         <button class="buy-btn" onclick="launchMission()" style="background:linear-gradient(135deg,rgba(139,26,26,0.4),rgba(139,26,26,0.1))">⚔ Deploy</button>
         ${selectedMissionId ? `<div class="text-xs text-mist mt-2" id="missionIntro"></div>` : ''}
@@ -3726,11 +3787,21 @@ function launchMission() {
 // ==========================================
 
 const TERRAIN_TILES = {
-  empty:  { color: '#1a1a26', passable: true,  moveCost: 1,  label: '' },
-  wall:   { color: '#0a0a12', passable: false, moveCost: 99, label: '▪' },
-  forest: { color: '#1a2a1a', passable: true,  moveCost: 2,  label: '🌲' },
-  rubble: { color: '#2a1a0a', passable: true,  moveCost: 2,  label: '∷' },
-  exit:   { color: '#0a2a1a', passable: true,  moveCost: 1,  label: '⬡', isExit: true }
+  empty:  { color: '#1a1a26', passable: true,  moveCost: 1,  label: '', height: 0, light: 1.0, cover: 0, noise: 0 },
+  wall:   { color: '#0a0a12', passable: false, moveCost: 99, label: '▪', height: 4, light: 0.2, cover: 5, noise: 0 },
+  forest: { color: '#1a2a1a', passable: true,  moveCost: 2,  label: '🌲', height: 0, light: 0.4, cover: 3, noise: 1 },
+  rubble: { color: '#2a1a0a', passable: true,  moveCost: 2,  label: '∷', height: 0, light: 0.9, cover: 2, noise: 2 },
+  exit:   { color: '#0a2a1a', passable: true,  moveCost: 1,  label: '⬡', isExit: true, height: 0, light: 1.0, cover: 0, noise: 0 },
+  roof:   { color: '#2a2218', passable: true,  moveCost: 1,  label: '▭', height: 2, light: 1.0, cover: 1, noise: 0 },
+  roof3:  { color: '#322818', passable: true,  moveCost: 1,  label: '▬', height: 3, light: 1.0, cover: 1, noise: 0 },
+  shadow: { color: '#0a0a18', passable: true,  moveCost: 1,  label: '░', height: 0, light: 0.05, cover: 4, noise: 0 },
+  water:  { color: '#0a1a2a', passable: true,  moveCost: 3,  label: '≈', height: 0, light: 0.9, cover: 0, noise: 3 },
+  floor1: { color: '#20202e', passable: true,  moveCost: 1,  label: '', height: 1, light: 1.0, cover: 0, noise: 0 },
+  floor2: { color: '#262434', passable: true,  moveCost: 1,  label: '', height: 2, light: 0.9, cover: 0, noise: 0 },
+  floor3: { color: '#2c293a', passable: true,  moveCost: 1,  label: '', height: 3, light: 0.8, cover: 0, noise: 0 },
+  cliff:  { color: '#1a1214', passable: false, moveCost: 99, label: '╪', height: 3, light: 0.7, cover: 2, noise: 0 },
+  gate:   { color: '#3a2c14', passable: true,  moveCost: 1,  label: '⊞', height: 1, light: 0.8, cover: 2, noise: 1 },
+  stone:  { color: '#222230', passable: true,  moveCost: 1,  label: '', height: 0, light: 0.95, cover: 1, noise: 0 },
 };
 
 const TERRAIN_PRESETS = {
@@ -3831,7 +3902,7 @@ function initCombat(mission, partyIds) {
   _enemySpecs.forEach(group => {
     const type = ENEMY_TYPES[group.type];
     for (let i = 0; i < group.count; i++) {
-      const pos = findEmptyPos(CS.gridW - 3, CS.gridW - 1, 1, CS.gridH - 2);
+      const pos = findEmptyPos(CS.gridW - 5, CS.gridW - 2, 1, CS.gridH - 2);
       const eWeapon = spawnEnemyWeapon(group.type, mission.difficulty || 1);
       // Weapon upgrades enemy attack range for ranged/thrown
       const eAttackRange = eWeapon && (eWeapon.type === 'ranged' || eWeapon.type === 'thrown')
@@ -3890,6 +3961,14 @@ function initCombat(mission, partyIds) {
 
 
 function generateGrid(terrainName) {
+  // Try MAP_LIBRARY first — use a deterministic pick so replays feel consistent
+  const libKey = TERRAIN_TO_LIBRARY[terrainName];
+  if (libKey && MAP_LIBRARY[libKey] && MAP_LIBRARY[libKey].length > 0) {
+    const maps = MAP_LIBRARY[libKey];
+    const pick = maps[Math.floor(Math.random() * maps.length)];
+    return decodeMap(pick);
+  }
+
   const preset = TERRAIN_PRESETS[terrainName] || TERRAIN_PRESETS.village;
   const grid = [];
   for (let y = 0; y < CS.gridH; y++) {
@@ -3914,18 +3993,56 @@ function generateGrid(terrainName) {
 }
 
 function findEmptyPos(x1, x2, y1, y2, attempts = 30) {
+  // Phase 1: random attempts (fast path for uncrowded zones)
   for (let i = 0; i < attempts; i++) {
     const x = x1 + Math.floor(Math.random() * (x2 - x1 + 1));
     const y = y1 + Math.floor(Math.random() * (y2 - y1 + 1));
     if (isPosEmpty(x, y)) return { x, y };
   }
-  return { x: Math.floor((x1 + x2) / 2), y: Math.floor((y1 + y2) / 2) };
+  // Phase 2: exhaustive scan — guaranteed to find a passable tile if one exists
+  const ys = Array.from({ length: y2 - y1 + 1 }, (_, i) => y1 + i);
+  const xs = Array.from({ length: x2 - x1 + 1 }, (_, i) => x1 + i);
+  // Shuffle both arrays so scan order is still varied
+  ys.sort(() => Math.random() - 0.5);
+  xs.sort(() => Math.random() - 0.5);
+  for (const y of ys) {
+    for (const x of xs) {
+      if (isPosEmpty(x, y)) return { x, y };
+    }
+  }
+  // Phase 3: last resort — find ANY passable tile in zone ignoring unit occupation
+  for (const y of ys) {
+    for (const x of xs) {
+      if (x >= 0 && y >= 0 && x < CS.gridW && y < CS.gridH) {
+        const tile = CS.grid[y]?.[x];
+        const tileData = TERRAIN_TILES[tile] || TERRAIN_TILES.empty;
+        if (tileData.passable) return { x, y };
+      }
+    }
+  }
+  // Phase 4: absolute fallback — expand search outward from zone centre
+  const cx = Math.floor((x1 + x2) / 2), cy = Math.floor((y1 + y2) / 2);
+  for (let r = 1; r < CS.gridW; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+        const nx = cx + dx, ny = cy + dy;
+        if (nx >= 1 && ny >= 1 && nx < CS.gridW - 1 && ny < CS.gridH - 1) {
+          const tile = CS.grid[ny]?.[nx];
+          const tileData = TERRAIN_TILES[tile] || TERRAIN_TILES.empty;
+          if (tileData.passable) return { x: nx, y: ny };
+        }
+      }
+    }
+  }
+  return { x: cx, y: cy }; // true last resort — should never reach here
 }
 
 function isPosEmpty(x, y, excludeId = null) {
   if (x < 0 || y < 0 || x >= CS.gridW || y >= CS.gridH) return false;
   const tile = CS.grid[y]?.[x];
-  if (!tile || !TERRAIN_TILES[tile].passable) return false;
+  const tileData = TERRAIN_TILES[tile] || TERRAIN_TILES.empty;
+  if (!tile || !tileData.passable) return false;
   // Only living units block tiles — dead enemies/escaped allies don't occupy space
   const allUnits = [...CS.allies, ...CS.enemies].filter(u => u.hp > 0 && !u.escaped);
   return !allUnits.some(u => u.x === x && u.y === y && u.id !== excludeId && u.gridId !== excludeId);
@@ -4058,25 +4175,35 @@ function syncMobileCombatPanels() {
 
 function resizeCombatCanvas() {
   const canvas = document.getElementById('combatCanvas');
-  const container = canvas.parentElement;
-  if (!container) return;
+  const wrap = document.getElementById('combatScrollWrap');
+  if (!canvas || !wrap) return;
   const isMobile = window.innerWidth <= 700;
+
   if (isMobile) {
-    // Reserve space for header + controls + toggle buttons
+    // On mobile: fit to viewport, minimum 36px per tile
     const headerH = document.querySelector('.combat-header')?.offsetHeight || 40;
     const controlsH = document.querySelector('.combat-controls')?.offsetHeight || 60;
-    const availH = window.innerHeight - headerH - controlsH - 32;
-    const availW = container.clientWidth - 8;
-    // Fit grid into available space maintaining aspect ratio
-    const scaleW = availW / CS.gridW;
-    const scaleH = availH / CS.gridH;
-    CS.cellSize = Math.max(28, Math.floor(Math.min(scaleW, scaleH)));
+    const availH = window.innerHeight - headerH - controlsH - 12;
+    const availW = wrap.clientWidth || window.innerWidth;
+    const fitW = Math.floor(availW / CS.gridW);
+    const fitH = Math.floor(availH / CS.gridH);
+    CS.cellSize = Math.max(36, Math.min(fitW, fitH));
   } else {
-    const availW = container.clientWidth - 24;
-    const availH = container.clientHeight - 24;
-    const scaleW = availW / CS.gridW;
-    const scaleH = availH / CS.gridH;
-    CS.cellSize = Math.max(36, Math.min(64, Math.floor(Math.min(scaleW, scaleH))));
+    // Desktop: target 72px per tile (larger than before).
+    // If the resulting canvas fits in the container, great.
+    // If it overflows, the scroll wrapper handles it — no shrinking.
+    const TARGET_CELL = 72;
+    const MIN_CELL = 52;
+    const wrap_w = wrap.clientWidth || 600;
+    const wrap_h = wrap.clientHeight || 500;
+    // Use the target size, but scale down only if it would be smaller than the container
+    // in BOTH dimensions (i.e. lots of wasted space). Otherwise just use TARGET_CELL.
+    const fitW = Math.floor(wrap_w / CS.gridW);
+    const fitH = Math.floor(wrap_h / CS.gridH);
+    // If the target fits, use it. If the viewport is smaller, shrink to fit but stay above MIN_CELL.
+    CS.cellSize = Math.max(MIN_CELL, Math.min(TARGET_CELL, fitW, fitH) < MIN_CELL
+      ? Math.max(MIN_CELL, Math.min(fitW, fitH))
+      : TARGET_CELL);
   }
 }
 
@@ -4148,6 +4275,8 @@ function renderSelectedInfo() {
     ${ally.weapon ? `<div class="text-xs mt-1" style="color:${weaponUsable(ally) ? 'var(--gold)' : 'var(--crimson)'}">${ally.weapon.icon} ${ally.weapon.name} — ${weaponStatusLabel(ally.weapon)}</div>` : '<div class="text-xs text-mist mt-1">⚠ Unarmed</div>'}
     ${ally.armorItem ? `<div class="text-xs mt-1" style="color:${ally.armorItem.durability <= 2 ? 'var(--crimson-bright)' : 'var(--jade-bright)'}">🛡 ${ally.armorItem.name}: ${ally.armorItem.durability}/${ally.armorItem.maxDurability || ARMOR_DURABILITY[ally.armorItem.tier] || 5} dur.</div>` : ''}
   `;
+
+  if (CS.tacticsEngineEnabled && CS.activeUnit) _appendHeightInfoToSelected();
 }
 
 function updateActionButtons() {
@@ -4200,9 +4329,11 @@ function schedulePulseRedraw() {
 function drawCanvas() {
   const canvas = document.getElementById('combatCanvas');
   const cs = CS.cellSize;
-  canvas.width = CS.gridW * cs;
-  canvas.height = CS.gridH * cs;
+  const newW = CS.gridW * cs, newH = CS.gridH * cs;
+  if (canvas.width !== newW) canvas.width = newW;
+  if (canvas.height !== newH) canvas.height = newH;
   const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, newW, newH);
 
   // Draw grid
   for (let y = 0; y < CS.gridH; y++) {
@@ -4291,7 +4422,7 @@ function drawCanvas() {
     const ex = exit.x * cs;
     const ey = exit.y * cs;
     // Draw floor PNG (or fallback color) underneath
-    const floorImg = getImg('floor.png');
+    const floorImg = getImg(tilePng('empty'));
     if (floorImg) {
       ctx.drawImage(floorImg, ex, ey, cs, cs);
     } else {
@@ -4400,7 +4531,7 @@ function drawUnit(ctx, unit, fillColor, textColor, isAlly, selected = false) {
   const cy = py + cs / 2;
   const r = cs * 0.42;
 
-  // Resolve sprite sheet: allies use class sheet, enemies use type sheet
+  // Resolve sprite image: allies use class image, enemies use type image
   const sheet = isAlly ? getImg(classPng(unit.class)) : getImg(enemySheetKey(unit.type));
   const facing = unit.facing || 'south';
 
@@ -4423,23 +4554,12 @@ function drawUnit(ctx, unit, fillColor, textColor, isAlly, selected = false) {
 
   // Only use sprite if image is fully decoded (naturalWidth > 0)
   if (sheet && sheet.naturalWidth > 0) {
-    // ── Sprite sheet frame clipped to circle, preserving aspect ratio ──
-    const frameW = sheet.naturalWidth / 4;
-    const frameH = sheet.naturalHeight;
-    const aspect = frameW > 0 ? frameH / frameW : 1;
-
-    // Fit within the cell — scale so the wider dimension fills cs*0.88
+    // ── Single image rotated to face correct direction, clipped to circle ──
+    const aspect = sheet.naturalHeight > 0 ? sheet.naturalHeight / sheet.naturalWidth : 1;
     const maxSize = cs * 0.88;
     let dw, dh;
-    if (aspect >= 1) {
-      // Taller than wide: constrain by height
-      dh = maxSize;
-      dw = maxSize / aspect;
-    } else {
-      // Wider than tall: constrain by width
-      dw = maxSize;
-      dh = maxSize * aspect;
-    }
+    if (aspect >= 1) { dh = maxSize; dw = maxSize / aspect; }
+    else             { dw = maxSize; dh = maxSize * aspect; }
     const sx = cx - dw / 2;
     const sy = cy - dh / 2;
 
@@ -4588,7 +4708,8 @@ function hasLineOfSight(x1, y1, x2, y2) {
     // Don't check the start or end tile themselves
     if (!(cx === x1 && cy === y1) && !(cx === x2 && cy === y2)) {
       const tile = CS.grid?.[cy]?.[cx];
-      if (tile && tile !== 'empty' && tile !== 'exit' && tile !== 'forest' && tile !== 'rubble') {
+      const passable = TERRAIN_TILES[tile]?.passable !== false;
+      if (tile && !passable) {
         return false; // wall blocks LoS
       }
     }
@@ -4601,15 +4722,41 @@ function hasLineOfSight(x1, y1, x2, y2) {
 }
 
 function getReachableTiles(startX, startY, range, excludeId) {
+  // BFS with movement costs — respects terrain and height differences
+  const unit = [...CS.allies, ...CS.enemies].find(u => u.gridId === excludeId || u.id === excludeId);
+  const jumpStat = getUnitJump(unit);
+  const ignoreDifficult = unit ? hasMovementAbility(unit, 'ignore_difficult') : false;
+
+  const visited = new Map();
+  const queue = [{ x: startX, y: startY, cost: 0 }];
+  visited.set(startX + ',' + startY, 0);
   const tiles = [];
-  for (let dy = -range; dy <= range; dy++) {
-    for (let dx = -range; dx <= range; dx++) {
-      if (Math.abs(dx) + Math.abs(dy) <= range) {
-        const nx = startX + dx, ny = startY + dy;
-        if (isPosEmpty(nx, ny, excludeId)) {
-          tiles.push({ x: nx, y: ny, color: 'rgba(61,170,125,0.25)' });
-        }
-      }
+  let qi = 0; // index pointer — avoids O(n) shift()
+
+  while (qi < queue.length) {
+    const cur = queue[qi++];
+    const DIRS = [{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}];
+    for (const { dx, dy } of DIRS) {
+      const nx = cur.x + dx, ny = cur.y + dy;
+      const key = nx + ',' + ny;
+      if (!isPosEmpty(nx, ny, excludeId)) continue;
+      const tile = TERRAIN_TILES[CS.grid[ny]?.[nx] || 'empty'];
+      let moveCost = (ignoreDifficult && tile.moveCost === 2) ? 1 : (tile.moveCost || 1);
+      // Height climbing cost
+      const fromH = getTileHeight(cur.x, cur.y);
+      const toH = getTileHeight(nx, ny);
+      const hDiff = toH - fromH;
+      if (hDiff > jumpStat) continue; // too high to climb
+      if (hDiff > 0) moveCost += hDiff; // climbing costs extra
+      const newCost = cur.cost + moveCost;
+      if (newCost > range) continue;
+      if (visited.has(key) && visited.get(key) <= newCost) continue;
+      visited.set(key, newCost);
+      // Height tint: blue for high ground, green for same, yellow for low
+      const heightDiff = toH - getTileHeight(startX, startY);
+      const col = heightDiff > 0 ? 'rgba(80,160,255,0.28)' : heightDiff < 0 ? 'rgba(200,170,50,0.22)' : 'rgba(61,170,125,0.25)';
+      tiles.push({ x: nx, y: ny, color: col, cost: newCost });
+      queue.push({ x: nx, y: ny, cost: newCost });
     }
   }
   return tiles;
@@ -4631,14 +4778,65 @@ function getAttackTiles(cx, cy, range) {
 }
 
 document.getElementById('combatCanvas').addEventListener('click', function(e) {
-  if (CS.phase !== 'player' || !CS.selectedAction || !CS.activeUnit) return;
   const rect = this.getBoundingClientRect();
-  // Use rendered display size for accurate touch coords
-  const gx = Math.floor((e.clientX - rect.left) / (rect.width / CS.gridW));
-  const gy = Math.floor((e.clientY - rect.top) / (rect.height / CS.gridH));
+  // Use raw pixel position relative to canvas — works correctly with scroll
+  const cs = CS.cellSize;
+  const gx = Math.floor((e.clientX - rect.left) / cs);
+  const gy = Math.floor((e.clientY - rect.top) / cs);
+
+  // If no action selected and player phase: check for enemy click to show ranges
+  if (CS.phase === 'player' && !CS.selectedAction) {
+    const clickedEnemy = CS.enemies.find(en => en.hp > 0 && en.x === gx && en.y === gy);
+    if (clickedEnemy) {
+      // Toggle: click same enemy again to deselect
+      if (CS.selectedEnemy === clickedEnemy.id) {
+        CS.selectedEnemy = null;
+        CS.highlightedTiles = [];
+      } else {
+        CS.selectedEnemy = clickedEnemy.id;
+        // Build range overlay: move range in blue, attack range in red
+        const moveTiles = [], atkTiles = [];
+        for (let dy = -clickedEnemy.moveRange; dy <= clickedEnemy.moveRange; dy++) {
+          for (let dx2 = -clickedEnemy.moveRange; dx2 <= clickedEnemy.moveRange; dx2++) {
+            if (Math.abs(dx2) + Math.abs(dy) <= clickedEnemy.moveRange) {
+              const nx = clickedEnemy.x + dx2, ny = clickedEnemy.y + dy;
+              if (nx >= 0 && nx < CS.gridW && ny >= 0 && ny < CS.gridH)
+                moveTiles.push({ x: nx, y: ny, color: 'rgba(80,130,220,0.18)' });
+            }
+          }
+        }
+        for (let dy = -clickedEnemy.attackRange; dy <= clickedEnemy.attackRange; dy++) {
+          for (let dx2 = -clickedEnemy.attackRange; dx2 <= clickedEnemy.attackRange; dx2++) {
+            if (Math.abs(dx2) + Math.abs(dy) <= clickedEnemy.attackRange) {
+              const nx = clickedEnemy.x + dx2, ny = clickedEnemy.y + dy;
+              if (nx >= 0 && nx < CS.gridW && ny >= 0 && ny < CS.gridH)
+                atkTiles.push({ x: nx, y: ny, color: 'rgba(220,60,60,0.22)' });
+            }
+          }
+        }
+        // Attack tiles override move tiles for clarity
+        CS.highlightedTiles = [...moveTiles, ...atkTiles];
+      }
+      renderCombat();
+      return;
+    } else {
+      // Clicked empty space: deselect any enemy
+      if (CS.selectedEnemy) {
+        CS.selectedEnemy = null;
+        CS.highlightedTiles = [];
+        renderCombat();
+      }
+    }
+    return;
+  }
+
+  if (CS.phase !== 'player' || !CS.selectedAction || !CS.activeUnit) return;
 
   const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
   if (!ally || ally.hp <= 0) return;
+
+  // Clear enemy range overlay when taking an action
+  CS.selectedEnemy = null;
 
   if (CS.selectedAction === 'move') {
     handleMove(ally, gx, gy);
@@ -4653,8 +4851,9 @@ document.getElementById('combatCanvas').addEventListener('click', function(e) {
 document.getElementById('combatCanvas').addEventListener('touchstart', function(e) {
   e.preventDefault();
   const touch = e.touches[0];
+  // Dispatch click with touch coordinates — canvas rect accounts for scroll
   this.dispatchEvent(new MouseEvent('click', {
-    clientX: touch.clientX, clientY: touch.clientY, bubbles: true
+    clientX: touch.clientX, clientY: touch.clientY, bubbles: true, cancelable: true
   }));
 }, { passive: false });
 
@@ -5528,12 +5727,54 @@ function renderJobShop() {
     + '<div class="text-xs text-mist">Next Lv: ' + (jd.level >= 5 ? 'MAX' : (jd.totalSp||0) + ' / ' + (JOB_LEVEL_XP[jd.level]||2200) + ' SP earned') + '</div>'
     + '</div>'
     + slotPanel
+    + (jd.level >= 5 ? (() => {
+      const swapCost = 200;
+      const canSwap = jd.jp >= swapCost;
+      const allMoves = CLASSES[n.class]?.specialMoves || [];
+      return '<div style="background:var(--ink2);border:1px solid rgba(201,162,39,0.2);padding:0.8rem;margin-bottom:0.5rem">'
+        + '<div style="font-family:Cinzel,serif;font-size:0.75rem;color:var(--gold);margin-bottom:0.4rem">✦ Special Move</div>'
+        + '<div class="text-xs" style="margin-bottom:0.5rem">Current: <b style="color:var(--white)">' + n.specialMove.name + '</b> (' + n.specialMove.chi + ' Chi)<br><span class="text-mist">' + n.specialMove.desc + '</span></div>'
+        + '<div class="text-xs text-mist" style="margin-bottom:0.4rem">Swap for ' + swapCost + ' SP:</div>'
+        + allMoves.filter(m => m.name !== n.specialMove.name).map(m =>
+            '<button class="nav-btn' + (canSwap ? '' : '') + '" ' + (canSwap ? '' : 'disabled ') + 'style="margin-bottom:0.25rem;width:100%;text-align:left;' + (canSwap ? '' : 'opacity:0.4') + '" onclick="swapSpecialMove(\'' + n.id + '\',\'' + m.name + '\')">' + m.name + ' (' + m.chi + ' ☯) — ' + m.desc.substring(0,40) + (m.desc.length>40?'…':'') + '</button>'
+          ).join('')
+        + '</div>';
+    })() : '')
     + '</div>'
     + '<div>'
     + (allLearnable.length ? '<div class="section-title" style="font-size:0.65rem">Available to Learn</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem">' + allLearnable.map(ab => makeAbCard(ab, false)).join('') + '</div>' : '')
     + (alreadyUnlocked.length ? '<div class="section-title" style="font-size:0.65rem">Learned Abilities</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">' + alreadyUnlocked.map(ab => makeAbCard(ab, true)).join('') + '</div>' : '')
     + '</div>'
     + '</div>';
+}
+
+function swapSpecialMove(ninjaId, moveName) {
+  const n = GS.clan.find(x => x.id === ninjaId);
+  if (!n) return;
+  const jd = getNinjaJobData(n);
+  const SWAP_COST = 200;
+  if (jd.jp < SWAP_COST) { toast('Need ' + SWAP_COST + ' SP to swap special move.', 'error'); return; }
+  const cls = CLASSES[n.class];
+  const newMove = cls?.specialMoves.find(m => m.name === moveName);
+  if (!newMove) { toast('Special move not found.', 'error'); return; }
+  openModal('Swap Special Move?',
+    '<b style="color:var(--gold)">' + n.name + '</b> will replace <b>' + n.specialMove.name + '</b> with <b style="color:var(--jade-bright)">' + newMove.name + '</b> (' + newMove.chi + ' ☯).<br><br>'
+    + '<span class="text-mist">' + newMove.desc + '</span><br><br>'
+    + 'Cost: <b style="color:var(--gold)">' + SWAP_COST + ' SP</b>',
+    [
+      { label: 'Swap (' + SWAP_COST + ' SP)', fn: () => {
+        jd.jp -= SWAP_COST;
+        n.specialMove = { ...newMove };
+        // Sync to GS
+        const gn = GS.clan.find(x => x.id === n.id);
+        if (gn) { gn.specialMove = { ...newMove }; if (!gn.jobs) gn.jobs = {}; gn.jobs[n.class] = { ...jd }; }
+        saveGame(); closeModal();
+        toast(n.name + ' learned ' + newMove.name + '!', 'success');
+        renderJobShop(); renderClan();
+      }, cls: 'confirm' },
+      { label: 'Cancel', fn: closeModal }
+    ]
+  );
 }
 
 function learnAbilityUI(ninjaId, abilityId) {
@@ -5630,6 +5871,7 @@ function beginUnitTurn(unit) {
   CS.unitMoved = false;
   CS.unitActed = false;
   CS.savedMove = null;
+  CS.selectedEnemy = null;
 
   if (unit.gridId) {
     // ALLY turn
@@ -5670,9 +5912,46 @@ function triggerPermadeath(ally) {
   addLog(ally.name + ' has perished! Lost forever...', 'death');
   toast(ally.name + ' has died permanently!', 'error');
 
-  // Build loot bag from all their equipment
+  // If the ally died on an elevated tile, find nearest reachable ground-level
+  // tile so the doom bag is always retrievable by any unit (including Berserker).
+  let bagX = ally.x, bagY = ally.y;
+  const deathTileKey = CS.grid[ally.y]?.[ally.x] || 'empty';
+  const deathHeight = (TERRAIN_TILES[deathTileKey] || TERRAIN_TILES.empty).height || 0;
+  if (deathHeight > 1) {
+    // BFS outward from death position, find nearest passable tile at height ≤ 1
+    const visited = new Set([ally.x + ',' + ally.y]);
+    const queue = [{ x: ally.x, y: ally.y }];
+    let found = false;
+    while (queue.length && !found) {
+      const cur = queue.shift();
+      for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        const nx = cur.x + dx, ny = cur.y + dy;
+        const key = nx + ',' + ny;
+        if (visited.has(key)) continue;
+        visited.add(key);
+        if (nx < 0 || ny < 0 || nx >= CS.gridW || ny >= CS.gridH) continue;
+        const tKey = CS.grid[ny]?.[nx] || 'empty';
+        const tData = TERRAIN_TILES[tKey] || TERRAIN_TILES.empty;
+        if (!tData.passable) continue;
+        const tHeight = tData.height || 0;
+        // Check no unit is occupying this tile
+        const occupied = [...CS.allies, ...CS.enemies].some(u =>
+          u.hp > 0 && !u.escaped && u.x === nx && u.y === ny
+        );
+        if (tHeight <= 1 && !occupied) {
+          bagX = nx; bagY = ny; found = true; break;
+        }
+        queue.push({ x: nx, y: ny });
+      }
+    }
+    if (found) {
+      addLog(ally.name + "'s belongings slide down to (" + bagX + ',' + bagY + ').', 'system');
+    }
+  }
+
+  // Build loot bag from all their equipment, placed at the accessible position
   const bag = {
-    x: ally.x, y: ally.y,
+    x: bagX, y: bagY,
     allyId: ally.id,
     name: ally.name + "'s Belongings",
     icon: '💀',
@@ -5910,40 +6189,287 @@ function runEnemyUnitTurn(enemy) {
 
   const dist = Math.abs(nearest.x - enemy.x) + Math.abs(nearest.y - enemy.y);
   const _elos = hasLineOfSight(enemy.x, enemy.y, nearest.x, nearest.y);
+  const ai = enemy.ai || 'aggressive';
 
-  if (dist <= enemy.attackRange && _elos) {
-    const adx = nearest.x - enemy.x, ady = nearest.y - enemy.y;
-    if (Math.abs(adx) >= Math.abs(ady)) enemy.facing = adx > 0 ? 'east' : 'west';
-    else enemy.facing = ady > 0 ? 'south' : 'north';
-    const dmg = calcEnemyDamage(enemy);
-    addLog((enemy.weapon ? enemy.weapon.icon + ' ' : '') + enemy.name + ' attacks ' + nearest.name + '!', 'damage');
-        recordDetection(); // enemy spotted and struck ally
-    applyDamageToAlly(nearest, dmg, enemy.name);
-    consumeEnemyWeaponUse(enemy);
-  } else {
-    const dx = Math.sign(nearest.x - enemy.x);
-    const dy = Math.sign(nearest.y - enemy.y);
-    const steps = Math.min(enemy.moveRange, dist - 1);
+  // ── Helper: face toward a target ──
+  function faceTarget(e, tx, ty) {
+    const adx = tx - e.x, ady = ty - e.y;
+    if (Math.abs(adx) >= Math.abs(ady)) e.facing = adx > 0 ? 'east' : 'west';
+    else e.facing = ady > 0 ? 'south' : 'north';
+  }
+
+  // ── Helper: step toward target ──
+  function stepToward(e, tx, ty) {
+    const sx = Math.sign(tx - e.x), sy = Math.sign(ty - e.y);
+    const steps = Math.min(e.moveRange, Math.abs(tx - e.x) + Math.abs(ty - e.y) - 1);
     for (let s = 0; s < steps; s++) {
-      const nx = enemy.x + dx, ny = enemy.y + dy;
-      if (isPosEmpty(nx, ny, enemy.id)) {
-        const ox = enemy.x, oy = enemy.y; enemy.x = nx; enemy.y = ny;
-        if (Math.abs(enemy.x-ox) >= Math.abs(enemy.y-oy)) enemy.facing = enemy.x > ox ? 'east' : 'west';
-        else enemy.facing = enemy.y > oy ? 'south' : 'north';
-        break;
-      } else if (isPosEmpty(enemy.x + dx, enemy.y, enemy.id)) {
-        enemy.x += dx; enemy.facing = dx > 0 ? 'east' : 'west'; break;
-      } else if (isPosEmpty(enemy.x, enemy.y + dy, enemy.id)) {
-        enemy.y += dy; enemy.facing = dy > 0 ? 'south' : 'north'; break;
+      const nx = e.x + sx, ny = e.y + sy;
+      if (isPosEmpty(nx, ny, e.id)) {
+        const ox = e.x, oy = e.y; e.x = nx; e.y = ny;
+        if (Math.abs(e.x-ox) >= Math.abs(e.y-oy)) e.facing = e.x > ox ? 'east' : 'west';
+        else e.facing = e.y > oy ? 'south' : 'north';
+        return true;
+      } else if (isPosEmpty(e.x + sx, e.y, e.id)) {
+        e.x += sx; e.facing = sx > 0 ? 'east' : 'west'; return true;
+      } else if (isPosEmpty(e.x, e.y + sy, e.id)) {
+        e.y += sy; e.facing = sy > 0 ? 'south' : 'north'; return true;
       }
     }
-    if (Math.abs(nearest.x - enemy.x) + Math.abs(nearest.y - enemy.y) <= enemy.attackRange
-        && hasLineOfSight(enemy.x, enemy.y, nearest.x, nearest.y)) {
-      const dmg = calcEnemyDamage(enemy);
-      addLog((enemy.weapon ? enemy.weapon.icon + ' ' : '') + enemy.name + ' attacks ' + nearest.name + '!', 'damage');
-      applyDamageToAlly(nearest, dmg, enemy.name);
-      consumeEnemyWeaponUse(enemy);
+    return false;
+  }
+
+  // ── Helper: step away from target ──
+  function stepAway(e, fx, fy) {
+    const sx = -Math.sign(fx - e.x), sy = -Math.sign(fy - e.y);
+    const dirs = [[sx, 0], [0, sy], [sx, sy], [-sx, 0], [0, -sy]];
+    for (const [dx2, dy2] of dirs) {
+      const nx = e.x + dx2, ny = e.y + dy2;
+      if (dx2 === 0 && dy2 === 0) continue;
+      if (isPosEmpty(nx, ny, e.id)) { e.x = nx; e.y = ny; return; }
     }
+  }
+
+  // ── Helper: attack nearest if in range + LoS ──
+  function tryAttack(e, target) {
+    const d2 = Math.abs(target.x - e.x) + Math.abs(target.y - e.y);
+    if (d2 <= e.attackRange && hasLineOfSight(e.x, e.y, target.x, target.y)) {
+      faceTarget(e, target.x, target.y);
+      const dmg = calcEnemyDamage(e);
+      addLog((e.weapon ? e.weapon.icon + ' ' : '') + e.name + ' attacks ' + target.name + '!', 'damage');
+      recordDetection();
+      applyDamageToAlly(target, dmg, e.name);
+      consumeEnemyWeaponUse(e);
+      return true;
+    }
+    return false;
+  }
+
+  // ── TACTICAL AI — SCORING SYSTEM ──
+  // Score each potential target considering HP, position, height, flanking, stealth
+  function scoreTarget(e, target) {
+    let score = 0;
+    const d = Math.abs(target.x - e.x) + Math.abs(target.y - e.y);
+    // Prefer weak targets
+    const hpPct = target.hp / target.maxHp;
+    score += (1 - hpPct) * 40;  // up to +40 for near-death target
+    // Prefer targets in attack range
+    if (d <= e.attackRange) score += 30;
+    else score -= d * 3;
+    // Prefer back-attack opportunity
+    const dirMult = getDirDamageMult(target, e.x, e.y);
+    if (dirMult >= 1.5) score += 25;      // back attack available
+    else if (dirMult >= 1.25) score += 12; // side attack
+    // Height advantage: prefer attacking from higher ground
+    const eH = getTileHeight(e.x, e.y);
+    const tH = getTileHeight(target.x, target.y);
+    if (eH > tH) score += 15;
+    else if (eH < tH) score -= 10;
+    // Prefer targets carrying loot (priority kill)
+    if (target.hasLoot) score += 20;
+    // Prefer low-HP targets for finishing
+    if (target.hp < 20) score += 20;
+    // Prefer flanking with allies (pack tactics)
+    const adjacentAllies = CS.enemies.filter(other =>
+      other.id !== e.id && other.hp > 0 &&
+      Math.abs(other.x - target.x) + Math.abs(other.y - target.y) <= 2
+    );
+    score += adjacentAllies.length * 8;
+    // Line of sight bonus
+    if (hasLineOfSight(e.x, e.y, target.x, target.y)) score += 10;
+    return score;
+  }
+
+  // Score each potential move tile
+  function scoreMovePos(e, tx, ty, bestTarget) {
+    let score = 0;
+    if (!isPosEmpty(tx, ty, e.id)) return -9999;
+    const d = Math.abs(bestTarget.x - tx) + Math.abs(bestTarget.y - ty);
+    // Prefer tiles within attack range
+    if (d <= e.attackRange) score += 50;
+    else score -= d * 4;
+    // Prefer high ground
+    const newH = getTileHeight(tx, ty);
+    const curH = getTileHeight(e.x, e.y);
+    if (newH > curH) score += 18;
+    // Prefer flanking position (approach from side/rear)
+    const dirMult = getDirDamageMult(bestTarget, tx, ty);
+    if (dirMult >= 1.5) score += 30;  // back position
+    else if (dirMult >= 1.25) score += 15;
+    // Prefer cover tiles for ranged enemies
+    const tile = TERRAIN_TILES[CS.grid[ty]?.[tx] || 'empty'];
+    if (ai === 'ranged' && tile.cover > 0) score += tile.cover * 5;
+    // Avoid crowding other enemies
+    const crowded = CS.enemies.filter(other =>
+      other.id !== e.id && other.hp > 0 &&
+      Math.abs(other.x - tx) + Math.abs(other.y - ty) <= 1
+    ).length;
+    score -= crowded * 6;
+    // Avoid dark/shadow tiles for non-stealth enemies (noise)
+    if (tile.noise > 0 && e.ai !== 'stealth') score -= tile.noise * 3;
+    // Prefer chokepoints for defensive AI
+    if (ai === 'defensive') {
+      const exits = CS.exitTiles.filter(et => Math.abs(et.x - tx) + Math.abs(et.y - ty) <= 3).length;
+      score += exits * 10;
+    }
+    // Line of sight to target from this position
+    if (hasLineOfSight(tx, ty, bestTarget.x, bestTarget.y)) score += 12;
+    return score;
+  }
+
+  // ── Pick best target ──
+  let bestTarget = aliveAllies.reduce((best, a) => {
+    const sA = scoreTarget(enemy, a);
+    const sB = scoreTarget(enemy, best);
+    return sA > sB ? a : best;
+  }, aliveAllies[0]);
+
+  // Override for blinded enemy
+  if (enemy.status === 'blinded') {
+    bestTarget = aliveAllies[Math.floor(Math.random() * aliveAllies.length)];
+  }
+
+  const targetDist = Math.abs(bestTarget.x - enemy.x) + Math.abs(bestTarget.y - enemy.y);
+  const inRange = targetDist <= enemy.attackRange && hasLineOfSight(enemy.x, enemy.y, bestTarget.x, bestTarget.y);
+
+  // ── Tactical AI by behavior type ──
+  if (ai === 'aggressive') {
+    if (inRange) {
+      tryAttack(enemy, bestTarget);
+    } else {
+      // Score all reachable tiles and pick best approach
+      let bestScore = -9999, bestX = enemy.x, bestY = enemy.y;
+      for (let dy = -enemy.moveRange; dy <= enemy.moveRange; dy++) {
+        for (let dx = -enemy.moveRange; dx <= enemy.moveRange; dx++) {
+          if (Math.abs(dx) + Math.abs(dy) > enemy.moveRange) continue;
+          const tx = enemy.x + dx, ty = enemy.y + dy;
+          const s = scoreMovePos(enemy, tx, ty, bestTarget);
+          if (s > bestScore) { bestScore = s; bestX = tx; bestY = ty; }
+        }
+      }
+      if (bestX !== enemy.x || bestY !== enemy.y) {
+        stepToward(enemy, bestX, bestY);
+      }
+      tryAttack(enemy, bestTarget);
+    }
+
+  } else if (ai === 'patrol') {
+    const sightRange = enemy.attackRange + 4;
+    if (targetDist <= sightRange) {
+      if (!inRange) {
+        stepToward(enemy, bestTarget.x, bestTarget.y);
+      }
+      tryAttack(enemy, bestTarget);
+    } else {
+      // Patrol pattern — walk toward a chokepoint or exit zone
+      const patrolDirs = [{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}];
+      const dir = patrolDirs[(Math.floor(Date.now()/800 + enemy.id.charCodeAt(0))) % patrolDirs.length];
+      const px = enemy.x + dir.dx, py = enemy.y + dir.dy;
+      if (isPosEmpty(px, py, enemy.id)) {
+        enemy.x = px; enemy.y = py;
+        enemy.facing = dir.dx !== 0 ? (dir.dx > 0 ? 'east' : 'west') : (dir.dy > 0 ? 'south' : 'north');
+      }
+    }
+
+  } else if (ai === 'defensive') {
+    // Hold high-value chokepoint — only advance if target very close
+    if (inRange) {
+      tryAttack(enemy, bestTarget);
+    } else if (targetDist <= 2) {
+      stepToward(enemy, bestTarget.x, bestTarget.y);
+      tryAttack(enemy, bestTarget);
+    } else {
+      // Seek best defensive position (exits, high ground, cover)
+      let bestDefScore = -9999, defX = enemy.x, defY = enemy.y;
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          const tx = enemy.x + dx, ty = enemy.y + dy;
+          if (!isPosEmpty(tx, ty, enemy.id)) continue;
+          let ds = 0;
+          ds += getTileHeight(tx, ty) * 12;
+          const ct = TERRAIN_TILES[CS.grid[ty]?.[tx] || 'empty'];
+          ds += ct.cover * 5;
+          const exitProx = CS.exitTiles.reduce((mn, et) =>
+            Math.min(mn, Math.abs(et.x-tx)+Math.abs(et.y-ty)), 999);
+          if (exitProx <= 3) ds += 20;
+          if (ds > bestDefScore) { bestDefScore = ds; defX = tx; defY = ty; }
+        }
+      }
+      if (defX !== enemy.x || defY !== enemy.y) stepToward(enemy, defX, defY);
+      faceTarget(enemy, bestTarget.x, bestTarget.y);
+    }
+
+  } else if (ai === 'ranged') {
+    const idealMin = Math.max(2, enemy.attackRange - 1);
+    // Find best ranged position
+    if (targetDist < idealMin) {
+      stepAway(enemy, bestTarget.x, bestTarget.y);
+    } else if (targetDist > enemy.attackRange || !hasLineOfSight(enemy.x, enemy.y, bestTarget.x, bestTarget.y)) {
+      // Seek flanking high-ground position with LoS
+      let bestRangeScore = -9999, rX = enemy.x, rY = enemy.y;
+      for (let dy = -enemy.moveRange; dy <= enemy.moveRange; dy++) {
+        for (let dx = -enemy.moveRange; dx <= enemy.moveRange; dx++) {
+          if (Math.abs(dx)+Math.abs(dy) > enemy.moveRange) continue;
+          const tx = enemy.x+dx, ty = enemy.y+dy;
+          if (!isPosEmpty(tx, ty, enemy.id)) continue;
+          const d2 = Math.abs(bestTarget.x-tx)+Math.abs(bestTarget.y-ty);
+          if (d2 < idealMin || d2 > enemy.attackRange) continue;
+          let rs = getTileHeight(tx,ty)*15;
+          if (hasLineOfSight(tx, ty, bestTarget.x, bestTarget.y)) rs += 30;
+          const dirM = getDirDamageMult(bestTarget, tx, ty);
+          rs += (dirM - 1) * 40;
+          if (rs > bestRangeScore) { bestRangeScore = rs; rX = tx; rY = ty; }
+        }
+      }
+      if (rX !== enemy.x || rY !== enemy.y) stepToward(enemy, rX, rY);
+    }
+    tryAttack(enemy, bestTarget);
+
+  } else if (ai === 'stealth') {
+    // Stealth AI: seek shadow tiles, approach from behind, wait for back-attack
+    const onShadow = (TERRAIN_TILES[CS.grid[enemy.y]?.[enemy.x] || 'empty'].light || 1) < 0.3;
+    const backScore = getDirDamageMult(bestTarget, enemy.x, enemy.y);
+    if (backScore >= 1.5 && inRange) {
+      // Perfect back-attack position — strike!
+      const dmg = calcEnemyDamage(enemy);
+      faceTarget(enemy, bestTarget.x, bestTarget.y);
+      addLog('💀 ' + enemy.name + ' strikes from the shadows!', 'damage');
+      recordDetection();
+      applyDamageToAlly(bestTarget, Math.round(dmg * 1.5), enemy.name);
+      consumeEnemyWeaponUse(enemy);
+    } else {
+      // Seek shadow tiles and flank behind target
+      let bestStealthScore = -9999, sX = enemy.x, sY = enemy.y;
+      for (let dy = -enemy.moveRange; dy <= enemy.moveRange; dy++) {
+        for (let dx = -enemy.moveRange; dx <= enemy.moveRange; dx++) {
+          if (Math.abs(dx)+Math.abs(dy) > enemy.moveRange) continue;
+          const tx = enemy.x+dx, ty = enemy.y+dy;
+          if (!isPosEmpty(tx, ty, enemy.id)) continue;
+          const tt = TERRAIN_TILES[CS.grid[ty]?.[tx] || 'empty'];
+          let ss = 0;
+          ss += (1 - (tt.light || 1)) * 30; // prefer dark tiles
+          ss += (tt.cover || 0) * 8;
+          const dm = getDirDamageMult(bestTarget, tx, ty);
+          ss += (dm - 1) * 50; // strongly prefer back-attack position
+          const d2 = Math.abs(bestTarget.x-tx)+Math.abs(bestTarget.y-ty);
+          if (d2 <= enemy.attackRange) ss += 25;
+          if (ss > bestStealthScore) { bestStealthScore = ss; sX = tx; sY = ty; }
+        }
+      }
+      if (sX !== enemy.x || sY !== enemy.y) stepToward(enemy, sX, sY);
+      if (inRange) tryAttack(enemy, bestTarget);
+    }
+
+  } else if (ai === 'flee') {
+    const prevX = enemy.x, prevY = enemy.y;
+    stepAway(enemy, bestTarget.x, bestTarget.y);
+    if (enemy.x === prevX && enemy.y === prevY) {
+      tryAttack(enemy, bestTarget);
+    }
+
+  } else {
+    // Fallback: aggressive with scoring
+    if (!inRange) stepToward(enemy, bestTarget.x, bestTarget.y);
+    tryAttack(enemy, bestTarget);
   }
 
   renderCombat();
@@ -6126,7 +6652,7 @@ function advanceFloor() {
   (fd.enemies || []).forEach(group => {
     const type = ENEMY_TYPES[group.type];
     for (let i = 0; i < group.count; i++) {
-      const pos = findEmptyPos(CS.gridW - 3, CS.gridW - 1, 1, CS.gridH - 2);
+      const pos = findEmptyPos(CS.gridW - 5, CS.gridW - 2, 1, CS.gridH - 2);
       const w = spawnEnemyWeapon(group.type, mission.difficulty || 1);
       const ar = w && (w.type === 'ranged' || w.type === 'thrown') ? Math.max(type.attackRange, w.range || 3) : type.attackRange;
       CS.enemies.push({
@@ -6888,6 +7414,95 @@ function renderCodex() {
   openCodex();
 }
 
+
+// ==========================================
+// ===== TERRAIN CODEX SECTION =====
+// ==========================================
+
+function buildTerrainCodex() {
+  var tiles = [
+    { ch:'.', file:'tile_stone_floor.png', label:'Open Ground', icon:'\u2B1C', color:'#1a1a26',
+      move:'1', cover:'None', light:'Full', height:'0',
+      combat:'No modifier. Standard fighting ground — neither attacker nor defender gains any terrain advantage.',
+      look:'Bare stone or packed-earth floor. The most common tile on any map.' },
+    { ch:'W', file:'tile_fortress_wall.png', label:'Wall / Impassable', icon:'\uD83E\uDDF1', color:'#0a0a12',
+      move:'\u2014', cover:'Full block', light:'None', height:'4',
+      combat:'Cannot be entered. Blocks all movement and line-of-sight. Projectiles cannot pass through.',
+      look:'Solid stone masonry or dense timber. Dark, impenetrable. Towers over surrounding terrain.' },
+    { ch:'F', file:'tile_forest_canopy.png', label:'Forest', icon:'\uD83C\uDF32', color:'#1a2a1a',
+      move:'2', cover:'Heavy (+3)', light:'Dim (40%)', height:'0',
+      combat:'Defenders in forest take -15% damage. Does not block LoS but conceals units in low light. Noisy (+1) — stealthy classes partially resist.',
+      look:'Dense tree canopy with undergrowth. Dark beneath the boughs; patches of shadow between trunks.' },
+    { ch:'R', file:'tile_rubble_debris.png', label:'Rubble', icon:'\u2237', color:'#2a1a0a',
+      move:'2', cover:'Light (+2)', light:'Bright (90%)', height:'0',
+      combat:'Provides light cover (-8% damage). Unstable footing — no melee accuracy bonus. Noisy (+2).',
+      look:'Broken stone, collapsed timber, shattered debris. Pale and jagged in torchlight.' },
+    { ch:'r', file:'tile_rooftop_low.png', label:'Rooftop (Low)', icon:'\u25AD', color:'#2a2218',
+      move:'1', cover:'Light (+1)', light:'Bright', height:'2',
+      combat:'Height 2. +12% damage and +5% accuracy vs ground-level targets. Natural elevated firing position.',
+      look:'Tiled clay rooftop two storeys up. Warm terracotta colour, slightly uneven. Wide view of the street below.' },
+    { ch:'T', file:'tile_rooftop_high.png', label:'Rooftop (High)', icon:'\u25AC', color:'#322818',
+      move:'1', cover:'Light (+1)', light:'Bright', height:'3',
+      combat:'Height 3. +25% damage and +10% accuracy vs ground. Highest common rooftop elevation.',
+      look:'A third-storey platform or temple parapet. Deep brown tile, wide open sky. Exposed but commanding.' },
+    { ch:'S', file:'tile_shadow_hollow.png', label:'Shadow', icon:'\u2591', color:'#0a0a18',
+      move:'1', cover:'Very Heavy (+4)', light:'Very Dark (5%)', height:'0',
+      combat:'Very low light drastically reduces enemy detection range. Shinobi/Shadow gain +50% first-strike (Shadow Strike). Stealth bonuses stack here.',
+      look:'Near-lightless zone — a doorway gap, temple overhang, or deeply recessed alcove. Only a faint shimmer hints at the space.' },
+    { ch:'~', file:'tile_shallow_water.png', label:'Shallow Water', icon:'\u2248', color:'#0a1a2a',
+      move:'3', cover:'None', light:'Bright (90%)', height:'0',
+      combat:'Costs 3 movement points — severely slows crossing. Highly noisy (+3), greatly reducing stealth. No defensive bonus.',
+      look:'Ankle-deep water — a stream, flooded dockside, or courtyard puddle. Ripples shimmer. Audible splash with every step.' },
+    { ch:'1', file:'tile_platform_l1.png', label:'Elevated Floor (H1)', icon:'\u25A1', color:'#20202e',
+      move:'1', cover:'None', light:'Bright', height:'1',
+      combat:'Height 1. +8% damage and -5% accuracy against ground-level targets. A low platform, raised dais, or stepped foundation.',
+      look:'A single stone step up from ground. Slightly darker, with a visible lip at the edge.' },
+    { ch:'2', file:'tile_platform_l2.png', label:'Elevated Floor (H2)', icon:'\u25AB', color:'#262434',
+      move:'1', cover:'None', light:'Bright (90%)', height:'2',
+      combat:'Height 2. +12% damage, +5% accuracy vs ground. Same height as low rooftop tiles — crossing between them costs no extra jump.',
+      look:'A broad raised platform or second level of a fortress interior. Slightly shadowed at the edges.' },
+    { ch:'3', file:'tile_platform_l3.png', label:'Elevated Floor (H3)', icon:'\u25AA', color:'#2c293a',
+      move:'1', cover:'None', light:'Dim (80%)', height:'3',
+      combat:'Height 3. +25% damage, +10% accuracy vs ground. Highest common interior elevation — keep battlements, temple roofs, siege towers.',
+      look:'A high platform or tower top. Older, darker stonework. Wind noise at this height. Enemies below look small.' },
+    { ch:'C', file:'tile_cliff_ledge.png', label:'Cliff / Impassable Ledge', icon:'\u256A', color:'#1a1214',
+      move:'\u2014', cover:'Partial (+2)', light:'Dim (70%)', height:'3',
+      combat:'Cannot be entered. Acts as cover for adjacent units behind it. Units shooting over a cliff at targets below gain the full high-ground bonus.',
+      look:'A sheer rock face or crumbling masonry ledge. Dark and rough-edged. Natural cover for units crouching behind it.' },
+    { ch:'G', file:'tile_gate_archway.png', label:'Gate / Doorway', icon:'\u229E', color:'#3a2c14',
+      move:'1', cover:'Moderate (+2)', light:'Dim (80%)', height:'1',
+      combat:'A chokepoint tile. Grants moderate cover (+2) due to the narrow passage. Slightly elevated (H1). Defenders holding a gate have a natural advantage.',
+      look:'A heavy timber or iron-banded gate, partly open. Or a low archway in a stone wall. Warm lamplight spills through the gap.' },
+    { ch:'s', file:'tile_dressed_stone.png', label:'Dressed Stone', icon:'\u2B22', color:'#222230',
+      move:'1', cover:'Light (+1)', light:'Bright (95%)', height:'0',
+      combat:'Stable footing — no accuracy penalty for melee. Provides slight cover (+1) from the uneven surface. No movement penalty.',
+      look:'Well-cut flagstones or polished marble. Clean and pale. Found in palace halls, temple interiors, and inner keeps.' },
+  ];
+
+  var cards = tiles.map(function(t) {
+    var html = '<div style="background:var(--ink2);border:1px solid rgba(255,255,255,0.06);padding:1rem">';
+    html += '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.6rem">';
+    html += '<div style="width:32px;height:32px;background:' + t.color + ';border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">' + t.icon + '</div>';
+    html += '<div>';
+    html += '<div style="font-family:Cinzel,serif;font-size:0.85rem;color:var(--white)">' + t.label + '</div>';
+    html += '<div style="font-family:monospace;font-size:0.6rem;color:var(--mist);margin-top:1px">char: ' + t.ch + ' &middot; move: ' + t.move + ' &middot; height: ' + t.height + '</div>';
+    html += '<div style="font-family:monospace;font-size:0.55rem;color:rgba(100,180,255,0.7);margin-top:2px">img: ' + t.file + '</div>';
+    html += '</div></div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.3rem;margin-bottom:0.5rem">';
+    html += '<div style="font-size:0.65rem"><span style="color:var(--mist)">Cover</span> <span style="color:var(--steel)">' + t.cover + '</span></div>';
+    html += '<div style="font-size:0.65rem"><span style="color:var(--mist)">Light</span> <span style="color:var(--steel)">' + t.light + '</span></div>';
+    html += '</div>';
+    html += '<div style="font-size:0.68rem;color:var(--mist);line-height:1.55;margin-bottom:0.5rem">' + t.look + '</div>';
+    html += '<div style="font-size:0.68rem;color:var(--steel);line-height:1.55;border-top:1px solid rgba(255,255,255,0.06);padding-top:0.4rem">';
+    html += '<span style="color:var(--gold);font-family:Cinzel,serif;font-size:0.6rem">\u2694 Combat</span> ' + t.combat;
+    html += '</div></div>';
+    return html;
+  }).join('');
+
+  return '<div style="margin-bottom:2rem"><div class="section-title">Terrain &amp; Tiles</div>'
+       + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.8rem">'
+       + cards + '</div></div>';
+}
 function renderCodexContent() {
   const el = document.getElementById('codexContent');
 
@@ -6966,7 +7581,7 @@ function renderCodexContent() {
       </div>`;
     }).join('');
     return card(`
-      <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);margin-bottom:0.6rem">${cat.icon} ${cat.label}</div>
+      <div style="font-family:Cinzel,serif;font-size:0.85rem;color:var(--gold);margin-bottom:0.6rem">${cat.icon} ${cat.label}</div>
       ${rows}
     `);
   });
@@ -7081,7 +7696,8 @@ function renderCodexContent() {
 
   el.innerHTML = `
     ${section('Ninja Classes', grid(290, classCards))}
-    ${section('Weapons by Category', grid(220, weaponRows))}
+    ${buildTerrainCodex()}
+        ${section('Weapons by Category', grid(220, weaponRows))}
     ${section('Items & Consumables', grid(220, allItemRows))}
     ${section('Training', `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.6rem">${trainingRows}</div>`)}
     ${section('Tier Reference', tierTable)}
@@ -7156,7 +7772,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Auto-save periodically
 let _gameActive = false;  // set true after load or new game — prevents pre-load autosave
-setInterval(() => { if (_gameActive && GS.clan.length > 0) saveGame(); }, 60000);
+// Auto-save every 30 seconds (reduced from 60s)
+setInterval(() => { if (_gameActive && GS.clan.length > 0) saveGame(); }, 30000);
+
+// Emergency save when tab is closed or navigated away
+window.addEventListener('beforeunload', () => {
+  if (_gameActive && GS.clan.length > 0) saveGame();
+});
 
 // Live recruit roster auto-refresh
 setInterval(() => {
@@ -7220,6 +7842,633 @@ function filterWeaponShop(type) {
   });
   grid.innerHTML = html;
 }
+
+// ==========================================
+// ===== TACTICS ENGINE v2 INJECTION =====
+// ==========================================
+
+// ==========================================
+// ===== ENGINE IMPROVEMENTS — TACTICS v2 =====
+// ==========================================
+
+// ── TERRAIN LIBRARY MAPPING ──
+const TERRAIN_TO_LIBRARY = {
+  village:  'village',
+  castle:   'castle_siege',
+  dungeon:  'castle_siege',
+  fortress: 'fortress_gate',
+  palace:   'fortress_gate',
+  docks:    'forest_ambush',
+  forest:   'forest_ambush',
+  keep:     'castle_siege'
+};
+
+// ── MAP DECODE FUNCTION ──
+// Converts compact char string arrays into CS.grid format (14×12)
+function decodeMap(rows) {
+  const CHAR_MAP = {
+    '.': 'empty',  '1': 'floor1', '2': 'floor2', '3': 'floor3',
+    'W': 'wall',   'F': 'forest', 'R': 'rubble',  'r': 'roof',
+    'T': 'roof3',  'S': 'shadow', '~': 'water',   'G': 'gate',
+    'E': 'exit',   'f': 'forest', 'C': 'cliff',   's': 'stone',
+  };
+  const grid = [];
+  for (let y = 0; y < CS.gridH; y++) {
+    grid.push([]);
+    const row = rows[y] || '';
+    for (let x = 0; x < CS.gridW; x++) {
+      const ch = row[x] || '.';
+      grid[y].push(CHAR_MAP[ch] || 'empty');
+    }
+  }
+  return grid;
+}
+
+// ── TILE HEIGHT HELPER ──
+function getTileHeight(x, y) {
+  const key = CS.grid[y]?.[x] || 'empty';
+  return (TERRAIN_TILES[key] || TERRAIN_TILES.empty).height || 0;
+}
+
+// ── TILE LIGHT HELPER ──
+function getTileLight(x, y) {
+  const key = CS.grid[y]?.[x] || 'empty';
+  return (TERRAIN_TILES[key] || TERRAIN_TILES.empty).light ?? 1.0;
+}
+
+// ── UNIT JUMP STAT ──
+function getUnitJump(unit) {
+  if (!unit) return 1;
+  const cls = CLASSES[unit.class];
+  const baseJump = (cls?.jumpStat) || 1;
+  // Ninja classes jump higher
+  const jumpBonus = ['shinobi','shadow','kunoichi'].includes(unit.class) ? 1 : 0;
+  // Check ninja mobility abilities
+  const ninjaBonus = hasNinjaMobility(unit, 'high_jump') ? 2 :
+                     hasNinjaMobility(unit, 'roof_jump') ? 1 : 0;
+  return baseJump + jumpBonus + ninjaBonus;
+}
+
+// ── HEIGHT ADVANTAGE COMBAT MODIFIER ──
+function getHeightAdvantage(attackerX, attackerY, defenderX, defenderY) {
+  const aH = getTileHeight(attackerX, attackerY);
+  const dH = getTileHeight(defenderX, defenderY);
+  const diff = aH - dH;
+  if (diff >= 3) return { dmgMult: 1.35, accBonus: 0.15, label: '⛰ High Ground (+35% dmg)' };
+  if (diff >= 2) return { dmgMult: 1.25, accBonus: 0.10, label: '▲ High Ground (+25% dmg)' };
+  if (diff >= 1) return { dmgMult: 1.12, accBonus: 0.05, label: '↑ Elevated (+12% dmg)' };
+  if (diff <= -2) return { dmgMult: 0.85, accBonus: -0.10, label: '↓ Low Ground (-15% dmg)' };
+  if (diff <= -1) return { dmgMult: 0.92, accBonus: -0.05, label: '↓ Low Ground (-8% dmg)' };
+  return { dmgMult: 1.0, accBonus: 0, label: '' };
+}
+
+// ── TERRAIN EFFECT ON COMBAT ──
+function getTerrainCombatEffect(x, y) {
+  const key = CS.grid[y]?.[x] || 'empty';
+  const effects = {
+    forest: { defBonus: 0.85, label: '🌲 Forest Cover (-15% dmg taken)' },
+    roof:   { atkBonus: 1.10, accBonus: 0.10, label: '▭ Roof (+10% atk, +10% acc)' },
+    roof3:  { atkBonus: 1.15, accBonus: 0.15, label: '▬ High Roof (+15% atk)' },
+    shadow: { stealthBonus: true, label: '░ Shadow (stealth bonus)' },
+    stone:  { defBonus: 0.92, label: 's Stone footing (stable)' },
+    rubble: { movePenalty: true, label: '∷ Rubble (unstable footing)' },
+    water:  { movePenalty: true, noisePenalty: true, label: '≈ Shallow Water (slow+noisy)' },
+  };
+  return effects[key] || {};
+}
+
+// ==========================================
+// ===== STEALTH SYSTEM =====
+// ==========================================
+
+const STEALTH = {
+  // Detection radius: how far enemies can see in different light conditions
+  baseDetectRadius: 5,
+  nightDetectRadius: 3,
+  isNightMission: false,
+
+  // Check if a unit is in stealth (hidden)
+  isHidden(unit) {
+    return !!(unit.stealthed || unit.invisible);
+  },
+
+  // Calculate noise generated by moving to a tile
+  getMovementNoise(x, y, unit) {
+    const tile = TERRAIN_TILES[CS.grid[y]?.[x] || 'empty'];
+    let noise = tile.noise || 0;
+    // Ninja classes move silently on certain tiles
+    const cls = unit?.class;
+    if (['shinobi','shadow','kunoichi'].includes(cls)) noise = Math.max(0, noise - 1);
+    // Silent landing ability
+    if (hasNinjaMobility(unit, 'silent_landing')) noise = 0;
+    return noise;
+  },
+
+  // Calculate enemy detection chance against a unit
+  detectionChance(enemy, target) {
+    if (!enemy || !target || target.hp <= 0) return 0;
+    const dist = Math.abs(enemy.x - target.x) + Math.abs(enemy.y - target.y);
+    const detectRadius = this.isNightMission ? this.nightDetectRadius : this.baseDetectRadius;
+    if (dist > detectRadius) return 0;
+    if (!hasLineOfSight(enemy.x, enemy.y, target.x, target.y)) return 0;
+
+    let chance = 1.0;
+    // Distance falloff
+    chance *= (1 - (dist / (detectRadius + 1)) * 0.5);
+    // Target's tile light level reduces detection in dark areas
+    const lightLevel = getTileLight(target.x, target.y);
+    chance *= lightLevel;
+    // Target's cover
+    const cover = (TERRAIN_TILES[CS.grid[target.y]?.[target.x] || 'empty'].cover || 0);
+    chance *= Math.max(0.1, 1 - cover * 0.12);
+    // Stealth tier bonus
+    const stealthRep = (GS.reputation?.stealth || 0);
+    if (stealthRep >= 50) chance *= 0.6;
+    else if (stealthRep >= 20) chance *= 0.8;
+    // Night mission bonus
+    if (this.isNightMission) chance *= 0.6;
+    return Math.max(0, Math.min(1, chance));
+  },
+
+  // Process stealth checks for all enemies against all allies
+  processStealthChecks() {
+    CS.enemies.filter(e => e.hp > 0).forEach(enemy => {
+      CS.allies.filter(a => a.hp > 0 && !a.escaped).forEach(ally => {
+        if (ally.invisible) return; // cannot be detected while invisible
+        const chance = this.detectionChance(enemy, ally);
+        if (Math.random() < chance * 0.15) { // Only 15% of the check chance triggers
+          if (!CS.missionStats?.alliesAlerted) {
+            gainRep('ENEMY_ALERTED');
+          }
+          if (CS.missionStats) CS.missionStats.alliesAlerted = true;
+        }
+      });
+    });
+  },
+
+  // Apply first-strike stealth bonus
+  getStealthFirstStrikeBonus(attacker, defender) {
+    const tile = CS.grid[attacker.y]?.[attacker.x] || 'empty';
+    const lightLevel = getTileLight(attacker.x, attacker.y);
+    const inShadow = lightLevel < 0.3;
+    const isNinja = ['shinobi','shadow','kunoichi'].includes(attacker.class);
+    if (!CS.missionStats?.alliesAlerted && isNinja) {
+      if (inShadow) return { mult: 1.5, label: '🌑 Shadow Strike (+50% dmg)' };
+      return { mult: 1.25, label: '⚡ Stealth Strike (+25% dmg)' };
+    }
+    return { mult: 1.0, label: '' };
+  }
+};
+
+// ==========================================
+// ===== NINJA MOBILITY SYSTEM =====
+// ==========================================
+
+// Track ninja-specific mobility abilities
+const NINJA_MOBILITY = {
+  roof_jump:      { name: 'Roof Jump',      desc: 'Leap to rooftops from adjacent ground.', classes: ['shinobi','shadow'] },
+  wall_traversal: { name: 'Wall Traversal', desc: 'Reduce movement cost on walls/cliffs.', classes: ['shinobi','kunoichi','shadow'] },
+  high_jump:      { name: 'High Jump',      desc: '+2 jump height stat.', classes: ['shinobi','shadow','kunoichi'] },
+  silent_landing: { name: 'Silent Landing', desc: 'No noise penalty on any terrain.', classes: ['shinobi','shadow'] },
+  shadow_step:    { name: 'Shadow Step',    desc: 'Teleport to any shadow tile in range.', classes: ['shadow'] },
+};
+
+function hasNinjaMobility(unit, ability) {
+  if (!unit) return false;
+  const mob = NINJA_MOBILITY[ability];
+  if (!mob) return false;
+  if (!mob.classes.includes(unit.class)) return false;
+  // Unlocked at certain levels / via training
+  if (unit.level >= 3 && ability === 'roof_jump') return true;
+  if (unit.level >= 4 && ability === 'wall_traversal') return true;
+  if (unit.level >= 3 && ability === 'silent_landing') return true;
+  if (unit.level >= 5 && ability === 'high_jump') return true;
+  if (unit.level >= 5 && ability === 'shadow_step') return true;
+  return false;
+}
+
+// Execute shadow step — teleport to nearest shadow tile in range
+function executeShadowStep(ally) {
+  if (!hasNinjaMobility(ally, 'shadow_step')) {
+    toast('Shadow Step requires Shadow class at Level 5.', 'error'); return;
+  }
+  if (CS.unitMoved) { toast('Already moved this turn.', 'error'); return; }
+  const range = getEffectiveMoveRange(ally) + 2;
+  const shadowTiles = [];
+  for (let dy = -range; dy <= range; dy++) {
+    for (let dx = -range; dx <= range; dx++) {
+      if (Math.abs(dx)+Math.abs(dy) > range) continue;
+      const tx = ally.x+dx, ty = ally.y+dy;
+      if (!isPosEmpty(tx, ty, ally.gridId)) continue;
+      const lightLevel = getTileLight(tx, ty);
+      if (lightLevel < 0.3) shadowTiles.push({ x: tx, y: ty, color: 'rgba(100,50,200,0.35)' });
+    }
+  }
+  if (!shadowTiles.length) { toast('No shadow tiles in range.', 'error'); return; }
+  CS.savedMove = { x: ally.x, y: ally.y, facing: ally.facing };
+  CS.highlightedTiles = shadowTiles;
+  CS.selectedAction = 'shadow_step';
+  document.getElementById('actionLabel').textContent = '🌑 Shadow Step — click a shadow tile';
+  renderCombat();
+}
+
+// ==========================================
+// ===== ENHANCED DAMAGE CALCULATION =====
+// ==========================================
+
+// Patch calcDamage to include height advantage and terrain effects
+const _origCalcDamage = window.calcDamage || null;
+function calcDamage(attacker, defender) {
+  const cls = CLASSES[attacker.class];
+  let base = 0;
+  if (attacker.weapon && weaponUsable(attacker)) {
+    const w = attacker.weapon;
+    base = w.dmg[0] + Math.floor(Math.random() * (w.dmg[1] - w.dmg[0] + 1));
+    // Proficiency modifier
+    const profKey = w.type;
+    const profVal = attacker.proficiency?.[profKey] || 3;
+    const profMult = 1 + (profVal - 3) * 0.05;
+    base = Math.round(base * profMult);
+  } else {
+    base = 4 + Math.floor(Math.random() * 4);
+  }
+
+  // Support ability bonus
+  const suppMult = getSupportDmgBonus(attacker);
+  base = Math.round(base * suppMult);
+
+  // Reputation combat modifier
+  const repMods = getRepCombatMods(attacker);
+  base = Math.round(base * repMods.dmgMult);
+
+  // CLASS: Berserker — gains power when damaged
+  if (attacker.class === 'berserker') {
+    const hpLost = attacker.maxHp - attacker.hp;
+    const berserkBonus = 1 + (Math.floor(hpLost / 10) * 0.05);
+    base = Math.round(base * berserkBonus);
+  }
+
+  // ── HEIGHT ADVANTAGE ──
+  const heightMod = defender ? getHeightAdvantage(attacker.x, attacker.y, defender.x, defender.y) : { dmgMult: 1.0, label: '' };
+  if (heightMod.dmgMult !== 1.0) {
+    base = Math.round(base * heightMod.dmgMult);
+    if (heightMod.label) addLog(heightMod.label, 'special');
+  }
+
+  // ── TERRAIN EFFECT ON ATTACK ──
+  const terrainAtk = getTerrainCombatEffect(attacker.x, attacker.y);
+  if (terrainAtk.atkBonus) {
+    base = Math.round(base * terrainAtk.atkBonus);
+    if (terrainAtk.label) addLog(terrainAtk.label, 'special');
+  }
+
+  // ── STEALTH FIRST-STRIKE BONUS ──
+  const stealthBonus = STEALTH.getStealthFirstStrikeBonus(attacker, defender);
+  if (stealthBonus.mult > 1.0) {
+    base = Math.round(base * stealthBonus.mult);
+    if (stealthBonus.label) addLog(stealthBonus.label, 'special');
+  }
+
+  // ── POSITIONAL: TERRAIN DEFENSE ──
+  if (defender) {
+    const terrainDef = getTerrainCombatEffect(defender.x, defender.y);
+    if (terrainDef.defBonus) {
+      base = Math.round(base * terrainDef.defBonus);
+    }
+  }
+
+  return Math.max(1, base);
+}
+
+// ==========================================
+// ===== HEIGHT RENDERING OVERLAY =====
+// ==========================================
+
+// Patch drawCanvas to add height indicators and stealth overlays
+// Height/stealth overlay — called from main drawCanvas via _drawHeightOverlay()
+function _drawHeightOverlay() {
+  const canvas = document.getElementById('combatCanvas');
+  const cs = CS.cellSize;
+  const ctx = canvas.getContext('2d');
+
+  // ── Height elevation indicators — batched for performance ──
+  // Set shared font state once before the loop
+  const showHeightNum = cs >= 40;
+  if (showHeightNum) {
+    ctx.font = 'bold ' + Math.round(cs * 0.18) + 'px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+  }
+  const now = Date.now();
+  for (let y = 0; y < CS.gridH; y++) {
+    for (let x = 0; x < CS.gridW; x++) {
+      const key = CS.grid[y]?.[x] || 'empty';
+      const tileData = TERRAIN_TILES[key];
+      if (!tileData?.passable) continue;
+      const h = tileData.height || 0;
+      const px = x * cs, py = y * cs;
+
+      // Color overlay for elevated tiles
+      if (h >= 3) {
+        ctx.fillStyle = 'rgba(80,60,20,0.18)';
+        ctx.fillRect(px, py, cs, cs);
+        ctx.fillStyle = 'rgba(200,160,60,0.45)';
+        ctx.fillRect(px, py, cs, 2);
+        ctx.fillRect(px, py, 2, cs);
+      } else if (h === 2) {
+        ctx.fillStyle = 'rgba(60,50,20,0.12)';
+        ctx.fillRect(px, py, cs, cs);
+        ctx.fillStyle = 'rgba(180,140,50,0.3)';
+        ctx.fillRect(px, py, cs, 2);
+      } else if (h === 1) {
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        ctx.fillRect(px, py, cs, cs);
+        ctx.fillStyle = 'rgba(200,200,200,0.15)';
+        ctx.fillRect(px, py, cs, 1);
+      }
+
+      // Height number (font already set above)
+      if (h > 0 && showHeightNum) {
+        ctx.fillStyle = h >= 3 ? 'rgba(255,220,100,0.55)' : h === 2 ? 'rgba(255,220,100,0.45)' : 'rgba(255,220,100,0.35)';
+        ctx.fillText(h, px + 2, py + 2);
+      }
+
+      // Shadow fog overlay
+      const lightLevel = tileData.light ?? 1.0;
+      if (lightLevel < 0.5) {
+        ctx.fillStyle = 'rgba(0,0,10,' + ((1 - lightLevel) * 0.55).toFixed(2) + ')';
+        ctx.fillRect(px, py, cs, cs);
+      }
+
+      // Water ripple (throttled — only animate every 2nd frame equivalent)
+      if (key === 'water') {
+        const wave = 0.4 + 0.2 * Math.sin(now / 500 + x + y);
+        ctx.fillStyle = 'rgba(40,100,180,' + (wave * 0.25).toFixed(2) + ')';
+        ctx.fillRect(px, py, cs, cs);
+      }
+    }
+  }
+
+  // ── Detection radius preview (when viewing enemy ranges) ──
+  if (CS.selectedEnemy && CS.tacticsEngineEnabled) {
+    const e = CS.enemies.find(en => en.id === CS.selectedEnemy);
+    if (e) {
+      const detectR = STEALTH.isNightMission ? STEALTH.nightDetectRadius : STEALTH.baseDetectRadius;
+      for (let dy = -detectR; dy <= detectR; dy++) {
+        for (let dx = -detectR; dx <= detectR; dx++) {
+          if (Math.abs(dx)+Math.abs(dy) > detectR) continue;
+          const tx = e.x+dx, ty = e.y+dy;
+          if (tx<0||ty<0||tx>=CS.gridW||ty>=CS.gridH) continue;
+          ctx.fillStyle = 'rgba(255,200,50,0.06)';
+          ctx.fillRect(tx*cs, ty*cs, cs, cs);
+        }
+      }
+    }
+  }
+}
+
+// ==========================================
+// ===== MAP LIBRARY — 120 TACTICAL MAPS =====
+// ==========================================
+// Format: Array of 12 strings, each 14 chars wide
+// Key: . empty  1 floor1  2 floor2  3 floor3  W wall
+//      F forest  R rubble  r roof(h2)  T roof(h3)  S shadow
+//      ~ water   G gate    E exit      C cliff     s stone
+
+const MAP_LIBRARY = {
+  village: [
+    ['WWWWWWWWWWWWWW','W....W.....r.W','E....G.....r.W','W....WWWWWWWWW','W............W','W............W','EGGWWWWWWWWWGW','W....W.....r.W','W....W.....r.W','E....W.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','Wr..W......W.W','Er..G......W.W','WWWWG.WGWW.W.W','W....W....WW.W','W....W....WW.W','E....WWWWWWW.W','W....W.......W','Wr..rG......rW','Er..rW......rW','W....W......rW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...W...W....W','E...G...G....W','WWWGG...GWWWWW','S...W...W....S','S...W...W....S','E...WWWWWW...W','W...W....W...W','W...G....G...W','EWW.W....W.WWW','W...W....W...W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.rr.......rr.','E.rr.R.R...rr.','W.WWWGWWWWWWWW','W...........RW','W...R.R.R....W','EGGW.WWWWWW..W','W.rr.......rrW','W.rr.......rrW','E.WWWWWW...WWW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','EWWWWWWW.WWWWW','W.....W..W...W','W.....G..G...W','WGGWWWW..WWWWW','E........W...W','W........G...W','WWWWWWW..WWWWW','E..G.....W...W','W..W.........W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','Wrrr.WrrrW...W','Errr.WrrrG...W','W....G...WWWWW','W....W...W...W','W....WWWGG...W','EGGWWW...G...W','W....G...GWWWW','Wrrr.G...GrrrW','Errr.W...WrrrW','W....W...W...W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.rW.......WrW','E.rG.......GrW','W..WWW.WWWWWWW','W.........R..W','W.........R..W','EGG.WWWWWW...W','W.........R..W','W.rW.......WrW','E.rWWWWWWGWrGW','W.rW.......WrW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WWWW....W','E....W..W....W','W....G..G....W','W...rW..Wr...W','W...rW..Wr...W','EGGWWW..WWWWWW','W....W..W....W','W....G..G....W','E....W..W....W','W....WWWW....W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.............','E.R.R.R.R.R..W','WWWWW.WWWWWWWW','S...........SW','S.....WW.....S','E...........SW','WGGWWW.WWWWWWW','W.R.R.R.R.R..W','E.............','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.SS.W.SS.W..W','E.SS.G.SS.G..W','WWWWWG.WWWWWWW','W....W...W...W','W....G...G...W','EGGWWW...WWWWW','W.SS.W...W.SSW','W.SS.G...G.SSW','E.....WWW....W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...W......W.W','E...WrrrW..G.W','WWW.GrrrG..W.W','W...W....WWWWW','W...W........W','E...WWWWWWWWWW','W...........rW','WWW.WWWWWW..rW','E...W....W...W','W...G....G...W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W....W..W','E....G....G..W','W....W....W..W','WW.WWWWWWWWWWW','W.............','E.............','WGGWWWWWWWW.WW','W...W.....W..W','E...G.....G..W','W...W.....W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WrrW.......Wrr','ErrG.......Grr','GWWWW.WWW.WGWW','G....W...W...W','G....G...G...W','EGGWWWWWWWWWWW','W....W...W...W','WrrW.G...G.rrW','ErrW.WWWWW.rrW','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.........W..W','E.........G..W','WWWWW.WWWGWWWW','W....W.......W','W....G.......W','EGGWWW.WWWWWWW','W~~~~.........','W~~~~.........','E~~~~.........','W.....W......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W22W.......W22','E22G.......G22','W22WWWWWWWWW22','W....W...W...W','W....G...G...W','EGGWWW...WWWWW','W....W...W...W','W22W.....W.22W','E.2G.....G.22W','W..W.....W...W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WS...W....W..W','ES...G....G..W','WS...WWWWWWWWW','WS...W.....S.W','WS...G.....S.W','EGGWWG.....S.W','W....W.....S.W','WS...W....W..W','ES...G....G..W','W....W....W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...WWW...WWWW','E...W2G...W2..','W...G2W...G2..','W...W2WWWWW2..','W...W2....W2..','E...W2....W2..','W...WWWWWWWWWW','W............W','E...R.R.R....W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','W....WWWWWWWWW','W....W.......W','W....G.......W','EGGWWG.......W','W.....WWWWWWWW','W....2.......W','E....2.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...CCC....W.W','E...CCC....G.W','WGWWWWWWWGWWWW','W...........SW','W...........SW','E..WWWWWWWWWWW','W...........SW','W3333......W.W','E.333......G.W','W....W.....W.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.W.W.W.W.W..W','E.G.G.G.G.G..W','W...........rW','W.W.W.W.W.W.rW','W.G.G.G.G.G..W','E...........rW','W.G.W.W.W.W.rW','W.G.G.G.G.G..W','E............W','W...R........W','WWWWWWWWWWWWWW'],
+  ],
+  fortress_gate: [
+    ['WWWWWWWWWWWWWW','W333W......W3W','E3..W......G.W','W3..G......W.W','W3..W......W.W','WGGWWW....WWWW','E.....GGGG....','W.............','W.R.R.....R.R.','EWWWWWWWWGWWWW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3333W....W333','E3333G....G333','W3333WWWWWWW33','W.....W....W.W','W.....G....G.W','EGGWWWWGGGWWWW','W...........R.','W.R.........R.','E.............','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W2222W....W222','E2222G....G222','WWWWWWG.GWWWWW','W.............','W.R.........R.','EGGWWWG.GWWWWW','W3333W....W333','W3333G....G333','EWWWWWWWWGWWWW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..WWW....WWW.','E..WWW....WWW.','W..G.......G.W','W..W.......W.W','W..WWGGG.GGWWW','E.............','WGGWWGGG.GWWWW','W..W.......G.W','E..WWW....WWW.','W..WWW....WWW.','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333W......W33','E333G......G33','WWWWW......WWW','W.............','R.R.R.....R.R.','E.............','WGGWW......WWW','W333G......G33','E.33W......W33','W....W....W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.............','E...WWWWWWWWWW','W3..W........W','W3..GG......GW','G...W........W','E...WWWWWWWWWW','G.............','W3..WWWWWGWWWW','E...W..RR..R.W','W3..W........W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..W.......G.W','E..WRRRR.RRRWW','WGWWW...R..WWW','W..R.......R.W','W.............','E.R.R.....R.R.','WGGWWWWWWGWWWW','W3333G....G333','E.333W....W333','W....W....W...','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333WWWWWWWW33','E3..W......W..','W3..WGGGGGGW..','W3..W......G..','WGGWW......WWW','E.............','W.............','WWWWGWWWWWWWWW','E333G......G33','W333W......W33','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','GGC3W......W3C','EGC3G......G3C','WWWWWWGGGWWWWW','W.............','W.R.R.....R.R.','E.............','WGGWWWGGGWWWWW','WCC3G......G3C','E.C3W......W3C','W....W......WW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333GSSSSSG333','E3..WS...SW...','W3..WS...SW...','WWWWWS...SWWWW','WS...S...S...W','ES...S...S...W','WGGWWS...SWWWW','W3..WS...SW...','E333WS...SG333','W....G...W...W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3.W.......W.W','E3.G.......G.W','WWWWWWWWWGWWWW','W.R...........','W.R...........','E.............','WGGWWWWWWGWWWW','W3.G.......G.W','E3.W.......W.W','W...W.....W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W2222.....2222','E2222.....2222','W2222.....2222','WWWWW.....WWWW','W.............','E.R...........','WGGWWWWWWGWWWW','W3.G.......G.W','E3.W.......W.W','W...W.....W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3...W.....W.W','E3...G.....G.W','WWWWWW.....WWW','W....W.....W.W','W....G.....G.W','EGGWWW.....WWW','W....W.....W.W','W3...G.....G.W','E3...WWWWGWWGW','W3...W.....W.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.R........R.W','E.R........R.W','WWWWWWWWWGWWWW','W.............','W.............','EGGWWG.GGWWWWW','W.............','W3333G....G333','E.333W....W333','W....W....W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3.W.......W3W','E3.G.......G3W','W3.W.......W3W','W3.W.......W3W','WGG.GWWWWWWWWW','E.............','WGGWWWWWWWW.WW','W3.G.......G3W','E3.W.......W3W','W3.WWWWWWWWG3W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..W........Ws','E..G........Gs','GWWWWWWWWGWWWW','Gs...........s','Gs...R.R.R...s','EGGWWWWWWWWWWW','W..G........G.','W..W........W.','E..WWWWWWWWWWW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3333W....W333','E3333G....G333','WWWWWG....GWWW','W.............','W.............','EGGWWG....GWWW','W.R.R.....R.R.','W3333G....G333','E.333W....W333','W....W....W...','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSW.....GSSW','ESSSW.....WSSW','WGWWWG...GWWWW','W.............','W.R...........','E.............','WGGWWG...GWWWW','WSSSW.....WSSW','ESSSW.....WSSW','W....G.....G.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333W.....W333','E3..W.....W..3','WGWWWWGWWWWGWW','W.R.R.R.R.R..W','W.R.R.R.R.R..W','E.............','WGGWWWWWWGWWWW','W3..G.....G..3','E.33W.....W333','W....W....W...','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3.G.......G3W','E3.W.R.R.R.W3W','WWWWWWWWWGWWWW','W.............','W.............','E.............','WGGWWWWWWGWWWW','W3.W.R.R.R.W3W','E3.G.......G3W','W3.W.......W3W','WWWWWWWWWWWWWW'],
+  ],
+  temple_rooftop: [
+    ['WWWWWWWWWWWWWW','W............W','E.1111111111.W','W.1222222221.W','W.1233333321.W','W.1233333321.W','E.1233333321.W','W.1233333321.W','W.1222222221.W','E.1111111111.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33WW..WW333W','E...WW..WW..3W','W3..WW..WW..3W','W3..22..22..3W','G...22..22..3W','E...22..22..3W','G...22..22..3W','W3..WW..WW..3W','E.33WW..WW333W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W1111111111..W','E1222222221..W','W1232222321..W','W1233W33321..W','W1233G33321..W','E1232222321..W','W1222222221..W','W1111111111..W','E............W','W.....R......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E..........3.W','W3.........3.W','W3.1111111.3.W','G..1......1.3W','E..1......1.3W','G..1111111.3.W','W3.........3.W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.33..33..33.W','W.33..33..33.W','W............W','W.22..22..22.W','E.22..22..22.W','W............W','W.33..33..33.W','E.33..33..33.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W1111.....W..W','E1221.....W..W','W1221.....W..W','W1111.....W..W','W.........W..W','E.........G..W','W........3G..W','W........3W..W','E........3W..W','W........3W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.11111111...W','W.12222221...W','W.12333321...W','W.123..321...W','E.123..321...W','W.12333321...W','W.12222221...W','E.11111111...W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.3WW......WW3','E..WW......WW.','W3.WW......WW.','W3.22......22.','G..22......22.','E..22......22.','G..22......22.','W3.WW......WW.','E.3WW......WW3','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E............W','W3...........W','W3...........W','G............W','E............W','G............W','W3...........W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.22222222222W','E.....2222..2W','W2....2.....2W','W2....2.....2W','G.....2.....2W','E.....2.....2W','G.....2222..2W','W2..........2W','E.22222222222W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.1111..1111.W','W.1221..1221.W','W.1221..1221.W','W.1111..1111.W','E............W','W.1111..1111.W','W.1221..1221.W','E.1221..1221.W','W.1111..1111.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.3333........','E..........33.','W3.11111111.3.','W3.12......1.3','G..12......1.3','E..12......1.3','G..12......1.3','W3.11111111.3.','E..........3.3','W33333........','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W111111111111W','E1..........1W','W1..WWWWWW..1W','W1..W3333G..1W','W1..G3333W..1W','E1..W3333W..1W','W1..WWWWWW..1W','W1..........1W','E111111111111W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33W.....W333','E...W.....W..3','W3..22222222..','W3..22222222..','G...22....22..','E...22....22..','G...22222222..','W3..22222222..','E.33W.....W333','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.33.......33W','W.32.......23W','W.32.......23W','W.3333...3333W','E.............','W.3333...3333W','W.32.......23W','E.33.......33W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W33...........','E33...22222...','W33...22222...','W.....22.22...','W.....22.22...','E.....22222...','W.....22222...','W.....33333...','E.....33333...','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.1..1..1..1.W','W.1..1..1..1.W','W.1..1..1..1.W','W.1222222221.W','E.123......1.W','W.123......1.W','W.122222..21.W','E.1111111111.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E..1.......1.W','W3.1.......1.W','W3.1.......1.W','G..1.......1.W','E..1.......1.W','G..1.......1.W','W3.1.......1.W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.....333....W','W.1...333....W','W.1...333....W','W.1...33.....W','E.1...33.....W','W.11111111...W','W.12222221...W','E.11111111...W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.22222222222W','E...........2W','W2..333333..2W','W2..333333..2W','G...3....3..2W','E...3....3..2W','G...333333..2W','W2..333333..2W','E...........2W','W222222222222W','WWWWWWWWWWWWWW'],
+  ],
+  forest_ambush: [
+    ['WWWWWWWWWWWWWW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WFFF.FFF.FFFFW','WFFF.FFF.FFFFW','EFFF.FFF.FFFFW','W............W','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFFFFFFFFFFF.','EFFFFFFFFFFFF.','W............W','W...FF...FF..W','W...FF...FF..W','E...FF...FF..W','W............W','WFFFFFFFFFFFF.','EFFFFFFFFFFFF.','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFF.....FFFFF','EFFF.....FFFFF','W............W','W....~~~.....W','W....~~~.....W','E....~~~.....W','W............W','WFFF.~~~~.FFFF','EFFF.~~~~.FFFF','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFFFF.FFFFFFF','EFFFFF.FFFFFFF','W............W','W......FFFFFFF','W......FFFFFFF','E......FFFFFFF','W............W','WFFFFF.FFFFFFF','EFFFFF.FFFFFFF','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFFFFFFFFFFF.','EFFFFFFFFFFFF.','W............W','WF....RRRR...F','WF....RRRR...F','EF....RRRR...F','W............W','WFFFFFFFFFFFF.','EFFFFFFFFFFFF.','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSFSFSFSFSFSFW','ESFSFSFSFSFSFW','W............W','W..SFS.SFS...W','W..SFS.SFS...W','E..SFS.SFS...W','W............W','WSFSFSFSFSFSFW','ESFSFSFSFSFSFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFFFFFFFFFFFF','EFFFFFFFFFFFFF','W............W','W.F.........FW','W.F.........FW','E.F.........FW','W............W','WFFFFFFFFFFFFF','EFFFFFFFFFFFFF','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','Wf...f...f...W','Ef...f...f...W','W............W','WF...F...F...W','WF...F...F...W','EF...F...F...W','W............W','Wf...f...f...W','Ef...f...f...W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFFCCCCCCFFFW','EFFFCCCCCCFFFW','W............W','W...C......C.W','W...C......C.W','E...C......C.W','W............W','WFFFCCCCCCFFFW','EFFFCCCCCCFFFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSS.FFF.SSSSW','ESSS.FFF.SSSSW','W............W','W..........S.W','W..........S.W','E..........S.W','W............W','WSSS.FFF.SSSSW','ESSS.FFF.SSSSW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WF.F.F.F.F.F.W','EF.F.F.F.F.F.W','W............W','W............W','W............W','E............W','W............W','WF.F.F.F.F.F.W','EF.F.F.F.F.F.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFFF........F','EFFFF........F','W............W','W....FFFFF...F','W....FFFFF...F','E....FFFFF...F','W............W','WFFFF........F','EFFFF........F','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.F.F.F.F.F..W','E.F.F.F.F.F..W','W............W','WFF.FFF.FFF.FW','WFF.FFF.FFF.FW','EFF.FFF.FFF.FW','W............W','W.F.F.F.F.F..W','E.F.F.F.F.F..W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.SFSFSFSFSF.W','E.SFSFSFSFSF.W','W............W','WFSFSFSFSFSFFW','WFSFSFSFSFSFFW','EFSFSFSFSFSFFW','W............W','W.SFSFSFSFSF.W','E.SFSFSFSFSF.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFFFFFF.FFFFF','EFFFFFFF.FFFFF','W............W','W.............','W.............','E.............','W............W','WFFFFFFF.FFFFF','EFFFFFFF.FFFFF','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W~~~~~~~~~~~~W','E~~~~~~~~~~~~W','W............W','W.FF...FF....W','W.FF...FF....W','E.FF...FF....W','W............W','W~~~~~~~~~~~~W','E~~~~~~~~~~~~W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FF.FFF.FF.FW','E.FF.FFF.FF.FW','W............W','WWWWW...WWWWWW','WGGWW...WWWWWW','EGGWW...WWWWWW','W............W','W.FF.FFF.FF.FW','E.FF.FFF.FF.FW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FF.......FF.','E.FF.......FF.','W............W','WfFF.......FFf','WfFF.......FFf','EfFF.......FFf','W............W','W.FF.......FF.','E.FF.......FF.','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.SS.FFF.SS..W','E.SS.FFF.SS..W','W............W','WSSS.FSSS.SSSS','WSSS.FSSS.SSSS','ESSS.FSSS.SSSS','W............W','W.SS.FFF.SS..W','E.SS.FFF.SS..W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFFFF.FFFFFF.','EFFFFF.FFFFFF.','W............W','W.....R.R....W','W.....R.R....W','E.....R.R....W','W............W','WFFFFF.FFFFFF.','EFFFFF.FFFFFF.','W............W','WWWWWWWWWWWWWW'],
+  ],
+  castle_siege: [
+    ['WWWWWWWWWWWWWW','W333W......W33','E3..W......W..','W3..W......W..','GGGGGWWWWGWWGW','G.............','E.R.R...R.R...','GGGWWWWWWWWWWW','W3..G......G..','E3..W......W..','W333W......W33','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W2222222222222','E2.1111111111W','W2.1.........W','W2.1.........W','W2.1.........W','E2.1.........W','W2.1.........W','W2.1111111111W','E.222222222222','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.WWWWWWWWWWWW','W...........3W','W...........3W','W.....2.....3W','E.....2.....3W','W...........3W','W...........3W','E.WWWWWWWWWWWW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...RRRRRRRR.W','E...R......R.W','WWWWR......RWW','W...R......R.W','W...R......R.W','EGGWR......RWW','W...R......R.W','W...R......R.W','EWWWRRRRRRRRRW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33.......333','E..W.......W3W','W3.W.......W3W','W3.WWWWWWWWW3W','G..G.......G3W','E..G.......W3W','G..GWWWWWWWW3W','W3.W.......W3W','E.33.......333','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E..WWWG..WWWWW','W3.W..........','W3.W..........','G..GWW...WWW.W','E....W...W...W','G....WWWWW...W','W3...W.......W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.RR.RR.RR.R.W','E............W','W.RR.RR.RR.R.W','GWWWGWWWWWWWWW','G333.......333','E333.......333','GGGWWWWWWWWWWW','W.RR.RR.RR.R.W','E............W','W.RR.RR.RR.R.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.WWWWWWWWWWWW','E.G..........W','W.W.WWWWWWWWWW','W.W.W........W','W.G.W.WWWWWWWW','E.G.W.W......W','W.G.W.WWWGWWWG','W.W.W........G','E.W.WWWWWWWWGG','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W~~~~~~~~~~~~W','E~3333333333~W','W~3..........W','W~3..........W','W~3..........W','E~3..........W','W~3..........W','W~3333333333~W','E~~~~~~~~~~~~W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSS.....S333S','ESSS.....S333S','W....SSSSS....','W....SSSSS....','WSSSS.....SSSS','ESSSS.....SSSS','W....SSSSS....','WSSS.....S333S','ESSS.....S333S','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...W......W3W','E...G......G3W','W3..WWWWWWWW3W','W3..W......W3W','G...G......G3W','E...W......W3W','G...WWWWWWWW3W','W3..G......G3W','E...W......W3W','W3..W......W3W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.222222222222','E............2','W2.111111111.2','W2.1.......1.2','G..1.......1.2','E..1.......1.2','G..111111111.2','W2...........2','E.222222222222','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33W.....W333','E...G.....G..3','W3..WWWWWWWW.3','W3...........3','G............3','E............3','G............3','W3..WWWWWWWW.3','E...G.....G..3','W333W.....W333','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','EWWWWWWWWWWGWW','W.R.R.R.R.R.WW','W.R.R.R.R.R.WW','W............W','E............W','W.R.R.R.R.R.WW','WWWWGWWWWWWWWW','E............W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3W3W3W3W3W3WW','E.W.W.W.W.W.WW','W............W','W.W.W.W.W.W.WW','W3G3W3W3W3W3WW','E............W','W3G3W3W3W3W3WW','W.W.W.W.W.W.WW','E............W','W...W.W.W.W.WW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.3.3.3.3.3..W','E.............','W.3.3.3.3.3..W','W.............','W3.3.3.3.3.3.W','E.............','W.3.3.3.3.3..W','W.............','E3.3.3.3.3.3.W','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..W.......G.W','E..WWWWWWWGGWW','W..W.......W.W','W..G.......G.W','WGGG.......GWW','E..G.......G.W','W..W.......W.W','W..WWWWWWWWWGW','E..W.......W.W','W..G.......W.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333.......333','E3.........3..','WWWWWWWWWGWWWW','W..R.R.R.R.R.W','W.............','E.............','WGGWWWWWWGWWWW','W3.........3..','E333.......333','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..W.R.R.W...W','EGWG.....GWGWW','W.R.......R..W','W.R.......R..W','WGGG.....GWWWW','E..W.R.R.W...W','W..W.R.R.W...W','WWWG.....GWGWW','E.R.......R..W','W.R.......R..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..W.......W3W','E..G.......G3W','W3.WWWWWWWWW3W','W3.W.......W3W','G..G.......G3W','E..G.......W3W','G..GWWWWWWWW3W','W3.G.......G3W','E..W.......W3W','W3.W.......W3W','WWWWWWWWWWWWWW'],
+  ],
+  night_ambush: [
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS...........S','WS...........S','WS...........S','ES...........S','WS...........S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','W.............','W.............','E.............','W.............','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSFSFSFSFSFSFS','ESFSFSFSFSFSFS','W.............','W.............','W.............','E.............','W.............','WSFSFSFSFSFSFS','ESFSFSFSFSFSFS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSW......GSS','ESSSW......WSS','WS...W......W.','WS...W......W.','WS...W......W.','ES...W......W.','WS...W......W.','WSSSW......WSS','ESSSW......WSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.S.S.S.S.S.SW','E.S.S.S.S.S.SW','WS.S.S.S.S.S.W','WS.S.S.S.S.S.W','WS.S.S.S.S.S.W','ES.S.S.S.S.S.W','WS.S.S.S.S.S.W','W.S.S.S.S.S.SW','E.S.S.S.S.S.SW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS...........S','WS...........S','WS...........S','ES...........S','WS...........S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS.FF.....FF.S','WS.FF.....FF.S','WS.FF.....FF.S','ES.FF.....FF.S','WS.FF.....FF.S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSS.SSSS.SSSS','ESSS.SSSS.SSSS','W....SSSS.....','W....SSSS.....','W....SSSS.....','E....SSSS.....','W....SSSS.....','WSSS.SSSS.SSSS','ESSS.SSSS.SSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ES...........SW','WS.FFF...FFF.SW','WS.FFF...FFF.SW','WS...........SW','ES...........SW','WS.FFF...FFF.SW','WS.FFF...FFF.SW','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WSSS.......SSS','WSSS.......SSS','WSSS.......SSS','ESSS.......SSS','WSSS.......SSS','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSW','ESSSSSSSSSSSSW','W.S.........SW','W.S.........SW','W.S.........SW','E.S.........SW','W.S.........SW','WSSSSSSSSSSSSW','ESSSSSSSSSSSSW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...SS...SS...','E...SS...SS...','WSSS......SSSS','WSSS......SSSS','WSSS......SSSS','ESSS......SSSS','WSSS......SSSS','W...SS...SS...','E...SS...SS...','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSS.....SSSSS','ESSS.....SSSSS','W....FFF......','W....FFF......','W....FFF......','E....FFF......','W....FFF......','WSSS.....SSSSS','ESSS.....SSSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W~S~S~S~S~S~SW','E~S~S~S~S~S~SW','WS~S~S~S~S~S~W','WS~S~S~S~S~S~W','WS~S~S~S~S~S~W','ES~S~S~S~S~S~W','WS~S~S~S~S~S~W','W~S~S~S~S~S~SW','E~S~S~S~S~S~SW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS...........S','WS...........S','WS...........S','ES...........S','WS...........S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.R.R.SSS.R.RW','E.R.R.SSS.R.RW','WSSSSSSSSSSSSW','WSSSSSSSSSSSSW','WSSSSSSSSSSSSW','ESSSSSSSSSSSSW','WSSSSSSSSSSSSW','W.R.R.SSS.R.RW','E.R.R.SSS.R.RW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSS.......SSS','ESSS.......SSS','W..S.......S..','W..S.......S..','W..S.......S..','E..S.......S..','W..S.......S..','WSSS.......SSS','ESSS.......SSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSS.....SSSS','ESSSS.....SSSS','W....S...S....','W....S...S....','W....S...S....','E....S...S....','W....S...S....','WSSSS.....SSSS','ESSSS.....SSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSFSSFSSFSSFW','ESSFSSFSSFSSFW','W.............','W.............','W.............','E.............','W.............','WSSFSSFSSFSSFW','ESSFSSFSSFSSFW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS.S.S.S.S.S.S','WS.S.S.S.S.S.S','WS.S.S.S.S.S.S','ES.S.S.S.S.S.S','WS.S.S.S.S.S.S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
+  ],
+};
+
+// ==========================================
+// ===== INITIALIZATION =====
+// ==========================================
+
+function initializeTacticsEngine() {
+  CS.tacticsEngineEnabled = true;
+
+  // Upgrade existing TERRAIN_PRESETS to use better terrain placement
+  TERRAIN_PRESETS.village   = { base: 'empty', features: ['wall','rubble','roof','shadow'] };
+  TERRAIN_PRESETS.castle    = { base: 'empty', features: ['wall','wall','floor2','floor1'] };
+  TERRAIN_PRESETS.dungeon   = { base: 'shadow', features: ['wall','rubble','shadow'] };
+  TERRAIN_PRESETS.fortress  = { base: 'empty', features: ['wall','wall','floor2','floor3'] };
+  TERRAIN_PRESETS.palace    = { base: 'floor1', features: ['wall','floor2','floor3'] };
+  TERRAIN_PRESETS.docks     = { base: 'empty', features: ['wall','water','rubble'] };
+  TERRAIN_PRESETS.forest    = { base: 'forest', features: ['forest','forest','shadow','water'] };
+  TERRAIN_PRESETS.keep      = { base: 'empty', features: ['wall','wall','wall','floor3'] };
+
+  // Add jump stats to CLASSES for height traversal
+  Object.assign(CLASSES.shinobi, { jumpStat: 2 });
+  Object.assign(CLASSES.kunoichi, { jumpStat: 2 });
+  Object.assign(CLASSES.shadow, { jumpStat: 2 });
+  Object.assign(CLASSES.ronin, { jumpStat: 1 });
+  Object.assign(CLASSES.monk, { jumpStat: 1 });
+  Object.assign(CLASSES.berserker, { jumpStat: 1 });
+
+  // Night mission detection for certain terrain types
+  STEALTH.isNightMission = false; // Will be set per mission
+
+  // Patch night_ambush and forest_ambush missions to enable night stealth
+  const nightMissionTypes = ['forest', 'docks'];
+  if (CS.mission && nightMissionTypes.includes(CS.mission.terrain)) {
+    STEALTH.isNightMission = true;
+    addLog('🌙 Night conditions — stealth enhanced. Enemies detect less.', 'system');
+  }
+
+  console.log('[NINDO Tactics v2] Engine initialized — Height, Stealth, AI Scoring active.');
+}
+
+// ── Hook initializeTacticsEngine into initCombat ──
+// We do this by patching the CS object after combat starts
+// showScreen hook removed — initializeTacticsEngine called directly from initCombat
+
+// ── Add Shadow Step to canvas click handler (action type) ──
+const _origCanvasClick = document.getElementById('combatCanvas').onclick;
+document.getElementById('combatCanvas').addEventListener('click', function(e) {
+  if (CS.selectedAction === 'shadow_step' && CS.phase === 'player' && CS.activeUnit) {
+    const rect = this.getBoundingClientRect();
+    const cs2 = CS.cellSize;
+    const gx = Math.floor((e.clientX - rect.left) / cs2);
+    const gy = Math.floor((e.clientY - rect.top) / cs2);
+    const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
+    if (!ally) return;
+    const reachable = CS.highlightedTiles.find(t => t.x === gx && t.y === gy);
+    if (!reachable) { toast('Cannot shadow-step there.', 'error'); e.stopPropagation(); return; }
+    ally.x = gx; ally.y = gy;
+    ally.facing = 'south';
+    CS.unitMoved = true;
+    CS.selectedAction = null;
+    CS.highlightedTiles = [];
+    addLog(ally.name + ' shadow-steps into the darkness!', 'special');
+    STEALTH.processStealthChecks();
+    renderCombat();
+    e.stopPropagation();
+  }
+}, true); // capture phase
+
+// Stealth checks run via STEALTH.processStealthChecks() in runEnemyUnitTurn directly
+
+// ── Expose shadow step button in combat controls ──
+window.shadowStep = function() {
+  if (CS.phase !== 'player' || !CS.activeUnit) return;
+  const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
+  if (!ally) return;
+  executeShadowStep(ally);
+};
+
+// ── Add height info to selected unit display ──
+// ── Standalone height/terrain info appender — called from renderSelectedInfo ──
+function _appendHeightInfoToSelected() {
+  if (!CS.grid || !CS.activeUnit) return;
+  const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
+  if (!ally) return;
+  const terrainKey = CS.grid[ally.y]?.[ally.x] || 'empty';
+  const tileData = TERRAIN_TILES[terrainKey] || TERRAIN_TILES.empty;
+  const h = tileData.height || 0;
+  const light = tileData.light ?? 1.0;
+  const heightStr = h > 0 ? ' · <span style="color:#ffcc44">H:' + h + '</span>' : '';
+  const lightStr = light < 0.5 ? ' · <span style="color:#8888cc">Shadow</span>' : '';
+  const coverStr = (tileData.cover || 0) > 0 ? ' · <span style="color:#44aa77">Cover</span>' : '';
+  const statusLine = '<div style="font-size:0.55rem;color:var(--mist);margin-top:2px;font-family:Cinzel,serif">' + terrainKey.toUpperCase() + heightStr + lightStr + coverStr + '</div>';
+  ['selectedInfo','selectedInfoMobile'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML += statusLine;
+  });
+}
+
+console.log('[NINDO Tactics v2] Systems loaded: Terrain · Height · Movement · Combat · AI · Stealth · Maps');
+
+
 </script>
 </body>
 </html>
