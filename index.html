@@ -1017,7 +1017,7 @@ const CLASSES = {
     proficiency: { blades: 5, thrown: 4, ranged: 2, blunt: 1 },
     strengths: ['Stealth bonus on first strike (+50% dmg)', 'Ignore light obstacles'],
     weaknesses: ['Blunt weapons deal +25% dmg to Shinobi'],
-    primaryWeapons: ['blades', 'thrown'], moveRange: 4, attackRange: 1,
+    primaryWeapons: ['blades', 'thrown'], moveRange: 4, jumpStat: 2, attackRange: 1,
     specialMoves: [
       { name: 'Shadow Clone', chi: 2, desc: 'Creates a decoy; enemy wastes next attack.', effect: 'decoy' },
       { name: 'Assassination Strike', chi: 3, desc: 'Triple damage if target unaware. Must be adjacent.', effect: 'triple_dmg' },
@@ -1027,12 +1027,12 @@ const CLASSES = {
     ]
   },
   kunoichi: {
-    name: 'Dokusatsu', emoji: '🐡', color: '#c87820', description: 'Deadly ninja specializing in poison, ranged techniques and cunning.',
+    name: 'Kunoichi', emoji: '🐡', color: '#c87820', description: 'Master of poison and deception. Uses thrown weapons and ranged techniques to strike from the shadows.',
     baseStats: { hp: 65, stamina: 6, chi: 8, spd: 9 },
     proficiency: { blades: 3, thrown: 5, ranged: 5, blunt: 1 },
     strengths: ['Poison effects deal extra 5 dmg/turn', 'High chi regeneration'],
-    weaknesses: ['Melee blades deal +25% dmg to Dokusatsu'],
-    primaryWeapons: ['thrown', 'ranged'], moveRange: 3, attackRange: 3,
+    weaknesses: ['Melee blades deal +25% dmg to Kunoichi'],
+    primaryWeapons: ['thrown', 'ranged'], moveRange: 3, jumpStat: 2, attackRange: 3,
     specialMoves: [
       { name: 'Poison Dart', chi: 1, desc: 'Poisons target for 3 turns (5 dmg/turn).', effect: 'poison' },
       { name: 'Fan of Knives', chi: 2, desc: 'Hits all adjacent enemies for 50% weapon dmg.', effect: 'aoe_thrown' },
@@ -1047,7 +1047,7 @@ const CLASSES = {
     proficiency: { blades: 6, thrown: 2, ranged: 1, blunt: 4 },
     strengths: ['Counter-attack on block (50% chance)', '+20% damage with blades'],
     weaknesses: ['Ranged attacks deal +20% dmg to Ronin'],
-    primaryWeapons: ['blades', 'blunt'], moveRange: 3, attackRange: 1,
+    primaryWeapons: ['blades', 'blunt'], moveRange: 3, jumpStat: 1, attackRange: 1,
     specialMoves: [
       { name: 'Honor Slash', chi: 2, desc: 'Powerful strike dealing 2.5x weapon damage.', effect: 'heavy_strike' },
       { name: 'Whirlwind Cut', chi: 3, desc: 'Hits all enemies within melee range.', effect: 'spin_attack' },
@@ -1062,7 +1062,7 @@ const CLASSES = {
     proficiency: { blades: 2, thrown: 2, ranged: 2, blunt: 6 },
     strengths: ['Heal allies with chi', 'Chi regenerates 2 pts/turn'],
     weaknesses: ['Ranged attacks deal +15% dmg to Monk'],
-    primaryWeapons: ['blunt'], moveRange: 3, attackRange: 1,
+    primaryWeapons: ['blunt'], moveRange: 3, jumpStat: 1, attackRange: 1,
     specialMoves: [
       { name: 'Chi Blast', chi: 3, desc: 'Launches a bolt of chi energy. 2-tile range.', effect: 'chi_bolt' },
       { name: 'Healing Touch', chi: 3, desc: 'Restores 30 HP to target ally. Adjacent only.', effect: 'heal_ally' },
@@ -1077,7 +1077,7 @@ const CLASSES = {
     proficiency: { blades: 4, thrown: 3, ranged: 3, blunt: 2 },
     strengths: ['Life drain restores HP', 'Move through obstacles once per mission'],
     weaknesses: ['Light-element attacks deal +30% dmg'],
-    primaryWeapons: ['blades', 'ranged'], moveRange: 4, attackRange: 2,
+    primaryWeapons: ['blades', 'ranged'], moveRange: 4, jumpStat: 2, attackRange: 2,
     specialMoves: [
       { name: 'Dark Shroud', chi: 2, desc: 'Cover area in darkness; enemies have -50% accuracy.', effect: 'darkness' },
       { name: 'Soul Drain', chi: 3, desc: 'Steal 20 HP from target and gain it yourself.', effect: 'life_drain' },
@@ -1092,7 +1092,7 @@ const CLASSES = {
     proficiency: { blades: 2, thrown: 1, ranged: 1, blunt: 7 },
     strengths: ['Gains power when damaged (+5% dmg per 10 HP lost)', 'Cannot be one-shot killed'],
     weaknesses: ['Low chi; ranged cripples mobility'],
-    primaryWeapons: ['blunt'], moveRange: 3, attackRange: 1,
+    primaryWeapons: ['blunt'], moveRange: 3, jumpStat: 1, attackRange: 1,
     specialMoves: [
       { name: 'Rage', chi: 1, desc: 'Double damage for 2 turns but cannot defend.', effect: 'rage' },
       { name: 'Earthquake Stomp', chi: 3, desc: 'Shakes ground; all adjacent enemies stumble (lose 2 move pts).', effect: 'stomp' },
@@ -1102,6 +1102,29 @@ const CLASSES = {
     ]
   }
 };
+
+// ── CLASS WEAKNESS TABLE ──
+// Maps class key → { weaponType, multiplier, notes }
+const CLASS_WEAKNESSES = {
+  shinobi:   { blunt:   1.25 },           // Blunt weapons +25%
+  kunoichi:  { blades:  1.25 },           // Melee blades +25%
+  ronin:     { ranged:  1.20 },           // Ranged +20%
+  monk:      { ranged:  1.15 },           // Ranged +15%
+  shadow:    {},                           // Light-element (no weapon type maps cleanly; handled via void_bolt immunity below)
+  berserker: {},                           // No weapon weakness listed
+};
+
+// ── CLASS STRENGTH TABLE ──
+// Offensive bonuses applied in calcDamage when attacker is this class
+const CLASS_STRENGTHS = {
+  shinobi:   { firstStrike: true },        // +50% on undetected first strike (via STEALTH system)
+  kunoichi:  { poisonBonusDmg: 5 },        // Poison deals +5 dmg/turn
+  ronin:     { blades: 1.20 },             // +20% with blades
+  monk:      { chiRegenPerTurn: 2 },       // Already in tickUnitStatus
+  shadow:    { lifeDrainRestores: true },  // life_drain HP restoration (already coded)
+  berserker: { damagePer10HpLost: 0.05 }, // +5% dmg per 10 HP lost (scaled)
+};
+
 
 // Weapon uses by tier: common=20, uncommon=200, rare=2000, legendary=20000, epic=200000
 const WEAPON_USES = { common: 20, uncommon: 200, rare: 2000, legendary: 20000, epic: 200000 };
@@ -1333,8 +1356,8 @@ const MISSIONS = [
   ]
 },
 {
-  id: 'm9', name: 'The Shadow Dokusatsu', type: 'rescue',
-  desc: 'Track down the legendary Dokusatsu who works alone. Impress her in battle.',
+  id: 'm9', name: 'The Shadow Kunoichi', type: 'rescue',
+  desc: 'Track down the legendary Kunoichi who works alone. Impress her in battle.',
   difficulty: 3, reward: 350, recruitReward: { class: 'kunoichi', name: 'Yuki' }, requiredLevel: 1,
   enemies: [{ type: 'bounty_hunter', count: 3 }, { type: 'kunoichi_boss', count: 1 }],
   terrain: 'forest', tags: ['rescue', 'recruit'],
@@ -3157,7 +3180,7 @@ function ninjaCard(n) {
   return `
     <div class="ninja-card ${n.training ? 'training' : ''}" onclick="openNinjaDetail('${n.id}')">
       <div class="ninja-card-header">
-        <div class="ninja-avatar" style="background:${cls.color}22;border-color:${cls.color}">${cls.emoji}</div>
+        <div class="ninja-avatar" style="background:${cls.color}22;border-color:${cls.color}">${classImgOrEmoji(n.class, 36)}</div>
         <div class="ninja-info">
           <div class="ninja-name">${n.name}</div>
           <div class="ninja-class">${cls.name}</div>
@@ -3641,7 +3664,7 @@ function renderMissions() {
     const emptySlots = MAX_CARRY - n.carriedItems.length;
     const emptyPips = Array.from({length: emptySlots}, () => `<span class="loadout-pip" style="opacity:0.3">·</span>`).join('');
     return `<div class="party-slot ${inParty ? 'selected' : ''}" onclick="toggleParty('${n.id}')">
-      <div class="party-slot-avatar" style="background:${cls.color}33">${cls.emoji}</div>
+      <div class="party-slot-avatar" style="background:${cls.color}33">${classImgOrEmoji(n.class, 32)}</div>
       <div class="party-slot-info">
         <div class="party-slot-name">${n.name} ${inParty ? '<span style="color:var(--gold)">✓</span>' : ''}</div>
         <div class="party-slot-class">${cls.name} · Lv${n.level}</div>
@@ -4764,15 +4787,18 @@ function getReachableTiles(startX, startY, range, excludeId) {
 
 function getAttackTiles(cx, cy, range) {
   const tiles = [];
+  const needsLoS = range > 1;
   CS.enemies.filter(e => e.hp > 0).forEach(e => {
-    const dist = Math.abs(e.x - cx) + Math.abs(e.y - cy);
-    if (dist <= range && hasLineOfSight(cx, cy, e.x, e.y))
-      tiles.push({ x: e.x, y: e.y, color: 'rgba(192,57,43,0.3)' });
+    const dist = Math.abs(e.x-cx)+Math.abs(e.y-cy);
+    if (dist > range) return;
+    if (needsLoS && !hasLineOfSight(cx,cy,e.x,e.y)) return;
+    tiles.push({ x:e.x, y:e.y, color:'rgba(192,57,43,0.3)' });
   });
   CS.allies.filter(a => a.hp > 0).forEach(a => {
-    const dist = Math.abs(a.x - cx) + Math.abs(a.y - cy);
-    if (dist <= range && a.gridId !== CS.activeUnit && hasLineOfSight(cx, cy, a.x, a.y))
-      tiles.push({ x: a.x, y: a.y, color: 'rgba(61,170,125,0.2)' });
+    const dist = Math.abs(a.x-cx)+Math.abs(a.y-cy);
+    if (dist > range || a.gridId===CS.activeUnit) return;
+    if (needsLoS && !hasLineOfSight(cx,cy,a.x,a.y)) return;
+    tiles.push({ x:a.x, y:a.y, color:'rgba(61,170,125,0.2)' });
   });
   return tiles;
 }
@@ -5015,58 +5041,84 @@ function handleAttack(ally, tx, ty) {
   if (CS.unitActed) { toast('Already acted this turn.', 'error'); return; }
   const target = CS.enemies.find(e => e.x === tx && e.y === ty && e.hp > 0);
   if (!target) { toast('No valid target there.', 'error'); return; }
-
-  // Check weapon usable (empty quiver etc.)
   if (ally.weapon && !weaponUsable(ally)) {
     toast(ally.weapon.name + ' is out of ammo / unusable!', 'error'); return;
   }
-
   const range = ally.weapon?.range || 1;
   const dist = Math.abs(target.x - ally.x) + Math.abs(target.y - ally.y);
   if (dist > range) { toast('Out of range.', 'error'); return; }
-
-  // Face toward target
+  // Line-of-sight check for ranged weapons
+  if (range > 1 && !hasLineOfSight(ally.x, ally.y, target.x, target.y)) {
+    toast('No line of sight to target!', 'error'); return;
+  }
+  // Cover miss chance for ranged attacks
+  let missFromCover = false;
+  if (range > 1) {
+    const tKey = CS.grid[target.y]?.[target.x] || 'empty';
+    const cover = (TERRAIN_TILES[tKey] || TERRAIN_TILES.empty).cover || 0;
+    if (cover > 0 && Math.random() < cover * 0.08) {
+      missFromCover = true;
+      addLog(ally.name + ' fires at ' + target.name + ' — blocked by cover!', 'system');
+    }
+  }
   const adx = target.x - ally.x, ady = target.y - ally.y;
   if (Math.abs(adx) >= Math.abs(ady)) ally.facing = adx > 0 ? 'east' : 'west';
   else ally.facing = ady > 0 ? 'south' : 'north';
-
-  const dmg = calcDamage(ally, target);
-  applyDamage(target, dmg, ally.name);
-  applyWeaponEffect(ally.weapon, target);  // bleed, stun, poison etc.
+  if (!missFromCover) {
+    const dmg = calcDamage(ally, target);
+    applyDamage(target, dmg, ally.name);
+    applyWeaponEffect(ally.weapon, target);
+    checkOnHitPoison(ally, target);
+  }
   consumeWeaponUse(ally);
   CS.unitActed = true;
-  CS.savedMove = null;  // action taken — can no longer undo move
+  CS.savedMove = null;
   CS.selectedAction = null;
   CS.highlightedTiles = [];
-  giveJP(ally, target.hp <= 0 ? JP_AWARDS.kill + JP_AWARDS.attack : JP_AWARDS.attack, 'attack');
-  // On-hit poison check from support ability
-  checkOnHitPoison(ally, target);
+  const wasKill = !missFromCover && target.hp <= 0;
+  giveJP(ally, wasKill ? JP_AWARDS.kill + JP_AWARDS.attack : JP_AWARDS.attack, 'attack');
   checkCombatEnd();
   renderCombat();
   if (CS.unitMoved && CS.unitActed) setTimeout(finishAllyTurn, 400);
 }
 
+const SPECIAL_RANGES = {
+  triple_dmg:1, heavy_strike:1, spin_attack:1, stomp:1, charge:3,
+  aoe_thrown:2, multi_thrown:5, poison:2, stun:2, confuse:3, paralyze:2,
+  chi_bolt:3, void_bolt:4, life_drain:2, execute:1, heal_ally:1,
+  decoy:0, invisible:0, blind_all:0, rage:0, defend:0, iron_body:0,
+  battle_cry:0, meditate:0, bloodlust:0, mirror:0, darkness:3,
+  teleport:5, phase_walk:5, counter:0, last_stand:0,
+};
 function handleSpecial(ally, tx, ty) {
   if (CS.unitActed) { toast('Already acted this turn.', 'error'); return; }
   const move = ally.specialMove;
-  if (ally.chi < move.chi) { toast(`Not enough Chi. Need ${move.chi}.`, 'error'); return; }
-
+  if (ally.chi < move.chi) { toast('Not enough Chi. Need ' + move.chi + '.', 'error'); return; }
+  const specRange = SPECIAL_RANGES[move.effect] ?? 2;
+  const dist = Math.abs(tx - ally.x) + Math.abs(ty - ally.y);
+  const isSelf = specRange === 0;
+  if (!isSelf && dist > specRange) {
+    toast(move.name + ' is out of range (max ' + specRange + ' tiles).', 'error'); return;
+  }
+  if (!isSelf && specRange > 1 && dist > 1) {
+    const hasEnemyTarget = CS.enemies.some(e => e.x === tx && e.y === ty && e.hp > 0);
+    const hasAllyTarget = CS.allies.some(a => a.x === tx && a.y === ty && a.hp > 0);
+    if ((hasEnemyTarget || hasAllyTarget) && !hasLineOfSight(ally.x, ally.y, tx, ty)) {
+      toast('No line of sight for ' + move.name + '!', 'error'); return;
+    }
+  }
   ally.chi = Math.max(0, ally.chi - move.chi);
   CS.unitActed = true;
   CS.savedMove = null;
   CS.selectedAction = null;
   CS.highlightedTiles = [];
-
   const target = CS.enemies.find(e => e.x === tx && e.y === ty && e.hp > 0);
   const allyTarget = CS.allies.find(a => a.x === tx && a.y === ty && a.hp > 0 && a.gridId !== ally.gridId);
-
-  // Face toward clicked tile
   const sfx = tx - ally.x, sfy = ty - ally.y;
   if (sfx !== 0 || sfy !== 0) {
     if (Math.abs(sfx) >= Math.abs(sfy)) ally.facing = sfx > 0 ? 'east' : 'west';
     else ally.facing = sfy > 0 ? 'south' : 'north';
   }
-
   executeSpecial(ally, move, target, allyTarget);
   checkCombatEnd();
   renderCombat();
@@ -5100,7 +5152,7 @@ function executeSpecial(caster, move, target, allyTarget) {
       addLog('✦ ' + move.name + ': ' + hitsAoe.length + ' target' + (hitsAoe.length > 1 ? 's' : '') + ' hit!', 'special'); break;
     }
     case 'poison':
-      if (target) { target.status = 'poisoned'; addLog(`✦ ${move.name}: ${target.name} poisoned!`, 'special'); } break;
+      if (target) { target.status = 'poisoned'; target._poisonedByClass = caster.class; addLog(`✦ ${move.name}: ${target.name} poisoned!`, 'special'); } break;
     case 'stun':
       if (target) { target.status = 'stunned'; addLog(`✦ ${move.name}: ${target.name} stunned!`, 'special'); } break;
     case 'confuse':
@@ -5182,6 +5234,9 @@ function calcDamage(attacker, defender) {
     baseDmg = 3 + Math.floor(Math.random() * 5);
   }
   if (attacker.buffs?.some(b => b.type === 'rage' || b.type === 'damage_up')) baseDmg = Math.floor(baseDmg * 2);
+  if (attacker.buffs?.some(b => b.type === 'last_stand')) baseDmg = Math.floor(baseDmg * 3);
+  if (attacker.buffs?.some(b => b.type === 'bloodlust')) baseDmg = Math.floor(baseDmg * 1.3);
+  if (attacker.buffs?.some(b => b.type === 'invisible')) baseDmg = Math.floor(baseDmg * 1.5);
   // Support damage bonus (Attack Up ability)
   if (attacker.gridId) baseDmg = Math.floor(baseDmg * getSupportDmgBonus(attacker));
 
@@ -5190,6 +5245,18 @@ function calcDamage(attacker, defender) {
     const dirMult = getDirDamageMult(defender, attacker.x, attacker.y);
     if (dirMult !== 1) baseDmg = Math.round(baseDmg * dirMult);
   }
+  // ── CLASS STRENGTHS ──
+  if (attacker.class === 'ronin' && weapon && (weapon.type === 'blades' || weapon.type === 'blunt')) {
+    baseDmg = Math.floor(baseDmg * 1.20); // +20% with blades/blunt
+  }
+  if (attacker.class === 'berserker') {
+    const hpLost = Math.max(0, attacker.maxHp - attacker.hp);
+    const berserkBonus = 1 + Math.floor(hpLost / 10) * 0.05;
+    baseDmg = Math.floor(baseDmg * berserkBonus); // +5% per 10 HP lost
+  }
+  if (attacker.class === 'kunoichi' && weapon && weapon.type === 'thrown') {
+    baseDmg = Math.floor(baseDmg * 1.10); // +10% with thrown (proficiency speciality)
+  }
   if (defender.buffs?.some(b => b.type === 'defend' || b.type === 'iron_body')) baseDmg = Math.floor(baseDmg * 0.33);
   // Armor passive: apply reduction while durability > 0
   const armorBuff = defender.buffs?.find(b => b.type === 'armor_passive');
@@ -5197,6 +5264,18 @@ function calcDamage(attacker, defender) {
     if (armorBuff.effect === 'armor' || armorBuff.effect === 'shadow_armor') {
       baseDmg = Math.floor(baseDmg * (1 - armorBuff.value / 100));
     }
+  }
+  // ── CLASS STRENGTHS (attacker bonuses) ──
+  if (attacker.class === 'ronin' && weapon && (weapon.type === 'blades' || weapon.type === 'blunt')) {
+    baseDmg = Math.floor(baseDmg * 1.20); // Ronin: +20% with blades/blunt
+  }
+  if (attacker.class === 'berserker') {
+    const hpLost = Math.max(0, (attacker.maxHp||0) - (attacker.hp||0));
+    const berserkBonus = 1 + (Math.floor(hpLost / 10) * 0.05);
+    baseDmg = Math.floor(baseDmg * berserkBonus); // Berserker: +5% per 10 HP lost
+  }
+  if (attacker.class === 'kunoichi' && weapon && weapon.type === 'thrown') {
+    baseDmg = Math.floor(baseDmg * 1.10); // Kunoichi: +10% with thrown
   }
   return Math.max(1, baseDmg);
 }
@@ -5619,6 +5698,11 @@ function triggerReaction(ally, rawDmg, attackerUnit) {
 
 // Check iron_will support ability
 function checkIronWill(ally, dmg) {
+  // Berserker innate: cannot be one-shot from above 25% HP
+  if (ally.class === 'berserker' && ally.hp - dmg <= 0 && ally.hp > ally.maxHp * 0.25) {
+    addLog(ally.name + ': Berserker will — survives at 1 HP!', 'special');
+    return ally.hp - 1;
+  }
   if (!hasSupportAbility(ally, 'survive_lethal')) return dmg;
   if (ally.hp - dmg <= 0 && ally.hp > 10) {
     addLog(ally.name + ': Iron Will activates! Survives at 1 HP!', 'special');
@@ -6086,13 +6170,15 @@ function tickUnitStatus(unit) {
       return { ...b, turns: b.turns - 1 };
     }).filter(b => b.permanent || b.turns > 0);
   }
-  if (unit.status === 'poisoned') applyDamage(unit, 5, 'Poison');
+  if (unit.status === 'poisoned') applyDamage(unit, (unit._poisonedByClass==='kunoichi'?10:5), 'Poison');
   if (unit.bleeds && unit.bleedTurns > 0) {
     unit.hp = Math.max(0, unit.hp - unit.bleeds);
     unit.bleedTurns--;
     addLog('\u{1FA78} ' + unit.name + ' bleeds ' + unit.bleeds + ' HP. (' + unit.hp + '/' + unit.maxHp + ')', 'damage');
     if (unit.bleedTurns <= 0) unit.bleeds = 0;
   }
+  // Monk chi regen (passive: +2 chi per turn)
+  if (unit.gridId && unit.class === 'monk') unit.chi = Math.min(unit.maxChi, (unit.chi||0)+2);
 }
 
 function finishEnemyTurn(enemy) {
@@ -6108,15 +6194,30 @@ function finishEnemyTurn(enemy) {
 }
 
 
-function calcEnemyDamage(enemy) {
+function calcEnemyDamage(enemy, target) {
+  let base;
+  const weapType = enemy.weapon?.type;
   if (enemy.weapon && enemy.weapon.dmg) {
     const w = enemy.weapon;
     if (w.type === 'ranged' && w.quiverEmpty) {
-      return enemy.dmg[0] + Math.floor(Math.random() * (enemy.dmg[1] - enemy.dmg[0] + 1));
+      base = enemy.dmg[0] + Math.floor(Math.random() * (enemy.dmg[1] - enemy.dmg[0] + 1));
+    } else {
+      base = Math.max(1, w.dmg[0] + Math.floor(Math.random() * (w.dmg[1] - w.dmg[0] + 1)));
     }
-    return Math.max(1, w.dmg[0] + Math.floor(Math.random() * (w.dmg[1] - w.dmg[0] + 1)));
+  } else {
+    base = enemy.dmg[0] + Math.floor(Math.random() * (enemy.dmg[1] - enemy.dmg[0] + 1));
   }
-  return enemy.dmg[0] + Math.floor(Math.random() * (enemy.dmg[1] - enemy.dmg[0] + 1));
+  // Apply class weakness multiplier if we know the target's class
+  if (target && target.class && weapType) {
+    const weakness = CLASS_WEAKNESSES[target.class];
+    if (weakness && weakness[weapType]) {
+      const mult = weakness[weapType];
+      base = Math.round(base * mult);
+      const label = weapType === 'blunt' ? '⚒ Weak to blunt!' : weapType === 'blades' ? '⚔ Weak to blades!' : '🏹 Weak to ranged!';
+      addLog(label + ' (' + Math.round((mult-1)*100) + '% extra dmg)', 'damage');
+    }
+  }
+  return Math.max(1, base);
 }
 
 function consumeEnemyWeaponUse(enemy) {
@@ -6231,17 +6332,31 @@ function runEnemyUnitTurn(enemy) {
 
   // ── Helper: attack nearest if in range + LoS ──
   function tryAttack(e, target) {
-    const d2 = Math.abs(target.x - e.x) + Math.abs(target.y - e.y);
-    if (d2 <= e.attackRange && hasLineOfSight(e.x, e.y, target.x, target.y)) {
-      faceTarget(e, target.x, target.y);
-      const dmg = calcEnemyDamage(e);
-      addLog((e.weapon ? e.weapon.icon + ' ' : '') + e.name + ' attacks ' + target.name + '!', 'damage');
-      recordDetection();
-      applyDamageToAlly(target, dmg, e.name);
-      consumeEnemyWeaponUse(e);
-      return true;
+    const d2 = Math.abs(target.x-e.x)+Math.abs(target.y-e.y);
+    if (d2 > e.attackRange) return false;
+    if (e.attackRange > 1 && !hasLineOfSight(e.x,e.y,target.x,target.y)) return false;
+    faceTarget(e, target.x, target.y);
+    // Cover miss chance for ranged AI
+    if (e.attackRange > 1) {
+      const tKey=CS.grid[target.y]?.[target.x]||'empty';
+      const cover=(TERRAIN_TILES[tKey]||TERRAIN_TILES.empty).cover||0;
+      if (cover>0&&Math.random()<cover*0.08) {
+        addLog(e.name+' fires — cover deflects the shot!','system');
+        consumeEnemyWeaponUse(e); return true;
+      }
     }
-    return false;
+    // Height damage bonus for AI
+    const eH=getTileHeight(e.x,e.y), tH=getTileHeight(target.x,target.y);
+    let dmg=calcEnemyDamage(e, target);
+    const hd=eH-tH;
+    if (hd>=2) dmg=Math.round(dmg*1.25);
+    else if (hd>=1) dmg=Math.round(dmg*1.12);
+    else if (hd<=-1) dmg=Math.round(dmg*0.92);
+    addLog((e.weapon?e.weapon.icon+' ':'')+e.name+' attacks '+target.name+'!','damage');
+    recordDetection();
+    applyDamageToAlly(target,dmg,e.name);
+    consumeEnemyWeaponUse(e);
+    return true;
   }
 
   // ── TACTICAL AI — SCORING SYSTEM ──
@@ -6279,40 +6394,31 @@ function runEnemyUnitTurn(enemy) {
     return score;
   }
 
-  // Score each potential move tile
+  // Score each potential move tile — full terrain awareness
   function scoreMovePos(e, tx, ty, bestTarget) {
-    let score = 0;
     if (!isPosEmpty(tx, ty, e.id)) return -9999;
-    const d = Math.abs(bestTarget.x - tx) + Math.abs(bestTarget.y - ty);
-    // Prefer tiles within attack range
-    if (d <= e.attackRange) score += 50;
-    else score -= d * 4;
-    // Prefer high ground
-    const newH = getTileHeight(tx, ty);
-    const curH = getTileHeight(e.x, e.y);
-    if (newH > curH) score += 18;
-    // Prefer flanking position (approach from side/rear)
-    const dirMult = getDirDamageMult(bestTarget, tx, ty);
-    if (dirMult >= 1.5) score += 30;  // back position
-    else if (dirMult >= 1.25) score += 15;
-    // Prefer cover tiles for ranged enemies
-    const tile = TERRAIN_TILES[CS.grid[ty]?.[tx] || 'empty'];
-    if (ai === 'ranged' && tile.cover > 0) score += tile.cover * 5;
-    // Avoid crowding other enemies
-    const crowded = CS.enemies.filter(other =>
-      other.id !== e.id && other.hp > 0 &&
-      Math.abs(other.x - tx) + Math.abs(other.y - ty) <= 1
-    ).length;
-    score -= crowded * 6;
-    // Avoid dark/shadow tiles for non-stealth enemies (noise)
-    if (tile.noise > 0 && e.ai !== 'stealth') score -= tile.noise * 3;
-    // Prefer chokepoints for defensive AI
-    if (ai === 'defensive') {
-      const exits = CS.exitTiles.filter(et => Math.abs(et.x - tx) + Math.abs(et.y - ty) <= 3).length;
-      score += exits * 10;
+    const hDiff = getTileHeight(tx,ty)-getTileHeight(e.x,e.y);
+    if (hDiff > (ai==='stealth'?2:1)) return -9999;
+    let score = 0;
+    const tile = TERRAIN_TILES[CS.grid[ty]?.[tx]||'empty'];
+    const d = Math.abs(bestTarget.x-tx)+Math.abs(bestTarget.y-ty);
+    if (d <= e.attackRange) score += 60; else score -= d*5;
+    const newH=getTileHeight(tx,ty), curH=getTileHeight(e.x,e.y);
+    if (newH>curH) score+=newH*20;
+    if (newH>getTileHeight(bestTarget.x,bestTarget.y)) score+=15;
+    const dirMult=getDirDamageMult(bestTarget,tx,ty);
+    if (dirMult>=1.5) score+=35; else if (dirMult>=1.25) score+=18;
+    if (hasLineOfSight(tx,ty,bestTarget.x,bestTarget.y)) score+=15;
+    else if (e.attackRange>1) score-=30;
+    if ((ai==='ranged'||ai==='stealth')&&tile.cover>0) score+=tile.cover*8;
+    if (ai==='stealth') score+=(1-(tile.light??1))*35;
+    if (ai==='defensive') {
+      const ep=CS.exitTiles.reduce((mn,et)=>Math.min(mn,Math.abs(et.x-tx)+Math.abs(et.y-ty)),999);
+      if (ep<=3) score+=25;
     }
-    // Line of sight to target from this position
-    if (hasLineOfSight(tx, ty, bestTarget.x, bestTarget.y)) score += 12;
+    const crowded=CS.enemies.filter(o=>o.id!==e.id&&o.hp>0&&Math.abs(o.x-tx)+Math.abs(o.y-ty)<=1).length;
+    score-=crowded*8;
+    if (tile.noise>0) score-=tile.noise*4;
     return score;
   }
 
@@ -6506,6 +6612,27 @@ function getDirDamageMult(defender, attackerX, attackerY) {
 }
 
 function applyDamageToAlly(ally, rawDmg, attackerName) {
+  // Decoy absorbs one hit entirely
+  if (ally.buffs?.some(b => b.type === 'decoy')) {
+    ally.buffs = ally.buffs.filter(b => b.type !== 'decoy');
+    addLog(ally.name + "'s decoy takes the hit!", 'special');
+    renderCombat(); return;
+  }
+  // Mirror image: 67% miss chance per charge
+  if (ally.buffs?.some(b => b.type === 'mirror')) {
+    if (Math.random() < 0.67) {
+      const mb = ally.buffs.find(b => b.type === 'mirror');
+      if (mb) { mb.charges = (mb.charges||1)-1; if (mb.charges<=0) ally.buffs = ally.buffs.filter(b=>b.type!=='mirror'); }
+      addLog(attackerName + ' strikes a mirror image — miss!', 'special');
+      renderCombat(); return;
+    }
+  }
+  // Invisible: 60% miss, breaks on hit
+  if (ally.buffs?.some(b => b.type === 'invisible')) {
+    if (Math.random() < 0.6) { addLog(attackerName + ' cannot see ' + ally.name + '!', 'special'); renderCombat(); return; }
+    ally.buffs = ally.buffs.filter(b => b.type !== 'invisible');
+    addLog(ally.name + "'s invisibility broken!", 'special');
+  }
   // Reaction ability check (before armor)
   const attackerUnit = CS.enemies.find(e => e.name === attackerName || (e.name && attackerName && e.name.includes(attackerName)));
   let dmg = triggerReaction(ally, rawDmg, attackerUnit);
@@ -7048,7 +7175,7 @@ function renderTraining() {
   const ninjaSlots = availableNinjas.map(n => {
     const cls = CLASSES[n.class];
     return `<div class="party-slot ${selectedTrainingNinja === n.id ? 'selected' : ''}" onclick="selectTrainingNinja('${n.id}')">
-      <div class="party-slot-avatar" style="background:${cls.color}33">${cls.emoji}</div>
+      <div class="party-slot-avatar" style="background:${cls.color}33">${classImgOrEmoji(n.class, 32)}</div>
       <div class="party-slot-info"><div class="party-slot-name">${n.name}</div><div class="party-slot-class">${cls.name} · Lv${n.level}</div></div>
       ${selectedTrainingNinja === n.id ? '<span style="color:var(--gold)">✓</span>' : ''}
     </div>`;
@@ -7482,7 +7609,8 @@ function buildTerrainCodex() {
   var cards = tiles.map(function(t) {
     var html = '<div style="background:var(--ink2);border:1px solid rgba(255,255,255,0.06);padding:1rem">';
     html += '<div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.6rem">';
-    html += '<div style="width:32px;height:32px;background:' + t.color + ';border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">' + t.icon + '</div>';
+    var _tkey = {'.'  :'empty','W':'wall','F':'forest','R':'rubble','r':'roof','T':'roof3','S':'shadow','~':'water','1':'floor1','2':'floor2','3':'floor3','C':'cliff','G':'gate','s':'stone','E':'exit'};
+    html += '<div style="width:40px;height:40px;flex-shrink:0">' + tileImgOrLabel(_tkey[t.ch]||'empty', 40) + '</div>';
     html += '<div>';
     html += '<div style="font-family:Cinzel,serif;font-size:0.85rem;color:var(--white)">' + t.label + '</div>';
     html += '<div style="font-family:monospace;font-size:0.6rem;color:var(--mist);margin-top:1px">char: ' + t.ch + ' &middot; move: ' + t.move + ' &middot; height: ' + t.height + '</div>';
@@ -7503,6 +7631,38 @@ function buildTerrainCodex() {
        + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.8rem">'
        + cards + '</div></div>';
 }
+
+// ── PNG-WITH-FALLBACK HELPERS ──
+// Returns an <img> tag if the image is loaded, otherwise the emoji as a span.
+// Used throughout the codex and UI for characters and tiles.
+
+function classImgOrEmoji(classKey, size) {
+  const img = getImg(classPng(classKey));
+  const cls = CLASSES[classKey];
+  if (img && img.naturalWidth > 0) {
+    return '<img src="' + img.src + '" width="' + size + '" height="' + size + '" style="border-radius:50%;object-fit:cover;border:2px solid ' + (cls?.color||'#555') + '44" alt="' + (cls?.name||classKey) + '">';
+  }
+  return '<span style="font-size:' + Math.round(size*0.7) + 'px;line-height:1">' + (cls?.emoji || '🥷') + '</span>';
+}
+
+function enemyImgOrEmoji(typeKey, size) {
+  const img = getImg(enemySheetKey(typeKey));
+  const et = ENEMY_TYPES[typeKey];
+  if (img && img.naturalWidth > 0) {
+    return '<img src="' + img.src + '" width="' + size + '" height="' + size + '" style="border-radius:50%;object-fit:cover;border:2px solid rgba(220,80,80,0.4)" alt="' + (et?.name||typeKey) + '">';
+  }
+  return '<span style="font-size:' + Math.round(size*0.7) + 'px;line-height:1">' + (et?.emoji || '👤') + '</span>';
+}
+
+function tileImgOrLabel(tileKey, size) {
+  const img = getImg(tilePng(tileKey));
+  const tile = TERRAIN_TILES[tileKey] || TERRAIN_TILES.empty;
+  if (img && img.naturalWidth > 0) {
+    return '<img src="' + img.src + '" width="' + size + '" height="' + size + '" style="object-fit:cover;border:1px solid rgba(255,255,255,0.15)" alt="' + tileKey + '">';
+  }
+  return '<div style="width:' + size + 'px;height:' + size + 'px;background:' + tile.color + ';display:flex;align-items:center;justify-content:center;font-size:' + Math.round(size*0.45) + 'px;border:1px solid rgba(255,255,255,0.15)">' + (tile.label||'') + '</div>';
+}
+
 function renderCodexContent() {
   const el = document.getElementById('codexContent');
 
@@ -7527,7 +7687,13 @@ function renderCodexContent() {
 
   // ── CLASSES ──
   const classCards = Object.entries(CLASSES).map(([key, cls]) => card(`
-    <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:${cls.color};margin-bottom:0.4rem">${cls.emoji} ${cls.name}</div>
+    <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:0.6rem">
+      ${classImgOrEmoji(key, 48)}
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:0.95rem;color:${cls.color}">${cls.name}</div>
+        <div style="font-size:0.6rem;color:var(--mist);font-family:'Cinzel',serif;letter-spacing:0.08em">MOVE ${cls.moveRange} · ATK ${cls.attackRange} · JUMP ${cls.jumpStat||1}</div>
+      </div>
+    </div>
     <div class="text-xs text-mist" style="margin-bottom:0.6rem">${cls.description}</div>
     <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:0.5rem">
       <span class="text-xs"><span style="color:var(--crimson-bright)">❤</span> ${cls.baseStats.hp}</span>
@@ -7607,7 +7773,7 @@ function renderCodexContent() {
     const prefs = ENEMY_WEAPON_PREFS[key] || ['blades'];
     return card(`
       <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem">
-        ${buildEnemySpriteImgLg(key, e.emoji, 40)}
+        ${enemyImgOrEmoji(key, 48)}
         <div>
           <div style="font-family:'Cinzel',serif;font-size:0.8rem;color:var(--white)">${e.name}</div>
           <div style="font-size:0.6rem;color:var(--mist)">${e.ai.toUpperCase()} · ${e.isBoss ? '\u{1F451} BOSS' : e.isAlly ? '⚠ TARGET' : 'ENEMY'}</div>
@@ -7900,13 +8066,12 @@ function getTileLight(x, y) {
 function getUnitJump(unit) {
   if (!unit) return 1;
   const cls = CLASSES[unit.class];
+  // jumpStat is defined directly on class: shinobi/kunoichi/shadow=2, others=1
   const baseJump = (cls?.jumpStat) || 1;
-  // Ninja classes jump higher
-  const jumpBonus = ['shinobi','shadow','kunoichi'].includes(unit.class) ? 1 : 0;
-  // Check ninja mobility abilities
+  // Mobility ability bonus (high_jump unlocked at level 5 for ninja classes)
   const ninjaBonus = hasNinjaMobility(unit, 'high_jump') ? 2 :
                      hasNinjaMobility(unit, 'roof_jump') ? 1 : 0;
-  return baseJump + jumpBonus + ninjaBonus;
+  return baseJump + ninjaBonus;
 }
 
 // ── HEIGHT ADVANTAGE COMBAT MODIFIER ──
@@ -8237,70 +8402,70 @@ function _drawHeightOverlay() {
 
 const MAP_LIBRARY = {
   village: [
-    ['WWWWWWWWWWWWWW','W....W.....r.W','E....G.....r.W','W....WWWWWWWWW','W............W','W............W','EGGWWWWWWWWWGW','W....W.....r.W','W....W.....r.W','E....W.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','Wr..W......W.W','Er..G......W.W','WWWWG.WGWW.W.W','W....W....WW.W','W....W....WW.W','E....WWWWWWW.W','W....W.......W','Wr..rG......rW','Er..rW......rW','W....W......rW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....r1W','E....G.....r.W','W....WWWWWWWWW','W............W','W............W','EGGWWWWWWWWWGW','W....W.....r1W','W....W.....r.W','E....W.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','Wr1.W......W.W','Er..G......W.W','WWWWG.WGWW.W.W','W....W....WW.W','W....W....WW.W','E....WWWWWWW.W','W....W.......W','Wr1.rG......rW','Er..rW.....1rW','W....W......rW','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...W...W....W','E...G...G....W','WWWGG...GWWWWW','S...W...W....S','S...W...W....S','E...WWWWWW...W','W...W....W...W','W...G....G...W','EWW.W....W.WWW','W...W....W...W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.rr.......rr.','E.rr.R.R...rr.','W.WWWGWWWWWWWW','W...........RW','W...R.R.R....W','EGGW.WWWWWW..W','W.rr.......rrW','W.rr.......rrW','E.WWWWWW...WWW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.rr1.....1rr.','E.rr.R.R...rr.','W.WWWGWWWWWWWW','W...........RW','W...R.R.R....W','EGGW.WWWWWW..W','W.rr......1rrW','W.rr.......rrW','E.WWWWWW...WWW','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','EWWWWWWW.WWWWW','W.....W..W...W','W.....G..G...W','WGGWWWW..WWWWW','E........W...W','W........G...W','WWWWWWW..WWWWW','E..G.....W...W','W..W.........W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','Wrrr.WrrrW...W','Errr.WrrrG...W','W....G...WWWWW','W....W...W...W','W....WWWGG...W','EGGWWW...G...W','W....G...GWWWW','Wrrr.G...GrrrW','Errr.W...WrrrW','W....W...W...W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.rW.......WrW','E.rG.......GrW','W..WWW.WWWWWWW','W.........R..W','W.........R..W','EGG.WWWWWW...W','W.........R..W','W.rW.......WrW','E.rWWWWWWGWrGW','W.rW.......WrW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WWWW....W','E....W..W....W','W....G..G....W','W...rW..Wr...W','W...rW..Wr...W','EGGWWW..WWWWWW','W....W..W....W','W....G..G....W','E....W..W....W','W....WWWW....W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','Wrrr.WrrrW...W','Errr.WrrrG...W','W.1..G...WWWWW','W....W...W...W','W....WWWGG...W','EGGWWW...G...W','W....G...GWWWW','Wrrr.G...GrrrW','Errr.W...WrrrW','W.1..W...W...W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.rW.......WrW','E.rG.......GrW','W..WWW.WWWWWWW','W.........R..W','W.........R..W','EGG.WWWWWW...W','W.........R..W','W.rW.......WrW','E1rWWWWWWGWrGW','W.rW.......WrW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WWWW....W','E....W..W....W','W....G..G....W','W..1rW..Wr...W','W...rW..Wr1..W','EGGWWW..WWWWWW','W....W..W....W','W....G..G....W','E....W..W....W','W....WWWW....W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.............','E.R.R.R.R.R..W','WWWWW.WWWWWWWW','S...........SW','S.....WW.....S','E...........SW','WGGWWW.WWWWWWW','W.R.R.R.R.R..W','E.............','W.............','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.SS.W.SS.W..W','E.SS.G.SS.G..W','WWWWWG.WWWWWWW','W....W...W...W','W....G...G...W','EGGWWW...WWWWW','W.SS.W...W.SSW','W.SS.G...G.SSW','E.....WWW....W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...W......W.W','E...WrrrW..G.W','WWW.GrrrG..W.W','W...W....WWWWW','W...W........W','E...WWWWWWWWWW','W...........rW','WWW.WWWWWW..rW','E...W....W...W','W...G....G...W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...W......W.W','E...WrrrW..G.W','WWW.GrrrG..W.W','W...W....WWWWW','W...W........W','E...WWWWWWWWWW','W..........1rW','WWW.WWWWWW..rW','E...W....W...W','W...G....G...W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W....W..W','E....G....G..W','W....W....W..W','WW.WWWWWWWWWWW','W.............','E.............','WGGWWWWWWWW.WW','W...W.....W..W','E...G.....G..W','W...W.....W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WrrW.......Wrr','ErrG.......Grr','GWWWW.WWW.WGWW','G....W...W...W','G....G...G...W','EGGWWWWWWWWWWW','W....W...W...W','WrrW.G...G.rrW','ErrW.WWWWW.rrW','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WrrW.......Wrr','ErrG.......Grr','GWWWW.WWW.WGWW','G....W...W...W','G....G...G...W','EGGWWWWWWWWWWW','W....W...W...W','WrrW.G...G1rrW','ErrW.WWWWW.rrW','W.1..W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.........W..W','E.........G..W','WWWWW.WWWGWWWW','W....W.......W','W....G.......W','EGGWWW.WWWWWWW','W~~~~.........','W~~~~.........','E~~~~.........','W.....W......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W22W.......W22','E22G.......G22','W22WWWWWWWWW22','W....W...W...W','W....G...G...W','EGGWWW...WWWWW','W....W...W...W','W22W.....W.22W','E.2G.....G.22W','W..W.....W...W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W22W.......W22','E22G.......G22','W22WWWWWWWWW22','W....W...W...W','W....G...G...W','EGGWWW...WWWWW','W....W...W...W','W22W.....W122W','E.2G.....G.22W','W..W.....W...W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','WS...W....W..W','ES...G....G..W','WS...WWWWWWWWW','WS...W.....S.W','WS...G.....S.W','EGGWWG.....S.W','W....W.....S.W','WS...W....W..W','ES...G....G..W','W....W....W..W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...WWW...WWWW','E...W2G...W2..','W...G2W...G2..','W...W2WWWWW2..','W...W2....W2..','E...W2....W2..','W...WWWWWWWWWW','W............W','E...R.R.R....W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','W....WWWWWWWWW','W....W.......W','W....G.......W','EGGWWG.......W','W.....WWWWWWWW','W....2.......W','E....2.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...CCC....W.W','E...CCC....G.W','WGWWWWWWWGWWWW','W...........SW','W...........SW','E..WWWWWWWWWWW','W...........SW','W3333......W.W','E.333......G.W','W....W.....W.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.W.W.W.W.W..W','E.G.G.G.G.G..W','W...........rW','W.W.W.W.W.W.rW','W.G.G.G.G.G..W','E...........rW','W.G.W.W.W.W.rW','W.G.G.G.G.G..W','E............W','W...R........W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','W....WWWWWWWWW','W....W.......W','W....G.......W','EGGWWG.......W','W.....WWWWWWWW','W....2.......W','E....21......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...CCC....W.W','E...CCC....G.W','WGWWWWWWWGWWWW','W22.........SW','W222........SW','E22WWWWWWWWWWW','W2222222....SW','W33332222..W.W','E23332222..G.W','W2222W22...W.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.W.W.W.W.W..W','E.G.G.G.G.G..W','W...........rW','W.W.W.W.W.W1rW','W.G.G.G.G.G..W','E..........1rW','W.G.W.W.W.W.rW','W.G.G.G.G.G..W','E............W','W...R........W','WWWWWWWWWWWWWW'],
   ],
   fortress_gate: [
-    ['WWWWWWWWWWWWWW','W333W......W3W','E3..W......G.W','W3..G......W.W','W3..W......W.W','WGGWWW....WWWW','E.....GGGG....','W.............','W.R.R.....R.R.','EWWWWWWWWGWWWW','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3333W....W333','E3333G....G333','W3333WWWWWWW33','W.....W....W.W','W.....G....G.W','EGGWWWWGGGWWWW','W...........R.','W.R.........R.','E.............','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W2222W....W222','E2222G....G222','WWWWWWG.GWWWWW','W.............','W.R.........R.','EGGWWWG.GWWWWW','W3333W....W333','W3333G....G333','EWWWWWWWWGWWWW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333W......W3W','E322W......G2W','W32.G......W.W','W32.W......W.W','WGGWWW....WWWW','E.....GGGG....','W.............','W.R.R.....R.R.','EWWWWWWWWGWWWW','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3333W....W333','E33332....2333','W3333WWWWWWW33','W2222.W....W2W','W.22..G....G2W','EGGWWWWGGGWWWW','W...........R.','W.R.........R.','E.............','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W2222W....W222','E2222G....G222','WWWWWWG.GWWWWW','W.............','W.R.........R.','EG2WWWG.GWWWWW','W3333W....W333','W3333G...22333','EWWWWWWWWGWWWW','W.............','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W..WWW....WWW.','E..WWW....WWW.','W..G.......G.W','W..W.......W.W','W..WWGGG.GGWWW','E.............','WGGWWGGG.GWWWW','W..W.......G.W','E..WWW....WWW.','W..WWW....WWW.','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W333W......W33','E333G......G33','WWWWW......WWW','W.............','R.R.R.....R.R.','E.............','WGGWW......WWW','W333G......G33','E.33W......W33','W....W....W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.............','E...WWWWWWWWWW','W3..W........W','W3..GG......GW','G...W........W','E...WWWWWWWWWW','G.............','W3..WWWWWGWWWW','E...W..RR..R.W','W3..W........W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..W.......G.W','E..WRRRR.RRRWW','WGWWW...R..WWW','W..R.......R.W','W.............','E.R.R.....R.R.','WGGWWWWWWGWWWW','W3333G....G333','E.333W....W333','W....W....W...','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W333WWWWWWWW33','E3..W......W..','W3..WGGGGGGW..','W3..W......G..','WGGWW......WWW','E.............','W.............','WWWWGWWWWWWWWW','E333G......G33','W333W......W33','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','GGC3W......W3C','EGC3G......G3C','WWWWWWGGGWWWWW','W.............','W.R.R.....R.R.','E.............','WGGWWWGGGWWWWW','WCC3G......G3C','E.C3W......W3C','W....W......WW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W333GSSSSSG333','E3..WS...SW...','W3..WS...SW...','WWWWWS...SWWWW','WS...S...S...W','ES...S...S...W','WGGWWS...SWWWW','W3..WS...SW...','E333WS...SG333','W....G...W...W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3.W.......W.W','E3.G.......G.W','WWWWWWWWWGWWWW','W.R...........','W.R...........','E.............','WGGWWWWWWGWWWW','W3.G.......G.W','E3.W.......W.W','W...W.....W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W2222.....2222','E2222.....2222','W2222.....2222','WWWWW.....WWWW','W.............','E.R...........','WGGWWWWWWGWWWW','W3.G.......G.W','E3.W.......W.W','W...W.....W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3...W.....W.W','E3...G.....G.W','WWWWWW.....WWW','W....W.....W.W','W....G.....G.W','EGGWWW.....WWW','W....W.....W.W','W3...G.....G.W','E3...WWWWGWWGW','W3...W.....W.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.R........R.W','E.R........R.W','WWWWWWWWWGWWWW','W.............','W.............','EGGWWG.GGWWWWW','W.............','W3333G....G333','E.333W....W333','W....W....W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3.W.......W3W','E3.G.......G3W','W3.W.......W3W','W3.W.......W3W','WGG.GWWWWWWWWW','E.............','WGGWWWWWWWW.WW','W3.G.......G3W','E3.W.......W3W','W3.WWWWWWWWG3W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333W222222W33','E3332222222233','WWWWW222222WWW','W..2222222222.','R.R2222222222.','E...222222222.','WG2WW222222WWW','W333G222222233','E.33W..2222W33','W....W..22W22W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.............','E2..WWWWWWWWWW','W32.W........W','W32.GG......GW','G2..W........W','E...WWWWWWWWWW','G2............','W32.WWWWWGWWWW','E2..W..RR..R.W','W32.W........W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..W.......G.W','E..WRRRR.RRRWW','WGWWW...R..WWW','W..R.......R.W','W.............','E.R.R.....R.R.','WG2WWWWWWGWWWW','W3333G...22333','E.333W....W333','W..2.W....W22.','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333WWWWWWWW33','E322W......W2.','W32.WGGGGGGW2.','W32.W......G2.','WGGWW......WWW','E.............','W.............','WWWWGWWWWWWWWW','E3332222222233','W333W.22222W33','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','GGC3W2...22W3C','EGC3222.22223C','WWWWWWGGGWWWWW','W.............','W.R.R.....R.R.','E.............','WGGWWWGGGWWWWW','WCC3222.22223C','E.C3W2...22W3C','W2222W....2.WW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3332222222333','E322W22222W22.','W322W22222W22.','WWWWW22.22WWWW','WS...2...2...W','ES...S..222..W','WGGWWS.222WWWW','W32.WS2222W22.','E333WS22222333','W....G222W222W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W32W.......W.W','E32G.......G.W','WWWWWWWWWGWWWW','W.R...........','W.R...........','E.............','WGGWWWWWWGWWWW','W32G.......G.W','E3.W.......W.W','W...W.....W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W2222.....2222','E22221...12222','W2222.....2222','WWWWW.....WWWW','W.............','E.R...........','WGGWWWWWWGWWWW','W32G.......G.W','E3.W.......W.W','W...W.....W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3222W.....W.W','E3222G.....G.W','WWWWWW.....WWW','W....W.....W.W','W....G.....G.W','EGGWWW.....WWW','W2...W.....W.W','W32..G.....G.W','E32..WWWWGWWGW','W3...W.....W.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.R........R.W','E.R........R.W','WWWWWWWWWGWWWW','W.............','W.............','EGGWWG.GGWWWWW','W.22....22222.','W3333G.2222333','E.333W..22W333','W..2.W...2W22W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3.W.222222W3W','E32G222222223W','W3.W.222222W3W','W3.W..22222W3W','WGG.GWWWWWWWWW','E.....2222222.','WGGWWWWWWWW2WW','W32G222222223W','E32W..22222W3W','W3.WWWWWWWW23W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W..W........Ws','E..G........Gs','GWWWWWWWWGWWWW','Gs...........s','Gs...R.R.R...s','EGGWWWWWWWWWWW','W..G........G.','W..W........W.','E..WWWWWWWWWWW','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3333W....W333','E3333G....G333','WWWWWG....GWWW','W.............','W.............','EGGWWG....GWWW','W.R.R.....R.R.','W3333G....G333','E.333W....W333','W....W....W...','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3333W....W333','E33332....2333','WWWWWG....GWWW','W.............','W.............','EGGWWG....GWWW','W.22R.....222.','W3333G....2333','E.333W....W333','W..2.W....W22.','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','WSSSW.....GSSW','ESSSW.....WSSW','WGWWWG...GWWWW','W.............','W.R...........','E.............','WGGWWG...GWWWW','WSSSW.....WSSW','ESSSW.....WSSW','W....G.....G.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W333W.....W333','E3..W.....W..3','WGWWWWGWWWWGWW','W.R.R.R.R.R..W','W.R.R.R.R.R..W','E.............','WGGWWWWWWGWWWW','W3..G.....G..3','E.33W.....W333','W....W....W...','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3.G.......G3W','E3.W.R.R.R.W3W','WWWWWWWWWGWWWW','W.............','W.............','E.............','WGGWWWWWWGWWWW','W3.W.R.R.R.W3W','E3.G.......G3W','W3.W.......W3W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333W.....W333','E322W.....W223','W2WWWWGWWWWGWW','W222R.R.R.R..W','W22.R.R.R.R..W','E2............','WGGWWWWWWGWWWW','W32.G.....G223','E233W.....W333','W....W....W.2.','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W32G.....2223W','E3.W.R.R.22W3W','WWWWWWWWWGWWWW','W.............','W.............','E.............','WGGWWWWWWGWWWW','W3.W.R.R.22W3W','E32G.....2223W','W3.W......2W3W','WWWWWWWWWWWWWW'],
   ],
   temple_rooftop: [
     ['WWWWWWWWWWWWWW','W............W','E.1111111111.W','W.1222222221.W','W.1233333321.W','W.1233333321.W','E.1233333321.W','W.1233333321.W','W.1222222221.W','E.1111111111.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33WW..WW333W','E...WW..WW..3W','W3..WW..WW..3W','W3..22..22..3W','G...22..22..3W','E...22..22..3W','G...22..22..3W','W3..WW..WW..3W','E.33WW..WW333W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W233WW..WW333W','E222WW..WW223W','W32.WW..WW.23W','W32.22..22.23W','G2..221.22.23W','E...22..22123W','G2..22..22.23W','W32.WW..WW223W','E233WW..WW333W','W.2.......222W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W1111111111..W','E1222222221..W','W1232222321..W','W1233W33321..W','W1233G33321..W','E1232222321..W','W1222222221..W','W1111111111..W','E............W','W.....R......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33333333333W','E..........3.W','W3.........3.W','W3.1111111.3.W','G..1......1.3W','E..1......1.3W','G..1111111.3.W','W3.........3.W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W............W','E.33..33..33.W','W.33..33..33.W','W............W','W.22..22..22.W','E.22..22..22.W','W............W','W.33..33..33.W','E.33..33..33.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W1111.....W..W','E1221.....W..W','W1221.....W..W','W1111.....W..W','W.........W..W','E.........G..W','W........3G..W','W........3W..W','E........3W..W','W........3W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E2..222222232W','W32.......23.W','W32111111123.W','G..1......123W','E..1......1.3W','G..1111111.3.W','W32.....2..3.W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.22..22..22.W','E233223322332W','W233223322332W','W.22..22..22.W','W122..22.122.W','E.22.122..22.W','W..2.........W','W.332233..33.W','E233..332233.W','W.2....2.....W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W1111.....W..W','E1221.....W..W','W1221.....W..W','W1111.....W..W','W.........W..W','E.........G..W','W........32..W','W.......23W..W','E.......23W..W','W.......23W..W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','E.11111111...W','W.12222221...W','W.12333321...W','W.123..321...W','E.123..321...W','W.12333321...W','W.12222221...W','E.11111111...W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.3WW......WW3','E..WW......WW.','W3.WW......WW.','W3.22......22.','G..22......22.','E..22......22.','G..22......22.','W3.WW......WW.','E.3WW......WW3','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33333333333W','E............W','W3...........W','W3...........W','G............W','E............W','G............W','W3...........W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.22222222222W','E.....2222..2W','W2....2.....2W','W2....2.....2W','G.....2.....2W','E.....2.....2W','G.....2222..2W','W2..........2W','E.22222222222W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W23WW...222223','E22WW...222W2.','W32WW....22WW.','W3222.....222.','G2.22......22.','E..221....122.','G2.22.....222.','W32WW....22WW.','E23WW....22W23','W.2.....22222W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W233333333333W','E222222222222W','W32..........W','W32..........W','G2...........W','E............W','G2...........W','W32..........W','E233333333333W','W......2.....W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.22222222222W','E.....2222..2W','W21...2.....2W','W2....2.....2W','G.....21....2W','E.....2.....2W','G.....2222..2W','W21.........2W','E.22222222222W','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','E.1111..1111.W','W.1221..1221.W','W.1221..1221.W','W.1111..1111.W','E............W','W.1111..1111.W','W.1221..1221.W','E.1221..1221.W','W.1111..1111.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.3333........','E..........33.','W3.11111111.3.','W3.12......1.3','G..12......1.3','E..12......1.3','G..12......1.3','W3.11111111.3.','E..........3.3','W33333........','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W111111111111W','E1..........1W','W1..WWWWWW..1W','W1..W3333G..1W','W1..G3333W..1W','E1..W3333W..1W','W1..WWWWWW..1W','W1..........1W','E111111111111W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33W.....W333','E...W.....W..3','W3..22222222..','W3..22222222..','G...22....22..','E...22....22..','G...22222222..','W3..22222222..','E.33W.....W333','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W............W','E.33.......33W','W.32.......23W','W.32.......23W','W.3333...3333W','E.............','W.3333...3333W','W.32.......23W','E.33.......33W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W33...........','E33...22222...','W33...22222...','W.....22.22...','W.....22.22...','E.....22222...','W.....22222...','W.....33333...','E.....33333...','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.3333........','E..2.......33.','W321111111123.','W3.12......1.3','G..12......123','E..12......1.3','G..12......1.3','W321111111123.','E..2.......323','W33333........','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W111111111111W','E1..........1W','W1..WWWWWW..1W','W1.2W333322.1W','W12223333W2.1W','E1..W3333W..1W','W1..WWWWWW..1W','W1..........1W','E111111111111W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W233W.....W333','E222W22222W223','W32.22222222..','W322222222222.','G2.2222222222.','E..2222222222.','G2.2222222222.','W32.222222222.','E233W22222W333','W.2..........W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W222222222222W','E123222222233W','W232222222223W','W232222222223W','W233332223333W','E122222222222.','W233332223333W','W232222222223W','E123222222233W','W222222222222W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W332222222222.','E122222222222.','W332222222222.','W222222222222.','W222222222222.','E122222222222.','W222222222222.','W222223333322.','E122223333322.','W222222222222.','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','E.1..1..1..1.W','W.1..1..1..1.W','W.1..1..1..1.W','W.1222222221.W','E.123......1.W','W.123......1.W','W.122222..21.W','E.1111111111.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33333333333W','E..1.......1.W','W3.1.......1.W','W3.1.......1.W','G..1.......1.W','E..1.......1.W','G..1.......1.W','W3.1.......1.W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W............W','E.....333....W','W.1...333....W','W.1...333....W','W.1...33.....W','E.1...33.....W','W.11111111...W','W.12222221...W','E.11111111...W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.22222222222W','E...........2W','W2..333333..2W','W2..333333..2W','G...3....3..2W','E...3....3..2W','G...333333..2W','W2..333333..2W','E...........2W','W222222222222W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E..1.2222221.W','W321.......1.W','W3.1.......1.W','G..1.......1.W','E..1.......1.W','G..1.......1.W','W321.......1.W','E.33333333333W','W......2.....W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W......2.....W','E.....333....W','W.1..23332...W','W.1..23332...W','W.1..2332....W','E.1...332....W','W.11111111...W','W.12222221...W','E.11111111...W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.22222222222W','E...........2W','W21.333333..2W','W2..333333..2W','G...3222232.2W','E..2322223.12W','G...333333..2W','W21.333333..2W','E.....2.....2W','W222222222222W','WWWWWWWWWWWWWW'],
   ],
   forest_ambush: [
     ['WWWWWWWWWWWWWW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WFFF.FFF.FFFFW','WFFF.FFF.FFFFW','EFFF.FFF.FFFFW','W............W','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WWWWWWWWWWWWWW'],
@@ -8325,26 +8490,26 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','WFFFFF.FFFFFF.','EFFFFF.FFFFFF.','W............W','W.....R.R....W','W.....R.R....W','E.....R.R....W','W............W','WFFFFF.FFFFFF.','EFFFFF.FFFFFF.','W............W','WWWWWWWWWWWWWW'],
   ],
   castle_siege: [
-    ['WWWWWWWWWWWWWW','W333W......W33','E3..W......W..','W3..W......W..','GGGGGWWWWGWWGW','G.............','E.R.R...R.R...','GGGWWWWWWWWWWW','W3..G......G..','E3..W......W..','W333W......W33','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W333W......W33','E322W......W2.','W32.W......W2.','GGGGGWWWWGWWGW','G.............','E.R.R...R.R...','GGGWWWWWWWWWWW','W32.G......G2.','E32.W......W2.','W333W......W33','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W2222222222222','E2.1111111111W','W2.1.........W','W2.1.........W','W2.1.........W','E2.1.........W','W2.1.........W','W2.1111111111W','E.222222222222','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W............W','E.WWWWWWWWWWWW','W...........3W','W...........3W','W.....2.....3W','E.....2.....3W','W...........3W','W...........3W','E.WWWWWWWWWWWW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.WWWWWWWWWWWW','W........2223W','W........2223W','W.....2.22223W','E.....2122223W','W........2223W','W........2223W','E.WWWWWWWWWWWW','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...RRRRRRRR.W','E...R......R.W','WWWWR......RWW','W...R......R.W','W...R......R.W','EGGWR......RWW','W...R......R.W','W...R......R.W','EWWWRRRRRRRRRW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33.......333','E..W.......W3W','W3.W.......W3W','W3.WWWWWWWWW3W','G..G.......G3W','E..G.......W3W','G..GWWWWWWWW3W','W3.W.......W3W','E.33.......333','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33333333333W','E..WWWG..WWWWW','W3.W..........','W3.W..........','G..GWW...WWW.W','E....W...W...W','G....WWWWW...W','W3...W.......W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.RR.RR.RR.R.W','E............W','W.RR.RR.RR.R.W','GWWWGWWWWWWWWW','G333.......333','E333.......333','GGGWWWWWWWWWWW','W.RR.RR.RR.R.W','E............W','W.RR.RR.RR.R.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W2332222222333','E22W..22222W3W','W32W...2222W3W','W32WWWWWWWWW3W','G2.G..2222223W','E..G...2222W3W','G2.GWWWWWWWW3W','W32W..22222W3W','E233.222222333','W.2...2222222W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E2.WWWG2.WWWWW','W32W..........','W32W..........','G2.GWW...WWW.W','E....W...W...W','G2...WWWWW...W','W32..W.......W','E233333333333W','W......2.....W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.RR.RR.RR.R.W','E............W','W.RR.RR.RR.R.W','GWWWGWWWWWWWWW','G3332222222333','E333.222222333','GG2WWWWWWWWWWW','W.RR.RR.RR.R.W','E............W','W.RR.RR.RR.R.W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.WWWWWWWWWWWW','E.G..........W','W.W.WWWWWWWWWW','W.W.W........W','W.G.W.WWWWWWWW','E.G.W.W......W','W.G.W.WWWGWWWG','W.W.W........G','E.W.WWWWWWWWGG','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W~~~~~~~~~~~~W','E~3333333333~W','W~3..........W','W~3..........W','W~3..........W','E~3..........W','W~3..........W','W~3333333333~W','E~~~~~~~~~~~~W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WSSS.....S333S','ESSS.....S333S','W....SSSSS....','W....SSSSS....','WSSSS.....SSSS','ESSSS.....SSSS','W....SSSSS....','WSSS.....S333S','ESSS.....S333S','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...W......W3W','E...G......G3W','W3..WWWWWWWW3W','W3..W......W3W','G...G......G3W','E...W......W3W','G...WWWWWWWW3W','W3..G......G3W','E...W......W3W','W3..W......W3W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.222222222222','E............2','W2.111111111.2','W2.1.......1.2','G..1.......1.2','E..1.......1.2','G..111111111.2','W2...........2','E.222222222222','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33W.....W333','E...G.....G..3','W3..WWWWWWWW.3','W3...........3','G............3','E............3','G............3','W3..WWWWWWWW.3','E...G.....G..3','W333W.....W333','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W222222222222W','E123333333332W','W232222222222W','W232222222222W','W232222222222W','E122222222222W','W232222222222W','W233333333332W','E122222222222W','W222222222222W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W222222222333S','E122222222333S','W222222222222.','W222222222222.','W222222222222S','E122222222222S','W222222222222.','W222222222333S','E122222222333S','W222222222222.','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...W..2222W3W','E2..G.2222223W','W32.WWWWWWWW3W','W32.W.22222W3W','G2..G22222223W','E...W.22222W3W','G2..WWWWWWWW3W','W32.G.2222223W','E2..W..2222W3W','W32.W...222W3W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.222222222222','E............2','W21111111111.2','W2.1.......1.2','G..1.......112','E..1.......1.2','G..111111111.2','W21..........2','E.222222222222','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33W.....W333','E2.2G.....G223','W32.WWWWWWWW23','W32.........23','G2..........23','E...........23','G2..........23','W32.WWWWWWWW23','E22.G.....G.23','W333W.....W333','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','EWWWWWWWWWWGWW','W.R.R.R.R.R.WW','W.R.R.R.R.R.WW','W............W','E............W','W.R.R.R.R.R.WW','WWWWGWWWWWWWWW','E............W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3W3W3W3W3W3WW','E.W.W.W.W.W.WW','W............W','W.W.W.W.W.W.WW','W3G3W3W3W3W3WW','E............W','W3G3W3W3W3W3WW','W.W.W.W.W.W.WW','E............W','W...W.W.W.W.WW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.3.3.3.3.3..W','E.............','W.3.3.3.3.3..W','W.............','W3.3.3.3.3.3.W','E.............','W.3.3.3.3.3..W','W.............','E3.3.3.3.3.3.W','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W323232323232W','E122222222222W','W222222222222W','W222222222222W','W323232323232W','E122222222222W','W323232323232W','W222222222222W','E122222222222W','W222222222222W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W232323232322W','E122222222222.','W232323232322W','W222222222222.','W323232323232W','E122222222222.','W232323232322W','W222222222222.','E123232323232W','W222222222222.','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W..W.......G.W','E..WWWWWWWGGWW','W..W.......W.W','W..G.......G.W','WGGG.......GWW','E..G.......G.W','W..W.......W.W','W..WWWWWWWWWGW','E..W.......W.W','W..G.......W.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W333.......333','E3.........3..','WWWWWWWWWGWWWW','W..R.R.R.R.R.W','W.............','E.............','WGGWWWWWWGWWWW','W3.........3..','E333.......333','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W3332222222333','E3222222.2232.','WWWWWWWWWGWWWW','W..R.R.R.R.R.W','W.............','E.............','WGGWWWWWWGWWWW','W32......2232.','E333.....22333','W.........222.','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W..W.R.R.W...W','EGWG.....GWGWW','W.R.......R..W','W.R.......R..W','WGGG.....GWWWW','E..W.R.R.W...W','W..W.R.R.W...W','WWWG.....GWGWW','E.R.......R..W','W.R.......R..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..W.......W3W','E..G.......G3W','W3.WWWWWWWWW3W','W3.W.......W3W','G..G.......G3W','E..G.......W3W','G..GWWWWWWWW3W','W3.G.......G3W','E..W.......W3W','W3.W.......W3W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..W..22222W3W','E2.G.22222223W','W32WWWWWWWWW3W','W32W.222222W3W','G2.G222222223W','E..G.222222W3W','G..GWWWWWWWW3W','W32G.22222223W','E2.W..22222W3W','W32W...2222W3W','WWWWWWWWWWWWWW'],
   ],
   night_ambush: [
     ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS...........S','WS...........S','WS...........S','ES...........S','WS...........S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
@@ -8387,13 +8552,8 @@ function initializeTacticsEngine() {
   TERRAIN_PRESETS.forest    = { base: 'forest', features: ['forest','forest','shadow','water'] };
   TERRAIN_PRESETS.keep      = { base: 'empty', features: ['wall','wall','wall','floor3'] };
 
-  // Add jump stats to CLASSES for height traversal
-  Object.assign(CLASSES.shinobi, { jumpStat: 2 });
-  Object.assign(CLASSES.kunoichi, { jumpStat: 2 });
-  Object.assign(CLASSES.shadow, { jumpStat: 2 });
-  Object.assign(CLASSES.ronin, { jumpStat: 1 });
-  Object.assign(CLASSES.monk, { jumpStat: 1 });
-  Object.assign(CLASSES.berserker, { jumpStat: 1 });
+  // jumpStat is now defined directly in CLASSES (see CLASSES declaration above)
+  // No runtime assignment needed — this is kept for clarity only.
 
   // Night mission detection for certain terrain types
   STEALTH.isNightMission = false; // Will be set per mission
