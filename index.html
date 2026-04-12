@@ -963,6 +963,8 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
       <button class="action-btn attack" id="btnAttack" onclick="setAction('attack')">⚔ Attack</button>
       <button class="action-btn special" id="btnSpecial" onclick="setAction('special')">✦ Special</button>
       <button class="action-btn" id="btnItem" onclick="setAction('item')">⊛ Item</button>
+      <button class="action-btn special" id="btnObjective" onclick="performObjectiveAction()" style="display:none;border-color:rgba(255,140,0,0.5);color:#ffaa33">⚑ Objective</button>
+      <button id="btnDiscardWeapon" onclick="combatDiscardWeapon()" style="display:none;background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--mist);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.05em;padding:0.35rem 0.7rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(192,57,43,0.12)'" onmouseout="this.style.background='transparent'">✕ Discard Weapon</button>
       <div style="width:1px;height:28px;background:rgba(255,255,255,0.1)"></div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
         <button class="facing-btn" id="facingN" onclick="setFacing('north')" title="Face North">▲</button>
@@ -2429,12 +2431,61 @@ const TRAINING_TYPES = [
   { id: 'ranged_training', name: 'Ranged Training', icon: '🏹', stat: 'rangedProficiency', pointsPerHour: 1, minHours: 2, maxHours: 8, desc: 'Target practice improves ranged and thrown accuracy.' }
 ];
 
+// ── CLASS-SPECIFIC NAME POOLS ──
+// Each class has its own unique name list — no crossover between classes.
+// Male/female/neutral names chosen to match the class flavour.
+const CLASS_NAMES = {
+  shinobi: [
+    // Swift, shadow-themed — short, sharp, often monosyllabic
+    'Ryu','Hayate','Kazan','Sōen','Karasu','Mugen','Shura','Kumo',
+    'Rasetsu','Hibiki','Zanko','Arashi','Kaze','Tsuyoshi','Yami',
+    'Ibuki','Kōga','Mizore','Shirō','Raijin','Fugaku','Kōhei',
+    'Sōma','Takuya','Gekkō','Naoto','Fūma','Kiryu','Isamu','Hyōga',
+  ],
+  kunoichi: [
+    // Elegant, flora/nature-themed female names with an edge
+    'Kasumi','Setsuna','Nami','Akemi','Fuuka','Kohana','Hana','Izumi',
+    'Reiko','Yuki','Mizuki','Satsuki','Seika','Asahi','Midori','Tsuki',
+    'Shizuka','Hotaru','Ran','Aoi','Suzume','Momoka','Sakura','Kikyo',
+    'Kurumi','Ayame','Nadeshiko','Himari','Tsubaki','Ren',
+  ],
+  ronin: [
+    // Stoic, old-fashioned warrior names — heavier sound
+    'Kenshin','Takeda','Raiden','Kurogane','Goro','Tatsu','Kenji','Jin',
+    'Bunta','Daisuke','Musashi','Masamune','Sōjirō','Jubei','Genzo',
+    'Tōma','Rokuro','Daigo','Shingen','Kōshirō','Orochi','Ijichi',
+    'Hagane','Ittōsai','Kagehisa','Tōbei','Bennosuke','Susanoo','Yoichi','Ujimasa',
+  ],
+  monk: [
+    // Spiritual, Sanskrit/Buddhist-influenced names
+    'Tenshi','Raijin','Fujin','Sōken','Myōun','Ryōkan','Dōgen','Jōchi',
+    'Kūkai','Mushin','Tenshin','Enkū','Zenji','Shinran','Hōnen',
+    'Ryōen','Kōshō','Genshin','Nankai','Eian','Jakucho','Myōan',
+    'Kakuban','Enshō','Kōun','Tairin','Shōen','Fugen','Byakuren','Nyorin',
+  ],
+  shadow: [
+    // Dark, archaic, otherworldly — void/night imagery
+    'Kage','Kurō','Yamikaze','Yūrei','Onryō','Muen','Akuryō','Kokumu',
+    'Shinkū','Reibō','Zanmu','Meifu','Abaddon','Yamato','Sōkoku',
+    'Ryūja','Kurotama','Yomigaeri','Shirogane','Kokuyō','Zangetsu',
+    'Enkō','Meikyo','Yamiyo','Reimei','Shikigami','Kagero','Maboroshi','Tsukuyomi','Erebos',
+  ],
+  berserker: [
+    // Brutal, primal, thunder-and-earth — hard consonants
+    'Tora','Tsuyoshi','Geki','Kengo','Ryūto','Tamotsu','Gōda','Masamori',
+    'Bakuryu','Kōga','Gōken','Tetsuya','Kazuma','Ganryū','Shōki',
+    'Ryūsei','Bōkyaku','Dairoku','Tetsurō','Ōmura','Gōshō','Gantetsu',
+    'Orochi','Hakuryū','Kōtarō','Zanku','Kyōfu','Fujimaro','Dōmeki','Ryūzan',
+  ],
+};
+
+// Flat fallback list (used when a class key is unknown)
 const NINJA_NAMES = [
-  'Ryu', 'Kasumi', 'Takeda', 'Himiko', 'Shuro', 'Nami', 'Kenshin', 'Akemi',
-  'Tora', 'Setsuna', 'Hayate', 'Izumi', 'Raiden', 'Fuuka', 'Kurogane', 'Yoshi',
-  'Minato', 'Sora', 'Riku', 'Kohana', 'Tenshi', 'Kazuya', 'Midori', 'Hana',
-  'Goro', 'Tsuki', 'Kenji', 'Yuki', 'Shin', 'Reiko', 'Tatsu', 'Mizuki',
-  'Bunta', 'Seika', 'Jin', 'Asahi', 'Kira', 'Nori', 'Daisuke', 'Satsuki'
+  'Ryu','Kasumi','Takeda','Himiko','Shuro','Nami','Kenshin','Akemi',
+  'Tora','Setsuna','Hayate','Izumi','Raiden','Fuuka','Kurogane','Yoshi',
+  'Minato','Sora','Riku','Kohana','Tenshi','Kazuya','Midori','Hana',
+  'Goro','Tsuki','Kenji','Yuki','Shin','Reiko','Tatsu','Mizuki',
+  'Bunta','Seika','Jin','Asahi','Kira','Nori','Daisuke','Satsuki'
 ];
 
 // Recruit cost scales with level: base 80g + 60g per level above 1
@@ -2495,6 +2546,7 @@ function getAllGameImages() {
   const files = new Set();
   Object.values(TILE_PNG).forEach(f => files.add(f));
   Object.keys(CLASSES).forEach(k => files.add(classPng(k)));
+  files.add('Prisoner.png'); // prisoner NPC sprite
   Object.keys(ENEMY_TYPES).forEach(k => files.add(enemySheetKey(k)));
   return [...files];
 }
@@ -2612,6 +2664,7 @@ let CS = {
   exitsActive: false,
   exitTiles: [],
   lootOnFloor: null,
+  goldPickups: [],    // [{x, y, amount}] — collector coin bags on the floor
   allyWithLoot: null,
   alliesEscaped: [],
   turnLimit: 0,
@@ -2895,15 +2948,18 @@ function usedNinjaNames() {
   return new Set(GS.clan.map(n => n.name));
 }
 
-function pickUnusedName() {
+function pickUnusedName(classKey) {
   const used = usedNinjaNames();
-  const pool = NINJA_NAMES.filter(n => !used.has(n));
-  if (!pool.length) {
-    // All names used — add a number suffix
-    const base = NINJA_NAMES[Math.floor(Math.random() * NINJA_NAMES.length)];
-    return base + ' II';
+  // Use the class-specific pool if available, else the generic pool
+  const basePool = (classKey && CLASS_NAMES[classKey]) ? CLASS_NAMES[classKey] : NINJA_NAMES;
+  const available = basePool.filter(n => !used.has(n));
+  if (available.length) {
+    return available[Math.floor(Math.random() * available.length)];
   }
-  return pool[Math.floor(Math.random() * pool.length)];
+  // All class names used — pick any from the pool and add a suffix
+  const fallback = basePool[Math.floor(Math.random() * basePool.length)];
+  const suffixes = [' II', ' the Elder', ' no Kage', ' Reborn', ' Shadow'];
+  return fallback + suffixes[Math.floor(Math.random() * suffixes.length)];
 }
 
 function generateHireableNinja(targetLevel) {
@@ -2929,25 +2985,67 @@ function generateHireableNinja(targetLevel) {
     if (pool.length) weapon = initWeapon(pool[Math.floor(Math.random() * pool.length)], wType);
   }
 
-  // Random trait for flavour
-  const traits = [
+  // Class-specific hire traits
+  const CLASS_TRAITS = {
+    shinobi: [
+      'Grew up in the village gutters. Shadow is the only home they know.',
+      'Former palace spy — reads a room before anyone has finished entering it.',
+      'Trained under a master who disappeared without explanation. Still searching.',
+      'Moves like smoke. Never seen unless they choose to be.',
+      'Counts heartbeats to time every strike. Unnervingly calm.',
+      'Cut their teeth on garrison rooftops at fourteen.',
+    ],
+    kunoichi: [
+      'Poison is a kindness compared to her patience.',
+      'Former court dancer — every movement carries a hidden knife.',
+      'Speaks in riddles and strikes in silence.',
+      'Studied herbalism and assassination in equal measure.',
+      'Once a merchant\'s wife. The merchant asked too many questions.',
+      'Has never missed a target. Has never apologised for one either.',
+    ],
+    ronin: [
+      'Masterless for three years. Still looking for something worth serving.',
+      'Carries a broken clan seal. Speaks of it to no one.',
+      'Won a duel at seventeen. Has been hunted by the loser\'s clan ever since.',
+      'Drinks too much at camp. Fights perfectly sober.',
+      'Old enough to remember the previous warlord. Hasn\'t forgiven the new one.',
+      'Seven duels. Seven victories. Zero regrets.',
+    ],
+    monk: [
+      'Left the mountain temple when the warlord\'s soldiers burned the lower village.',
+      'Recites sutras before every fight. Wins every fight.',
+      'Carries a broken prayer wheel as a reminder. Will not say of what.',
+      'Healed three enemies on the same battlefield he defeated six.',
+      'Chi flows so freely it makes the air hum when he meditates.',
+      'Was a physician first. Became a warrior when medicine wasn\'t enough.',
+    ],
+    shadow: [
+      'Claims to have died once. The story changes each time they tell it.',
+      'Walks through walls of shadow. What else walks through with them is unclear.',
+      'Speaks of the void the way others speak of an old friend.',
+      'Former court sorcerer — exiled when the emperor\'s nightmares began.',
+      'Eyes that have seen the other side of something. Never says what.',
+      'Recruited from a cursed battlefield where no one else survived.',
+    ],
+    berserker: [
+      'Cracked a castle gate with a single charge. Didn\'t slow down.',
+      'Took three arrows at the Battle of Iron Ridge. Finished the fight.',
+      'Scars tell a story. So does the grin.',
+      'Happiest in the thick of it. Everyone else is terrified.',
+      'Gentle until the fight starts. Then purely animal.',
+      'Eats before every battle and drinks after. Never the other way around.',
+    ],
+  };
+  const traits = CLASS_TRAITS[classKey] || [
     'Former palace guard. Reliable in tight spaces.',
     'Street brawler who fights dirty and wins.',
     'Wandering ronin seeking purpose.',
-    'Ex-merchant with a knack for ambushes.',
-    'Orphaned apprentice, eager to prove worth.',
-    'Disgraced samurai — dangerous and unpredictable.',
     'Quiet assassin who never misses a target.',
-    'Healer turned warrior out of necessity.',
-    'Cheerful but ruthless in equal measure.',
-    'Night-hunter with exceptional reflexes.',
-    'Pirate turned shadow-walker.',
-    'Former spy with too many secrets.',
   ];
 
   return {
     id: 'hire_' + Date.now() + '_' + Math.floor(Math.random() * 9999),
-    name: pickUnusedName(),
+    name: pickUnusedName(classKey),
     class: classKey,
     level, exp: 0, expToNext: 100,
     hp: cls.baseStats.hp + bonus, maxHp: cls.baseStats.hp + bonus,
@@ -3299,9 +3397,15 @@ function buildWeaponChoiceHTML(n) {
     const sStatus = weaponStatusLabel(w);
     const sBroken = w.quiverEmpty || w.usesLeft <= 0 || w.ammo <= 0;
     const sCanUse = ninjaCanUseWeapon(n, w);
+    // Sell button always shown; discard only for broken
     const sDiscardBtn = sBroken
       ? `<button onclick="event.stopPropagation();stashDiscardWeapon(${i})" style="font-size:0.55rem;background:rgba(192,57,43,0.15);border:1px solid rgba(192,57,43,0.4);color:var(--crimson-bright);padding:0.15rem 0.4rem;cursor:pointer;font-family:Cinzel,serif;margin-top:0.3rem">✕ Discard</button>`
       : '';
+    const _sSellBase = (WEAPON_SELL_PRICE || {})[w.tier] || 15;
+    const _sSellFinal = sBroken ? Math.floor(_sSellBase * 0.5) : _sSellBase;
+    const sSellBtn = '<button onclick="event.stopPropagation();stashSellWeapon(' + i + ')" style="font-size:0.55rem;background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.35);color:var(--gold);padding:0.15rem 0.5rem;cursor:pointer;font-family:Cinzel,serif;margin-top:0.3rem;margin-left:0.2rem" onmouseover="this.style.background=\'rgba(201,162,39,0.22)\'" onmouseout="this.style.background=\'rgba(201,162,39,0.12)\'">&#9837; Sell ' + _sSellFinal + 'G</button>';
+    const sSellPrice = (window.WEAPON_SELL_PRICE || {})[w.tier] || 15;
+    const sSellFinal = sBroken ? Math.floor(sSellPrice * 0.5) : sSellPrice;
     const sRestricted = !sCanUse && !sBroken;
     const sClickable = !sBroken && sCanUse;
     html += `<div class="weapon-choice-item" style="opacity:${sRestricted ? '0.45' : '1'}" ${sClickable ? `onclick="ninjaEquipWeapon('${n.id}', ${i})"` : ''}>
@@ -3309,7 +3413,7 @@ function buildWeaponChoiceHTML(n) {
       <div class="wci-info">
         <div class="wci-name">${w.icon} ${w.name}${sBroken ? ' <span style="color:var(--crimson);font-size:0.55rem">DEPLETED</span>' : ''}${sRestricted ? ' <span style="color:var(--mist);font-size:0.5rem">🔒 Class locked</span>' : ''}</div>
         <div class="wci-stats">DMG ${w.dmg[0]}-${w.dmg[1]}${w.range ? ' · Range '+w.range : ''} · ${w.tier.toUpperCase()} · ${WEAPONS[w.type]?.label || w.type}<br><span style="color:var(--mist)">${sStatus}</span></div>
-        ${sDiscardBtn}
+        ${sDiscardBtn}${sSellBtn}
       </div>
     </div>`;
   });
@@ -3454,6 +3558,45 @@ function ninjaDiscardWeapon(ninjaId) {
       { label: 'Discard', fn: () => { n.weapon = null; saveGame(); closeModal(); renderLoadoutModal(ninjaId); }, cls: 'danger' },
       { label: 'Cancel', fn: closeModal }
     ]);
+}
+
+
+// ── STASH SELL PRICES ──
+const WEAPON_SELL_PRICE = { common: 20, uncommon: 45, rare: 90, legendary: 175, epic: 300 };
+
+function stashSellWeapon(stashIdx) {
+  const stash = GS.weaponStash || [];
+  const w = stash[stashIdx];
+  if (!w) return;
+  const sellPrice = WEAPON_SELL_PRICE[w.tier] || 15;
+  // Depleted weapons sell for half
+  const broken = w.quiverEmpty || w.usesLeft <= 0 || (w.ammo !== undefined && w.ammo <= 0);
+  const finalPrice = broken ? Math.floor(sellPrice * 0.5) : sellPrice;
+  openModal(
+    'Sell Weapon?',
+    '<div style="font-size:1.2rem;margin-bottom:0.4rem">' + w.icon + ' ' + w.name + '</div>' +
+    '<div style="font-size:0.75rem;color:var(--mist);margin-bottom:0.7rem">' + (w.tier||'common').toUpperCase() + ' · DMG ' + w.dmg[0] + '-' + w.dmg[1] + '</div>' +
+    (broken ? '<div style="font-size:0.65rem;color:var(--crimson-bright);margin-bottom:0.5rem">Weapon is depleted — selling at 50% value</div>' : '') +
+    'Sell for <b style="color:var(--gold)">' + finalPrice + ' Gold</b>?',
+    [
+      {
+        label: 'Sell (' + finalPrice + 'G)',
+        cls: 'confirm',
+        fn: () => {
+          GS.weaponStash.splice(stashIdx, 1);
+          GS.gold += finalPrice;
+          updateGoldDisplay();
+          saveGame();
+          closeModal();
+          // Re-open the loadout modal if it was open
+          const openNinjaId = window._openNinjaDetailId;
+          if (openNinjaId) openNinjaDetail(openNinjaId);
+          toast('+' + finalPrice + 'G — ' + w.name + ' sold.', 'success');
+        }
+      },
+      { label: 'Keep', cls: '', fn: closeModal }
+    ]
+  );
 }
 
 function stashDiscardWeapon(stashIdx) {
@@ -3838,6 +3981,157 @@ const TERRAIN_PRESETS = {
   keep:     { base: 'empty', features: ['wall', 'wall', 'wall'] }
 };
 
+
+// ═══════════════════════════════════════════════════════
+// ── STRUCTURED OBJECTIVE SYSTEM ──
+// Objective tiles are placed on the map after grid generation.
+// Each has a type: 'fire' | 'intel' | 'sabotage' | 'plant_evidence'
+// An ally must stand on the tile and use the Objective action to interact.
+// ═══════════════════════════════════════════════════════
+
+const OBJECTIVE_TILE_ICONS = {
+  fire:           '🔥',
+  intel:          '📋',
+  sabotage:       '💥',
+  plant_evidence: '📜',
+};
+
+const OBJECTIVE_TILE_LABELS = {
+  fire:           'Set Fire',
+  intel:          'Copy Intelligence',
+  sabotage:       'Sabotage',
+  plant_evidence: 'Plant Evidence',
+};
+
+// Determine what kind of objective tiles this mission needs
+function getMissionObjectiveType(mission) {
+  const type = mission.type;
+  const tags = mission.tags || [];
+  const name = (mission.name || '').toLowerCase();
+  const desc = (mission.desc || '').toLowerCase();
+  if (type === 'agitation') {
+    if (name.includes('fire') || name.includes('burn') || desc.includes('torch') || desc.includes('fire') || desc.includes('burn')) return 'fire';
+    if (name.includes('sabotage') || name.includes('destroy') || name.includes('bridge') || desc.includes('sabotage') || desc.includes('destroy')) return 'sabotage';
+    return 'sabotage'; // default agitation
+  }
+  if (type === 'espionage') {
+    if (name.includes('plant') || name.includes('evidence') || desc.includes('plant')) return 'plant_evidence';
+    return 'intel'; // default espionage
+  }
+  return null; // not an objective-tile mission
+}
+
+// Place objective tiles at passable, mid-map positions
+// Returns array of {x, y, type, label, icon, done}
+function placeObjectiveTiles(grid, objType, count) {
+  const W = CS.gridW, H = CS.gridH;
+  const PASSABLE = new Set('.1FRGSs~rT');
+  const candidates = [];
+  // Prefer right-centre cluster (where enemies are) — objective is usually deep in the map
+  for (let y = 2; y < H - 2; y++) {
+    for (let x = Math.floor(W * 0.4); x < W - 2; x++) {
+      const ch = grid[y]?.[x];
+      if (ch && PASSABLE.has(ch)) candidates.push({ x, y });
+    }
+  }
+  // Shuffle and pick 'count' well-spread tiles
+  candidates.sort(() => Math.random() - 0.5);
+  const chosen = [];
+  for (const c of candidates) {
+    // Ensure chosen tiles are spread at least 3 tiles apart
+    const tooClose = chosen.some(t => Math.abs(t.x - c.x) + Math.abs(t.y - c.y) < 3);
+    if (!tooClose) {
+      chosen.push(c);
+      if (chosen.length >= count) break;
+    }
+  }
+  const icon = OBJECTIVE_TILE_ICONS[objType] || '⚑';
+  const label = OBJECTIVE_TILE_LABELS[objType] || 'Objective';
+  return chosen.map((c, i) => ({ x: c.x, y: c.y, type: objType, label, icon, done: false, id: 'obj_' + i }));
+}
+
+// Called after initCombat sets up grid + mission
+function initObjectiveTiles(mission, grid) {
+  const objType = getMissionObjectiveType(mission);
+  CS.objectiveTiles = [];
+  CS.objectiveProgress = 0;
+  CS.objectiveTotal = 0;
+  if (!objType) return;
+
+  // How many objective tiles? Scales with mission difficulty
+  const diff = mission.difficulty || 1;
+  const count = diff <= 2 ? 1 : diff <= 3 ? 2 : 3;
+
+  CS.objectiveTiles = placeObjectiveTiles(grid, objType, count);
+  CS.objectiveTotal = CS.objectiveTiles.length;
+  CS.objectiveProgress = 0;
+}
+
+// Perform objective action — called when player uses the Objective button
+function performObjectiveAction() {
+  if (CS.unitActed) { toast('Already acted this turn.', 'error'); return; }
+  if (CS.phase !== 'player') return;
+  const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
+  if (!ally || ally.hp <= 0) return;
+
+  const tile = CS.objectiveTiles.find(t => !t.done && t.x === ally.x && t.y === ally.y);
+  if (!tile) {
+    toast('No objective here. Move to a marked tile (\u25CF) to act.', 'error');
+    return;
+  }
+
+  // Complete the objective tile
+  tile.done = true;
+  CS.objectiveProgress++;
+
+  const flavour = {
+    fire:           [ally.name + ' sets fire to the structure — flames catch!',
+                     ally.name + ' touches a torch to the supplies. Fire spreads!',
+                     'Flames roar upward. ' + ally.name + ' steps back.'],
+    intel:          [ally.name + ' copies the patrol schedules.',
+                     ally.name + ' photographs the war plans with practiced strokes.',
+                     'Intelligence secured. ' + ally.name + ' rolls the scroll.'],
+    sabotage:       [ally.name + ' drives a spike into the mechanism — it seizes.',
+                     ally.name + ' cuts the support beam. A crack echoes through the structure.',
+                     'Sabotage complete. ' + ally.name + ' retreats into shadow.'],
+    plant_evidence: [ally.name + ' slips a forged document into the stack.',
+                     'Evidence planted. ' + ally.name + ' adjusts the seal perfectly.',
+                     ally.name + ' leaves no trace beyond the planted scroll.'],
+  };
+  const msgs = flavour[tile.type] || ['Objective completed!'];
+  addLog(tile.icon + ' ' + msgs[Math.floor(Math.random() * msgs.length)], 'special');
+  toast(tile.icon + ' ' + tile.label + ' complete!', 'success');
+
+  CS.unitActed = true;
+  CS.savedMove = null;
+  CS.selectedAction = null;
+  CS.highlightedTiles = [];
+
+  // All objectives done → activate exits
+  if (CS.objectiveProgress >= CS.objectiveTotal) {
+    CS.exitsActive = true;
+    CS.objectivePhase = 'extract';
+    const doneMsg = {
+      fire:           'The structure burns! Escape before it collapses!',
+      intel:          'All intelligence gathered. Extract now!',
+      sabotage:       'All targets sabotaged. Reach the exit!',
+      plant_evidence: 'All evidence planted. Disappear into the shadows!',
+    };
+    addLog('\u2714 ' + (doneMsg[tile.type] || 'All objectives complete! Reach the exit!'), 'system');
+    toast('\u2714 Objectives complete — escape!', 'success');
+    schedulePulseRedraw();
+  } else {
+    const remaining = CS.objectiveTotal - CS.objectiveProgress;
+    addLog(remaining + ' objective' + (remaining > 1 ? 's' : '') + ' remaining.', 'system');
+    toast(remaining + ' more to go.', 'success');
+  }
+
+  giveJP(ally, 50, 'objective');
+  checkCombatEnd();
+  renderCombat();
+  if (CS.unitMoved && CS.unitActed) setTimeout(finishAllyTurn, 400);
+}
+
 function initCombat(mission, partyIds) {
   CS.active = true;
   CS.mission = mission;
@@ -3856,10 +4150,15 @@ function initCombat(mission, partyIds) {
   CS.exitsActive = false;
   CS.exitTiles = [];
   CS.lootOnFloor = null;
+  CS.goldPickups = [];
   CS.allyWithLoot = null;
   CS.alliesEscaped = [];
   CS.turnLimit = mission.turnLimit || 0;
   CS.doomBags = [];
+  // ── Structured objective system ──
+  CS.objectiveTiles = [];      // [{x, y, type, label, done, icon}] — interactive map tiles
+  CS.objectiveProgress = 0;   // how many objective tiles have been completed
+  CS.objectiveTotal = 0;      // total needed
   CS.currentFloor = 0;
   CS.totalFloors = mission.floors ? mission.floors.length : 1;
   CS.prisoner = null;
@@ -3873,6 +4172,9 @@ function initCombat(mission, partyIds) {
   const exitYs = [2, Math.floor(CS.gridH / 2), CS.gridH - 3];
   CS.exitTiles = exitYs.map(y => ({ x: 0, y }));
   CS.exitTiles.forEach(t => { CS.grid[t.y][t.x] = 'exit'; });
+
+  // Place objective tiles (agitation/espionage missions)
+  initObjectiveTiles(mission, CS.grid);
 
   // Place allies
   CS.allies = partyIds.map((id, i) => {
@@ -4165,6 +4467,26 @@ function renderCombat() {
           : '📦 Kill carrier to drop loot';
         objColor = 'var(--crimson-bright)';
       }
+    } else if (CS.objectiveTiles && CS.objectiveTiles.length) {
+      // Agitation / espionage objective missions
+      const done = CS.objectiveProgress;
+      const total = CS.objectiveTotal;
+      const objType = CS.objectiveTiles[0]?.type || 'objective';
+      const activeLabel = OBJECTIVE_TILE_LABELS[objType] || 'Objective';
+      const activeIcon = OBJECTIVE_TILE_ICONS[objType] || '⚑';
+      if (CS.exitsActive && done >= total) {
+        objText = `✓ ${activeLabel} complete (${done}/${total}) — reach the exit!`;
+        objColor = 'var(--jade-bright)';
+      } else {
+        objText = `${activeIcon} ${activeLabel}: ${done}/${total} · Step on marked tiles and use ⚑`;
+        objColor = done > 0 ? 'var(--gold)' : 'var(--crimson-bright)';
+      }
+      // Overlay turn limit if present
+      if (CS.turnLimit > 0) {
+        const left = Math.max(0, CS.turnLimit - CS.turn + 1);
+        objText += ` · ⏳ ${left} turns left`;
+        if (left <= 3) objColor = 'var(--crimson-bright)';
+      }
     } else if (CS.turnLimit > 0) {
       const left = Math.max(0, CS.turnLimit - CS.turn + 1);
       objText = `⏳ ${left} turn${left !== 1 ? 's' : ''} left · Eliminate all enemies`;
@@ -4182,7 +4504,7 @@ function renderCombat() {
   drawCanvas();
   updateActionButtons();
   // Kick off pulse animation for exits/loot if needed
-  if (CS.exitsActive || CS.lootOnFloor || CS.doomBags.length || CS.allies.some(a => a.doomed) || (CS.prisoner && !CS.prisoner.escaped)) schedulePulseRedraw();
+  if (CS.exitsActive || CS.lootOnFloor || (CS.goldPickups && CS.goldPickups.length) || (CS.objectiveTiles && CS.objectiveTiles.some(t=>!t.done)) || CS.doomBags.length || CS.allies.some(a => a.doomed) || (CS.prisoner && !CS.prisoner.escaped)) schedulePulseRedraw();
 }
 
 function syncMobileCombatPanels() {
@@ -4295,7 +4617,15 @@ function renderSelectedInfo() {
       <div class="special-move-name">✦ ${ally.specialMove.name}</div>
       <div class="special-move-desc">Chi: ${ally.specialMove.chi}</div>
     </div>
-    ${ally.weapon ? `<div class="text-xs mt-1" style="color:${weaponUsable(ally) ? 'var(--gold)' : 'var(--crimson)'}">${ally.weapon.icon} ${ally.weapon.name} — ${weaponStatusLabel(ally.weapon)}</div>` : '<div class="text-xs text-mist mt-1">⚠ Unarmed</div>'}
+    ${ally.weapon
+      ? `<div class="text-xs mt-1" style="color:${weaponUsable(ally)?'var(--gold)':'var(--crimson)'}">
+           ${ally.weapon.icon} ${ally.weapon.name} &mdash; ${weaponStatusLabel(ally.weapon)}
+           ${!weaponUsable(ally)?'<span style="color:var(--crimson-bright);font-size:0.55rem"> &#x2715; BROKEN/EMPTY</span>':''}
+         </div>`
+      : `<div class="text-xs mt-1" style="color:var(--jade-bright)">
+           ${getUnarmedProfile(ally.class).icon} ${getUnarmedProfile(ally.class).name}
+           <span style="color:var(--mist);font-size:0.6rem"> (unarmed &middot; ${getUnarmedProfile(ally.class).dmg[0]}-${getUnarmedProfile(ally.class).dmg[1]} dmg)</span>
+         </div>`}
     ${ally.armorItem ? `<div class="text-xs mt-1" style="color:${ally.armorItem.durability <= 2 ? 'var(--crimson-bright)' : 'var(--jade-bright)'}">🛡 ${ally.armorItem.name}: ${ally.armorItem.durability}/${ally.armorItem.maxDurability || ARMOR_DURABILITY[ally.armorItem.tier] || 5} dur.</div>` : ''}
   `;
 
@@ -4308,14 +4638,47 @@ function updateActionButtons() {
   const moved = CS.unitMoved;
   const acted = CS.unitActed;
   const hasChi = ally ? ally.chi >= (ally.specialMove?.chi || 99) : false;
-  const weaponOut = ally && ally.weapon && !weaponUsable(ally);
+  const weaponBroken = ally && ally.weapon && !weaponUsable(ally);
 
   document.getElementById('btnMove').disabled = !isMyTurn || moved || !ally || ally.hp <= 0;
-  document.getElementById('btnAttack').disabled = !isMyTurn || acted || !ally || ally.hp <= 0 || weaponOut;
+  // Attack is always available (unarmed punches/kicks used when no weapon)
+  document.getElementById('btnAttack').disabled = !isMyTurn || acted || !ally || ally.hp <= 0;
+
+  // Show/hide discard button
+  const discardBtn = document.getElementById('btnDiscardWeapon');
+  if (discardBtn) {
+    const hasWeapon = ally && ally.weapon;
+    discardBtn.style.display = (isMyTurn && hasWeapon && !acted) ? '' : 'none';
+    if (hasWeapon && weaponBroken) {
+      discardBtn.textContent = '✕ Drop ' + ally.weapon.name;
+      discardBtn.style.borderColor = 'rgba(192,57,43,0.6)';
+      discardBtn.style.color = 'var(--crimson-bright)';
+    } else if (hasWeapon) {
+      discardBtn.textContent = '✕ Discard Weapon';
+      discardBtn.style.borderColor = 'rgba(255,255,255,0.15)';
+      discardBtn.style.color = 'var(--mist)';
+    }
+  }
   document.getElementById('btnSpecial').disabled = !isMyTurn || acted || !ally || !hasChi || ally.hp <= 0;
   document.getElementById('btnItem').disabled = !isMyTurn || !ally || ally.hp <= 0;
   const endBtn = document.getElementById('btnEndTurn');
   if (endBtn) endBtn.disabled = !isMyTurn;
+
+  // Objective button — show when ally is on an uncompleted objective tile
+  
+
+  // Objective action button — visible when standing on an uncompleted objective tile
+  const objBtn = document.getElementById('btnObjective');
+  if (objBtn && CS.objectiveTiles && CS.objectiveTiles.length) {
+    const onObjTile = ally && CS.objectiveTiles.some(t => !t.done && t.x === ally.x && t.y === ally.y);
+    objBtn.style.display = (isMyTurn && onObjTile && !acted) ? '' : 'none';
+    if (onObjTile) {
+      const tile = CS.objectiveTiles.find(t => !t.done && t.x === ally.x && t.y === ally.y);
+      if (tile) objBtn.textContent = tile.icon + ' ' + tile.label;
+    }
+  } else if (objBtn) {
+    objBtn.style.display = 'none';
+  }
   const undoBtn = document.getElementById('btnUndoMove');
   if (undoBtn) {
     // Undo available only if moved but not yet acted
@@ -4342,7 +4705,7 @@ function schedulePulseRedraw() {
   if (_pulseRAF) return;
   _pulseRAF = requestAnimationFrame(() => {
     _pulseRAF = null;
-    if (CS.active && (CS.exitsActive || CS.lootOnFloor || CS.doomBags.length || CS.allies.some(a => a.doomed) || (CS.prisoner && !CS.prisoner.escaped))) {
+    if (CS.active && (CS.exitsActive || CS.lootOnFloor || (CS.goldPickups && CS.goldPickups.length) || (CS.objectiveTiles && CS.objectiveTiles.some(t=>!t.done)) || CS.doomBags.length || CS.allies.some(a => a.doomed) || (CS.prisoner && !CS.prisoner.escaped))) {
       drawCanvas();
       schedulePulseRedraw();
     }
@@ -4431,13 +4794,29 @@ function drawCanvas() {
   if (CS.lootOnFloor) {
     const lx = CS.lootOnFloor.x * cs + cs / 2;
     const ly = CS.lootOnFloor.y * cs + cs / 2;
-    // Pulsing glow
     const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 300);
     ctx.fillStyle = `rgba(240,200,0,${0.15 + pulse * 0.15})`;
     ctx.beginPath(); ctx.arc(lx, ly, cs * 0.4, 0, Math.PI * 2); ctx.fill();
     ctx.font = `${cs * 0.5}px serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(CS.lootOnFloor.icon, lx, ly);
+
+  // Draw collector gold bags on floor
+  if (CS.goldPickups && CS.goldPickups.length) {
+    const pulse2 = 0.5 + 0.5 * Math.sin(Date.now() / 250 + 1);
+    CS.goldPickups.forEach(bag => {
+      const bx = bag.x * cs + cs / 2, by = bag.y * cs + cs / 2;
+      ctx.fillStyle = `rgba(255,210,0,${0.18 + pulse2 * 0.18})`;
+      ctx.beginPath(); ctx.arc(bx, by, cs * 0.36, 0, Math.PI * 2); ctx.fill();
+      ctx.font = `${cs * 0.45}px serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('💰', bx, by);
+      // Amount label
+      ctx.fillStyle = '#ffd700';
+      ctx.font = `bold ${cs * 0.18}px sans-serif`;
+      ctx.fillText(bag.amount + 'G', bx, by + cs * 0.32);
+    });
+  }
   }
 
   // Draw exit tiles with glow when active
@@ -4477,20 +4856,47 @@ function drawCanvas() {
   if (CS.prisoner && !CS.prisoner.escaped) {
     const _pr = CS.prisoner;
     const _prx = _pr.x * cs, _pry = _pr.y * cs;
-    // Pulsing glow — gold if freed, red if still chained
+    const _prCx = _prx + cs / 2, _prCy = _pry + cs / 2;
     const _prPulse = 0.5 + 0.5 * Math.sin(Date.now() / 400);
+
+    // Pulsing tile glow
     ctx.fillStyle = _pr.freed
       ? 'rgba(61,170,125,' + (0.2 + _prPulse * 0.15) + ')'
       : 'rgba(200,100,0,' + (0.15 + _prPulse * 0.12) + ')';
     ctx.fillRect(_prx, _pry, cs, cs);
-    ctx.font = (cs * 0.52) + 'px serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(_pr.freed ? '🧍' : '⛓️', _prx + cs / 2, _pry + cs / 2);
-    // Label
+
+    // Try Prisoner.png sprite (directional rotation same as other sprites)
+    const _prImg = getImg('Prisoner.png');
+    const _prFacing = _pr.facing || 'south';
+    const _prAngle = FACING_ANGLE[_prFacing] ?? 0;
+    const _prSize = cs * 0.82;
+    if (_prImg && _prImg.naturalWidth > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(_prCx, _prCy, cs * 0.40, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.translate(_prCx, _prCy);
+      ctx.rotate(_prAngle);
+      ctx.drawImage(_prImg, -_prSize / 2, -_prSize / 2, _prSize, _prSize);
+      ctx.restore();
+      // Ring — orange when chained, green when freed
+      ctx.strokeStyle = _pr.freed ? 'rgba(61,170,125,0.7)' : 'rgba(220,140,0,0.7)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(_prCx, _prCy, cs * 0.40, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      // Emoji fallback
+      ctx.font = (cs * 0.52) + 'px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(_pr.freed ? '\uD83E\uDDD1' : '\u26D3\uFE0F', _prCx, _prCy);
+    }
+
+    // Label strip
     ctx.fillStyle = _pr.freed ? '#88ffcc' : '#ffaa44';
-    ctx.font = (cs * 0.18) + 'px sans-serif';
+    ctx.font = 'bold ' + Math.round(cs * 0.17) + 'px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText(_pr.freed ? 'FREED' : 'PRISONER', _prx + cs / 2, _pry + 1);
+    ctx.fillText(_pr.freed ? 'FREED' : 'PRISONER', _prCx, _pry + 2);
   }
 
   // Draw doom bags (fallen ally loot)
@@ -4913,13 +5319,14 @@ function handleMove(ally, tx, ty) {
     // Instead: prisoner moves toward ally each time any ally moves
     const _distP = Math.abs(CS.prisoner.x - ally.x) + Math.abs(CS.prisoner.y - ally.y);
     if (_distP > 1) {
-      // Step prisoner one tile toward this ally
       const _pdx = Math.sign(ally.x - CS.prisoner.x);
       const _pdy = Math.sign(ally.y - CS.prisoner.y);
       if (Math.abs(ally.x - CS.prisoner.x) >= Math.abs(ally.y - CS.prisoner.y)) {
         CS.prisoner.x += _pdx;
+        CS.prisoner.facing = _pdx > 0 ? 'east' : 'west';
       } else {
         CS.prisoner.y += _pdy;
+        CS.prisoner.facing = _pdy > 0 ? 'south' : 'north';
       }
     }
   }
@@ -4927,6 +5334,18 @@ function handleMove(ally, tx, ty) {
   // ── DOOM BAG: step on a fallen ally's bag to recover it ──
   const doomBag = getDoomBagAt(tx, ty);
   if (doomBag) pickupDoomBag(ally, doomBag);
+
+  // ── GOLD BAG: step on a collector's dropped coin bag ──
+  const goldBagIdx = CS.goldPickups.findIndex(g => g.x === tx && g.y === ty);
+  if (goldBagIdx !== -1) {
+    const goldBag = CS.goldPickups[goldBagIdx];
+    GS.gold += goldBag.amount;
+    CS.goldPickups.splice(goldBagIdx, 1);
+    updateGoldDisplay();
+    saveGame();
+    addLog('💰 ' + ally.name + ' collects ' + goldBag.amount + 'G from the tax bag!', 'heal');
+    toast('+' + goldBag.amount + 'G collected!', 'success');
+  }
 
   // ── RESCUE: key-holder walks onto prisoner tile to free them ──
   if (CS.prisoner && !CS.prisoner.freed && ally.hasLoot
@@ -5037,14 +5456,69 @@ function applyWeaponEffect(weapon, target) {
   }
 }
 
+
+// ── UNARMED ATTACK SYSTEM ──
+// Per-class unarmed flavour and damage. Returns { name, icon, dmg:[min,max], range:1 }
+const UNARMED_PROFILES = {
+  shinobi:   { name: 'Palm Strike',    icon: '🤜', dmg: [4,  8],  desc: 'A swift open-palm strike.' },
+  kunoichi:  { name: 'Nerve Strike',   icon: '🤜', dmg: [3,  7],  desc: 'Precise pressure-point hit.' },
+  ronin:     { name: 'Iaijutsu Kick',  icon: '🦵', dmg: [6,  11], desc: 'A powerful samurai kick.' },
+  monk:      { name: 'Iron Fist',      icon: '👊', dmg: [8,  14], desc: 'Channelled chi into the fist.' },
+  shadow:    { name: 'Void Touch',     icon: '🖐', dmg: [5,  10], desc: 'Dark energy discharged on contact.' },
+  berserker: { name: 'Haymaker',       icon: '💢', dmg: [10, 18], desc: 'A wild crushing haymaker.' },
+};
+
+function getUnarmedProfile(classKey) {
+  return UNARMED_PROFILES[classKey] || { name: 'Punch', icon: '👊', dmg: [3, 6], desc: 'A basic strike.' };
+}
+
+function isEffectivelyUnarmed(ally) {
+  // No weapon at all, OR weapon exists but is broken/empty
+  return !ally.weapon || !weaponUsable(ally);
+}
+
+// Discard a weapon during combat — pops a confirmation, then drops the weapon
+function combatDiscardWeapon() {
+  const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
+  if (!ally || !ally.weapon) { toast('No weapon to discard.', 'error'); return; }
+  if (CS.unitActed) { toast('Already acted this turn.', 'error'); return; }
+
+  const w = ally.weapon;
+  const broken = !weaponUsable(ally);
+  const label  = broken ? w.name + ' (depleted)' : w.name;
+
+  openModal(
+    broken ? 'Discard Depleted Weapon?' : 'Discard Weapon?',
+    '<b style="color:var(--gold)">' + w.icon + ' ' + label + '</b><br><br>' +
+    (broken
+      ? 'This weapon is out of ammo or broken. Discard it and fight unarmed?'
+      : '<span style="color:var(--crimson-bright)">⚠ Weapon still has uses remaining.</span> Discard it anyway?<br><br>' +
+        'You will fight unarmed for the rest of this mission.'),
+    [
+      {
+        label: 'Discard',
+        cls: 'danger',
+        fn: () => {
+          addLog(ally.name + ' discards ' + w.name + ' and fights unarmed!', 'system');
+          ally.weapon = null;
+          closeModal();
+          renderCombat();
+          updateActionButtons();
+        }
+      },
+      { label: 'Keep', cls: '', fn: closeModal }
+    ]
+  );
+}
+
 function handleAttack(ally, tx, ty) {
   if (CS.unitActed) { toast('Already acted this turn.', 'error'); return; }
   const target = CS.enemies.find(e => e.x === tx && e.y === ty && e.hp > 0);
   if (!target) { toast('No valid target there.', 'error'); return; }
-  if (ally.weapon && !weaponUsable(ally)) {
-    toast(ally.weapon.name + ' is out of ammo / unusable!', 'error'); return;
-  }
-  const range = ally.weapon?.range || 1;
+  // Unarmed fighting: if weapon is broken/empty, fight with fists
+  // (player must explicitly discard if they want to switch mid-useful-weapon)
+  const unarmedMode = isEffectivelyUnarmed(ally);
+  const range = (!unarmedMode && ally.weapon?.range) ? ally.weapon.range : 1;
   const dist = Math.abs(target.x - ally.x) + Math.abs(target.y - ally.y);
   if (dist > range) { toast('Out of range.', 'error'); return; }
   // Line-of-sight check for ranged weapons
@@ -5066,11 +5540,16 @@ function handleAttack(ally, tx, ty) {
   else ally.facing = ady > 0 ? 'south' : 'north';
   if (!missFromCover) {
     const dmg = calcDamage(ally, target);
-    applyDamage(target, dmg, ally.name);
-    applyWeaponEffect(ally.weapon, target);
-    checkOnHitPoison(ally, target);
+    const hitLabel = unarmedMode
+      ? getUnarmedProfile(ally.class).icon + ' ' + ally.name + ' (' + getUnarmedProfile(ally.class).name + ')'
+      : ally.name;
+    applyDamage(target, dmg, hitLabel);
+    if (!unarmedMode) {
+      applyWeaponEffect(ally.weapon, target);
+      checkOnHitPoison(ally, target);
+    }
   }
-  consumeWeaponUse(ally);
+  if (!unarmedMode) consumeWeaponUse(ally);
   CS.unitActed = true;
   CS.savedMove = null;
   CS.selectedAction = null;
@@ -5231,7 +5710,9 @@ function calcDamage(attacker, defender) {
     const prof = attacker.proficiency?.[profType] || 1;
     baseDmg = Math.floor(baseDmg * (1 + (prof - 3) * 0.05));
   } else {
-    baseDmg = 3 + Math.floor(Math.random() * 5);
+    // Unarmed: use per-class profile
+    const up = getUnarmedProfile(attacker.class);
+    baseDmg = up.dmg[0] + Math.floor(Math.random() * (up.dmg[1] - up.dmg[0] + 1));
   }
   if (attacker.buffs?.some(b => b.type === 'rage' || b.type === 'damage_up')) baseDmg = Math.floor(baseDmg * 2);
   if (attacker.buffs?.some(b => b.type === 'last_stand')) baseDmg = Math.floor(baseDmg * 3);
@@ -5377,8 +5858,16 @@ function applyDamage(target, dmg, attackerName = '') {
       target.carriedLoot = null;
       addLog('\u{1F4E6} Loot dropped at (' + target.x + ',' + target.y + ')! Move onto it to pick up.', 'system');
       toast('Loot dropped — pick it up!', 'success');
-      // Spawn reinforcements when loot drops
       setTimeout(() => spawnReinforcements('loot_dropped'), 400);
+    }
+
+    // ── COLLECTOR: drops a bonus gold bag on the floor ──
+    if (target.type === 'collector') {
+      const bonusGold = target.gold + Math.floor(Math.random() * 31) + 20; // 20-50 extra on top of base gold
+      CS.goldPickups.push({ x: target.x, y: target.y, amount: bonusGold });
+      addLog('💰 Gold bag dropped at (' + target.x + ',' + target.y + ')! Walk over it to collect ' + bonusGold + 'G!', 'system');
+      toast('💰 Gold bag dropped — collect the gold!', 'success');
+      schedulePulseRedraw(); // keep canvas animating until picked up
     }
   }
 }
@@ -6250,8 +6739,23 @@ function runEnemyUnitTurn(enemy) {
     return;
   }
   if (enemy.status === 'confused') {
-    addLog(enemy.name + ' is confused, skips turn.');
-    enemy.status = null;
+    enemy.confuseTurns = (enemy.confuseTurns || 1) - 1;
+    if (enemy.confuseTurns <= 0) enemy.status = null;
+    // Confused: attack a random adjacent unit (could be ally or another enemy)
+    const _cAllUnits = [
+      ...CS.allies.filter(a => a.hp > 0 && !a.escaped),
+      ...CS.enemies.filter(e => e.hp > 0 && e.id !== enemy.id)
+    ];
+    const _cAdj = _cAllUnits.filter(u => Math.abs(u.x-enemy.x)+Math.abs(u.y-enemy.y) <= 1);
+    if (_cAdj.length) {
+      const _cTgt = _cAdj[Math.floor(Math.random()*_cAdj.length)];
+      const _cDmg = enemy.dmg[0]+Math.floor(Math.random()*(enemy.dmg[1]-enemy.dmg[0]+1));
+      addLog('❓ '+enemy.name+' (confused) attacks '+_cTgt.name+'!','damage');
+      if (_cTgt.gridId) applyDamageToAlly(_cTgt, _cDmg, enemy.name+' (confused)');
+      else applyDamage(_cTgt, _cDmg, enemy.name+' (confused)');
+    } else {
+      addLog('❓ '+enemy.name+' is confused and stumbles!','system');
+    }
     renderCombat();
     setTimeout(() => finishEnemyTurn(enemy), 300);
     return;
@@ -6726,6 +7230,16 @@ function checkCombatEnd() {
     return;
   }
 
+  // Objective missions (agitation/espionage): need objectives done + escape
+  if (CS.objectiveTiles && CS.objectiveTiles.length > 0 && !isMultiFloor) {
+    if (CS.objectiveProgress >= CS.objectiveTotal && CS.exitsActive) {
+      // Victory when all allies have escaped
+      const notEscaped = aliveAllies.filter(a => !a.escaped && !a.doomed);
+      if (notEscaped.length === 0) { setTimeout(() => endCombat('victory'), 800); }
+    }
+    return; // objective missions don't win by killing all enemies
+  }
+
   // Generic: all enemies cleared (and target dead if required)
   if (aliveEnemies.length === 0 && targetDead) {
     if (isMultiFloor && !isLastFloor) {
@@ -6758,6 +7272,10 @@ function advanceFloor() {
   CS.lootOnFloor = null;
   CS.allyWithLoot = null;
   CS.doomBags = [];
+  CS.goldPickups = [];
+  CS.objectiveTiles = [];
+  CS.objectiveProgress = 0;
+  CS.objectiveTotal = 0;
 
   // Reset floor-specific turn limit
   const floorData = mission.floors[CS.currentFloor];
@@ -6840,6 +7358,44 @@ function advanceFloor() {
   initMissionStats();
   renderCombat();
   setTimeout(advanceCT, 300);
+}
+
+
+// ── ARMORY WEAPON DISCOVERY ──
+// Returns a discovered weapon (or null) when the mission involves an armory.
+// Difficulty 1-2 → common/uncommon, 3 → uncommon/rare, 4 → rare, 5 → legendary/epic
+const ARMORY_TIERS_BY_DIFFICULTY = {
+  1: ['common'],
+  2: ['common', 'uncommon'],
+  3: ['uncommon', 'rare'],
+  4: ['rare'],
+  5: ['rare', 'legendary'],
+};
+
+function missionHasArmory(mission) {
+  if (!mission) return false;
+  const tags = mission.tags || [];
+  if (tags.includes('armory')) return true;
+  const text = (mission.name + ' ' + (mission.desc || '')).toLowerCase();
+  if (text.includes('armory') || text.includes('stockpile') || text.includes('weapon cache')) return true;
+  // Fortress gate terrain missions have a chance of having an armory
+  const terrain = mission.terrain || (mission.floors && mission.floors[0]?.terrain) || '';
+  if (terrain === 'fortress_gate' || terrain === 'fortress' || terrain === 'castle') {
+    return Math.random() < 0.4; // 40% chance for fortress/castle missions
+  }
+  return false;
+}
+
+function rollArmoryWeapon(difficulty) {
+  const tierPool = ARMORY_TIERS_BY_DIFFICULTY[Math.min(5, Math.max(1, difficulty))] || ['common'];
+  const tier = tierPool[Math.floor(Math.random() * tierPool.length)];
+  // Pick a random weapon type and item at this tier
+  const allAtTier = Object.entries(WEAPONS).flatMap(([wType, cat]) =>
+    cat.items.filter(w => w.tier === tier).map(w => ({ template: w, wType }))
+  );
+  if (!allAtTier.length) return null;
+  const pick = allAtTier[Math.floor(Math.random() * allAtTier.length)];
+  return { weapon: initWeapon(pick.template, pick.wType), tier };
 }
 
 function endCombat(result) {
@@ -6959,6 +7515,24 @@ function endCombat(result) {
       }
     });
 
+    // ── ARMORY WEAPON DISCOVERY ──
+    let armoryMsg = '';
+    let armoryWeapon = null;
+    if (missionHasArmory(mission)) {
+      const roll = rollArmoryWeapon(mission.difficulty || 1);
+      if (roll) {
+        armoryWeapon = roll.weapon;
+        if (!GS.weaponStash) GS.weaponStash = [];
+        GS.weaponStash.push(armoryWeapon);
+        armoryMsg = '<br><br><div style="background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.25);padding:0.6rem;margin-top:0.4rem">'
+          + '<div style="font-family:Cinzel,serif;font-size:0.7rem;color:var(--gold);margin-bottom:0.3rem">\u{1F5E1} Armory Discovered!</div>'
+          + '<div style="font-size:0.75rem">' + armoryWeapon.icon + ' <b>' + armoryWeapon.name + '</b></div>'
+          + '<div style="font-size:0.65rem;color:var(--mist)">' + armoryWeapon.desc + '</div>'
+          + '<div style="font-size:0.6rem;color:var(--steel);margin-top:0.2rem">Tier: <span style="color:' + tierColor(armoryWeapon.tier) + '">' + (armoryWeapon.tier||'common').toUpperCase() + '</span> · Added to weapon stash</div>'
+          + '</div>';
+      }
+    }
+
     saveGame();
     updateGoldDisplay();
 
@@ -6967,7 +7541,7 @@ function endCombat(result) {
     openModal('Mission Complete!',
       `<b style="color:var(--jade-bright)">Victory!</b><br><br>
       Mission: ${mission.name}<br>
-      Gold earned: <b style="color:var(--gold)">+${mission.reward} G</b>${recruitMsg}${repLine}`,
+      Gold earned: <b style="color:var(--gold)">+${mission.reward} G</b>${recruitMsg}${armoryMsg}${repLine}`,
       [{ label: 'Return to Hub', fn: () => {
         closeModal(); showScreen('hub'); showHubSection('clan'); selectedMissionId = null; selectedParty = [];
         // Show pending arc completion modal after navigation
