@@ -149,7 +149,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
   transition: all 0.2s; text-transform: uppercase;
   clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
 }
-.nav-btn:hover, .nav-btn.active { border-color: rgba(201,162,39,0.4); color: var(--gold); }
+.nav-btn:hover { border-color: rgba(201,162,39,0.4); color: var(--gold); }
 .gold-display {
   font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--gold);
   background: rgba(201,162,39,0.1); border: 1px solid rgba(201,162,39,0.3);
@@ -229,6 +229,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .mission-card:hover:not(.locked) { border-color: rgba(201,162,39,0.3); transform: translateX(4px); }
 .mission-card.locked { opacity: 0.4; cursor: not-allowed; }
 .mission-card.completed { opacity: 0.5; }
+.mission-card.mission-card-selected { transform: translateX(4px); }
 .mission-type-icon { font-size: 2rem; flex-shrink: 0; width: 44px; text-align: center; }
 .mission-details { flex: 1; }
 .mission-name { font-family: 'Cinzel', serif; font-size: 0.95rem; color: var(--white); margin-bottom: 0.3rem; }
@@ -265,15 +266,234 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 /* ===== COMBAT ===== */
 #screen-combat { flex-direction: column; }
 .combat-layout { display: flex; flex: 1; gap: 0; overflow: hidden; }
+
+/* ── Compact strip sidebars ── */
 .combat-sidebar-left {
-  width: 200px; background: var(--ink2); border-right: 1px solid rgba(255,255,255,0.05);
-  padding: 0.8rem; overflow-y: auto; flex-shrink: 0;
+  width: 112px; background: var(--ink2); border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 0.5rem 0.4rem; overflow-y: auto; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 0.3rem;
 }
-.combat-main { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding: 0; background: var(--ink); position: relative; overflow: auto; }
 .combat-sidebar-right {
-  width: 200px; background: var(--ink2); border-left: 1px solid rgba(255,255,255,0.05);
-  padding: 0.8rem; overflow-y: auto; flex-shrink: 0;
+  width: 112px; background: var(--ink2); border-left: 1px solid rgba(255,255,255,0.06);
+  padding: 0.5rem 0.4rem; overflow-y: auto; flex-shrink: 0;
+  display: flex; flex-direction: column;
 }
+
+/* Compact unit strip cards */
+.combatant-strip {
+  background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06);
+  padding: 0.3rem 0.35rem; cursor: pointer; transition: all 0.15s;
+  border-radius: 2px; position: relative;
+}
+.combatant-strip:hover { border-color: rgba(201,162,39,0.4); background: rgba(201,162,39,0.04); }
+.combatant-strip.active-turn { border-color: var(--gold); background: rgba(201,162,39,0.07); }
+.combatant-strip.selected-strip { border-color: var(--jade-bright); background: rgba(61,170,125,0.06); }
+.combatant-strip.dead-strip { opacity: 0.28; pointer-events: none; }
+.strip-name {
+  font-family: 'Cinzel', serif; font-size: 0.58rem; color: var(--white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 3px; margin-bottom: 2px;
+}
+.strip-vals { font-size: 0.52rem; color: var(--mist); font-family: monospace; display: flex; gap: 3px; }
+.strip-hp-bar { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-top: 3px; overflow: hidden; }
+.strip-hp-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.strip-chi { font-size: 0.48rem; color: #88aaff; margin-top: 1px; }
+
+/* Sidebar mini-label */
+.sidebar-label {
+  font-family: 'Cinzel', serif; font-size: 0.48rem; letter-spacing: 0.25em;
+  color: rgba(201,162,39,0.5); text-transform: uppercase; padding: 0.1rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 0.3rem;
+}
+
+/* Mini combat log in right sidebar */
+.combat-log-mini {
+  flex: 1; overflow-y: auto; font-size: 0.55rem; color: var(--steel);
+  line-height: 1.5; min-height: 0;
+}
+.combat-log-mini .log-entry { font-size: 0.55rem; padding: 0.05rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+
+.combat-main { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; padding: 0; background: var(--ink); position: relative; overflow: auto; }
+
+/* ══════════════════════════════════════════
+   HOVER INSPECT OVERLAY
+══════════════════════════════════════════ */
+#hoverInspect {
+  position: fixed; z-index: 500; pointer-events: none;
+  background: rgba(8, 8, 14, 0.97);
+  border: 1px solid rgba(201,162,39,0.35);
+  padding: 0.65rem 0.8rem;
+  min-width: 180px; max-width: 240px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  animation: inspectFadeIn 0.12s ease;
+  display: none;
+}
+@keyframes inspectFadeIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+#hoverInspect.visible { display: block; }
+.inspect-header {
+  display: flex; align-items: center; gap: 0.45rem;
+  margin-bottom: 0.45rem; padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.inspect-emoji { font-size: 1.3rem; line-height: 1; }
+.inspect-title-block { flex: 1; min-width: 0; }
+.inspect-name {
+  font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.inspect-class { font-size: 0.6rem; color: var(--mist); }
+.inspect-type-badge {
+  font-size: 0.5rem; font-family: 'Cinzel', serif; letter-spacing: 0.1em;
+  padding: 0.1rem 0.3rem; border-radius: 1px; flex-shrink: 0;
+}
+.inspect-type-ally { border: 1px solid rgba(61,170,125,0.5); color: var(--jade-bright); background: rgba(61,170,125,0.08); }
+.inspect-type-enemy { border: 1px solid rgba(192,57,43,0.5); color: var(--crimson-bright); background: rgba(192,57,43,0.08); }
+
+.inspect-stat-row {
+  display: flex; align-items: center; gap: 0.4rem;
+  margin-bottom: 0.25rem;
+}
+.inspect-stat-label {
+  font-family: 'Cinzel', serif; font-size: 0.5rem; color: rgba(201,162,39,0.7);
+  letter-spacing: 0.08em; width: 22px; flex-shrink: 0; text-transform: uppercase;
+}
+.inspect-stat-bar {
+  flex: 1; height: 5px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden;
+}
+.inspect-stat-fill { height: 100%; border-radius: 3px; }
+.inspect-stat-fill.hp-fill { background: linear-gradient(90deg, var(--crimson), #e74c3c); }
+.inspect-stat-fill.chi-fill { background: linear-gradient(90deg, #2255aa, #4488ff); }
+.inspect-stat-fill.stam-fill { background: linear-gradient(90deg, var(--jade), var(--jade-bright)); }
+.inspect-stat-val { font-size: 0.58rem; color: var(--steel); font-family: monospace; min-width: 30px; text-align: right; }
+
+.inspect-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0.35rem 0; }
+
+.inspect-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.18rem; }
+.inspect-row-label { font-size: 0.55rem; color: var(--mist); }
+.inspect-row-val { font-size: 0.58rem; color: var(--white); font-family: 'Cinzel', serif; }
+
+.inspect-special {
+  background: rgba(68,136,255,0.07); border: 1px solid rgba(68,136,255,0.2);
+  padding: 0.3rem 0.4rem; margin-top: 0.35rem; border-radius: 1px;
+}
+.inspect-special-name { font-family: 'Cinzel', serif; font-size: 0.62rem; color: #88aaff; }
+.inspect-special-desc { font-size: 0.55rem; color: var(--mist); margin-top: 0.1rem; line-height: 1.4; }
+
+.inspect-terrain {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem 0.5rem;
+  margin-top: 0.3rem;
+}
+.inspect-terrain-tag {
+  font-size: 0.52rem; color: var(--mist);
+  display: flex; align-items: center; gap: 2px;
+}
+.inspect-terrain-tag span { color: var(--steel); }
+
+.inspect-status {
+  display: flex; gap: 0.25rem; flex-wrap: wrap; margin-top: 0.3rem;
+}
+.inspect-status-pill {
+  font-size: 0.5rem; font-family: 'Cinzel', serif; letter-spacing: 0.06em;
+  padding: 0.1rem 0.35rem; border-radius: 10px;
+  border: 1px solid rgba(255,200,50,0.4); color: #ffd060;
+  background: rgba(255,200,50,0.08);
+}
+
+/* ── Active action mode banner ── */
+#actionModeBanner {
+  display: none; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  z-index: 30; pointer-events: none;
+  background: rgba(8,8,14,0.9); border: 1px solid rgba(201,162,39,0.4);
+  border-top: none; padding: 0.2rem 1.2rem;
+  font-family: 'Cinzel', serif; font-size: 0.62rem; letter-spacing: 0.25em;
+  color: var(--gold); text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 100%, 6px 100%);
+}
+#actionModeBanner.visible { display: block; }
+#actionModeBanner.mode-move { border-color: rgba(61,170,125,0.5); color: var(--jade-bright); }
+#actionModeBanner.mode-attack { border-color: rgba(192,57,43,0.5); color: var(--crimson-bright); }
+#actionModeBanner.mode-special { border-color: rgba(68,136,255,0.5); color: #88aaff; }
+
+/* ── Phase transition banner ── */
+#phaseBanner {
+  position: absolute; inset: 0; z-index: 40; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.15s;
+}
+#phaseBanner.show { opacity: 1; }
+.phase-banner-inner {
+  font-family: 'Cinzel Decorative', serif; font-size: 2rem; letter-spacing: 0.2em;
+  text-shadow: 0 0 40px currentColor;
+  animation: phasePop 0.5s ease;
+}
+@keyframes phasePop {
+  0% { transform: scale(0.7) translateY(12px); opacity: 0; }
+  40% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Keyboard shortcut badges on action buttons ── */
+.action-btn { position: relative; }
+.kbd-hint {
+  position: absolute; top: -6px; right: -4px; z-index: 2;
+  background: rgba(20,20,30,0.95); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(201,162,39,0.8); font-family: monospace; font-size: 0.48rem;
+  padding: 0.06rem 0.28rem; border-radius: 2px; letter-spacing: 0;
+  pointer-events: none;
+}
+.action-btn:hover .kbd-hint { border-color: rgba(201,162,39,0.5); color: var(--gold); }
+.action-btn:disabled .kbd-hint { opacity: 0.35; }
+
+/* ── Improved combat controls bar ── */
+.combat-controls {
+  background: var(--ink2); border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 0.55rem 0.8rem; display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; justify-content: center;
+  position: relative;
+}
+.controls-active-label {
+  position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%);
+  font-family: 'Cinzel', serif; font-size: 0.55rem; letter-spacing: 0.2em;
+  color: var(--gold); background: var(--ink2);
+  padding: 0.1rem 0.6rem; border: 1px solid rgba(201,162,39,0.3);
+  white-space: nowrap; display: none;
+}
+.controls-active-label.visible { display: block; }
+
+/* ── Improved combat header ── */
+.combat-header {
+  background: var(--ink2); border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 0.4rem 0.8rem; display: flex; align-items: center; gap: 0.7rem;
+  font-family: 'Cinzel', serif; font-size: 0.7rem; color: var(--mist);
+  position: relative;
+}
+.phase-indicator {
+  display: flex; align-items: center; gap: 0.4rem;
+  background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.07);
+  padding: 0.2rem 0.6rem; border-radius: 1px;
+}
+.phase-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--jade-bright); box-shadow: 0 0 6px currentColor;
+  flex-shrink: 0; transition: background 0.3s;
+}
+.phase-dot.enemy { background: var(--crimson-bright); }
+.phase-dot.waiting { background: var(--gold); }
+
+/* Turn counter styled */
+.turn-counter {
+  font-family: 'Cinzel Decorative', serif; font-size: 0.75rem; color: var(--gold);
+  background: rgba(201,162,39,0.08); border: 1px solid rgba(201,162,39,0.2);
+  padding: 0.15rem 0.5rem;
+}
+
+/* ── HP bar color tiers ── */
+.hp-high { background: linear-gradient(90deg, var(--crimson), #e74c3c); }
+.hp-mid { background: linear-gradient(90deg, #aa7700, #ddaa00); }
+.hp-low { background: linear-gradient(90deg, var(--blood), #cc2222); }
 
 #combatCanvas {
   border: 2px solid rgba(201,162,39,0.2);
@@ -349,6 +569,18 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .facing-btn.active { background: rgba(201,162,39,0.22); border-color: var(--gold); color: var(--gold); }
 .facing-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 
+.combat-log {
+  background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+  padding: 0.6rem; height: 120px; overflow-y: auto; margin-top: 0.5rem;
+}
+.log-entry { font-size: 0.65rem; color: var(--steel); line-height: 1.6; padding: 0.1rem 0; }
+.log-entry.damage { color: var(--crimson-bright); }
+.log-entry.heal { color: var(--jade-bright); }
+.log-entry.special { color: #88aaff; }
+.log-entry.system { color: var(--gold); font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.1em; }
+.log-entry.death { color: #ff4444; font-weight: bold; }
+
+/* Legacy combatant-card — used in mobile overlay panels */
 .combatant-card {
   background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05);
   padding: 0.5rem; margin-bottom: 0.4rem; font-size: 0.7rem;
@@ -361,18 +593,172 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .combatant-mini-hp { height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); margin-top: 0.3rem; }
 .combatant-mini-hp-fill { height: 100%; border-radius: 2px; background: var(--crimson); transition: width 0.3s; }
 
-.combat-log {
-  background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
-  padding: 0.6rem; height: 120px; overflow-y: auto; margin-top: 0.5rem;
+/* ===== DOOM VIGNETTE PULSE ===== */
+#doomVignette {
+  position: fixed; inset: 0; pointer-events: none; z-index: 450;
+  border: 0px solid rgba(220, 30, 30, 0);
+  box-shadow: inset 0 0 0px rgba(220, 30, 30, 0);
+  transition: box-shadow 0.2s, border-width 0.2s;
 }
-.log-entry { font-size: 0.65rem; color: var(--steel); line-height: 1.6; padding: 0.1rem 0; }
-.log-entry.damage { color: var(--crimson-bright); }
-.log-entry.heal { color: var(--jade-bright); }
-.log-entry.special { color: #88aaff; }
-.log-entry.system { color: var(--gold); font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.1em; }
-.log-entry.death { color: #ff4444; font-weight: bold; }
+#doomVignette.doom-active {
+  animation: doomPulseVignette 0.9s ease-in-out infinite;
+}
+@keyframes doomPulseVignette {
+  0%, 100% { box-shadow: inset 0 0 40px rgba(220,30,30,0.12); }
+  50%       { box-shadow: inset 0 0 80px rgba(220,30,30,0.32); }
+}
 
-/* ===== SHOPS ===== */
+/* ===== TURN SUMMARY STRIP ===== */
+#turnSummary {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%) translateY(20px);
+  z-index: 35; pointer-events: none; white-space: nowrap;
+  background: rgba(8,8,14,0.92); border: 1px solid rgba(201,162,39,0.25);
+  padding: 0.28rem 1.2rem;
+  font-family: 'Cinzel', serif; font-size: 0.6rem; letter-spacing: 0.15em;
+  color: var(--mist);
+  transition: transform 0.22s ease, opacity 0.22s ease;
+  opacity: 0;
+  clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+}
+#turnSummary.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ===== MISSION CARD SELECTED EXPAND ===== */
+.mission-card-detail {
+  margin-top: 0.8rem; padding: 0.8rem;
+  background: rgba(0,0,0,0.2); border: 1px solid rgba(201,162,39,0.15);
+  animation: fadeIn 0.15s ease;
+}
+.mission-detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.7rem;
+}
+.mission-detail-stat {
+  font-size: 0.65rem;
+}
+.mission-detail-stat .label { color: var(--mist); font-family: 'Cinzel', serif; font-size: 0.55rem; letter-spacing: 0.1em; display: block; margin-bottom: 0.1rem; }
+.mission-detail-stat .val { color: var(--white); }
+.float-dmg {
+  position: fixed; pointer-events: none; z-index: 600;
+  font-family: 'Cinzel Decorative', serif; font-weight: 900;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 12px currentColor;
+  animation: floatDmgAnim 1.1s ease-out forwards;
+  user-select: none;
+}
+@keyframes floatDmgAnim {
+  0%   { transform: translateY(0) scale(1);   opacity: 1; }
+  15%  { transform: translateY(-6px) scale(1.2); opacity: 1; }
+  80%  { transform: translateY(-40px) scale(0.9); opacity: 0.85; }
+  100% { transform: translateY(-60px) scale(0.7); opacity: 0; }
+}
+.float-dmg.crit { animation: floatCritAnim 1.3s ease-out forwards; }
+@keyframes floatCritAnim {
+  0%   { transform: translateY(0) scale(1.4) rotate(-4deg); opacity: 1; }
+  15%  { transform: translateY(-10px) scale(1.6) rotate(3deg); opacity: 1; }
+  70%  { transform: translateY(-55px) scale(1.1) rotate(-1deg); opacity: 0.9; }
+  100% { transform: translateY(-80px) scale(0.8) rotate(0); opacity: 0; }
+}
+.float-dmg.heal { animation: floatHealAnim 1.2s ease-out forwards; }
+@keyframes floatHealAnim {
+  0%   { transform: translateY(0) scale(1);   opacity: 1; }
+  15%  { transform: translateY(6px) scale(1.15); opacity: 1; }
+  80%  { transform: translateY(-30px) scale(0.9); opacity: 0.85; }
+  100% { transform: translateY(-50px) scale(0.7); opacity: 0; }
+}
+.float-dmg.miss { font-size: 0.85rem; opacity: 0.7; }
+
+/* ===== IMPROVED ACTION BUTTON ACTIVE STATE ===== */
+.action-btn.mode-active {
+  background: rgba(201,162,39,0.12) !important;
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+  box-shadow: 0 0 12px rgba(201,162,39,0.2), inset 0 0 8px rgba(201,162,39,0.05);
+}
+.action-btn.mode-active.attack {
+  background: rgba(192,57,43,0.18) !important;
+  border-color: var(--crimson-bright) !important;
+  color: var(--crimson-bright) !important;
+  box-shadow: 0 0 12px rgba(192,57,43,0.25), inset 0 0 8px rgba(192,57,43,0.08);
+}
+.action-btn.mode-active.special {
+  background: rgba(68,136,255,0.15) !important;
+  border-color: #4488ff !important;
+  color: #88aaff !important;
+  box-shadow: 0 0 12px rgba(68,136,255,0.2), inset 0 0 8px rgba(68,136,255,0.06);
+}
+
+/* ===== IMPROVED NINJA CARD ===== */
+.ninja-card {
+  background: var(--ink2); border: 1px solid rgba(255,255,255,0.06);
+  padding: 1.2rem; position: relative; cursor: pointer;
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  transition: all 0.2s; overflow: hidden;
+}
+.ninja-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--card-accent, rgba(201,162,39,0.3)); opacity: 0; transition: opacity 0.2s;
+}
+.ninja-card:hover::before { opacity: 1; }
+.ninja-card:hover { border-color: rgba(201,162,39,0.3); transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.ninja-card.training { opacity: 0.65; }
+.ninja-card-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 0.8rem; }
+.ninja-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; flex-shrink: 0; border: 2px solid transparent;
+  position: relative;
+}
+.ninja-xp-ring {
+  position: absolute; inset: -3px; border-radius: 50%;
+  background: conic-gradient(var(--gold) var(--xp-pct, 0%), transparent 0%);
+  opacity: 0.5; z-index: -1;
+}
+.ninja-info { flex: 1; }
+.ninja-name { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--white); display: flex; align-items: center; gap: 0.4rem; }
+.ninja-class { font-size: 0.72rem; color: var(--mist); margin-top: 0.1rem; }
+.ninja-level-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.3rem; }
+.ninja-lvl-badge { font-family: 'Cinzel', serif; font-size: 0.62rem; color: var(--gold);
+  background: rgba(201,162,39,0.1); border: 1px solid rgba(201,162,39,0.25);
+  padding: 0.05rem 0.35rem; }
+.ninja-xp-bar-wrap { flex: 1; }
+.ninja-xp-bar-track { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+.ninja-xp-bar-fill { height: 100%; background: linear-gradient(90deg, rgba(201,162,39,0.6), var(--gold)); border-radius: 2px; transition: width 0.5s; }
+.ninja-xp-label { font-size: 0.48rem; color: rgba(201,162,39,0.5); font-family: 'Cinzel', serif; margin-top: 1px; }
+
+/* ===== HUB NAV ACTIVE TAB INDICATOR ===== */
+.nav-btn { position: relative; overflow: hidden; }
+.nav-btn.active {
+  border-color: rgba(201,162,39,0.5) !important;
+  color: var(--gold) !important;
+  background: rgba(201,162,39,0.06);
+}
+.nav-btn.active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: var(--gold);
+}
+
+/* ===== MINI TURN ORDER (CT queue) improvements ===== */
+.ct-slot {
+  display: flex; flex-direction: column; align-items: center;
+  width: 34px; flex-shrink: 0;
+  padding: 2px 2px 3px;
+  border: 1px solid rgba(255,255,255,0.07);
+  font-size: 0.55rem; border-radius: 2px; transition: all 0.15s;
+}
+.ct-slot.active { border-color: var(--gold); background: rgba(201,162,39,0.12);
+  box-shadow: 0 0 8px rgba(201,162,39,0.2); }
+.ct-slot:hover { border-color: rgba(255,255,255,0.2); }
+
+/* ===== SECTION TITLE upgrade ===== */
+.section-title {
+  font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.35em;
+  color: var(--gold); text-transform: uppercase; margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.section-title::before { content: ''; width: 16px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+.section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(201,162,39,0.4), transparent); }
 .shop-layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
 .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.8rem; }
 .shop-item {
@@ -787,8 +1173,8 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
   .combat-main { padding: 0; flex: 1; justify-content: flex-start; overflow: auto; }
   .combat-panel-toggle { display: block; }
   #combatCanvas { display: block; }
-  .combat-header { padding: 0.35rem 0.6rem; gap: 0.5rem; flex-wrap: wrap; font-size: 0.6rem; }
-  .turn-display { font-size: 0.7rem; }
+  .combat-header { padding: 0.35rem 0.6rem; gap: 0.4rem; flex-wrap: wrap; font-size: 0.6rem; }
+  .turn-counter { font-size: 0.65rem; }
   .combat-controls {
     padding: 0.5rem 0.5rem;
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0));
@@ -799,7 +1185,10 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
     clip-path: none; border-radius: 3px;
     min-width: 52px; min-height: 40px;
   }
+  .kbd-hint { display: none; }
   #actionLabel { font-size: 0.58rem; }
+  #hoverInspect { display: none !important; }
+  #actionModeBanner { font-size: 0.55rem; padding: 0.15rem 0.8rem; }
 }
 
 /* Medium phones / landscape */
@@ -906,24 +1295,25 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
   <!-- COMBAT -->
   <div id="screen-combat" class="screen">
     <div class="combat-header">
-      <span style="font-size:0.9rem;color:var(--gold);font-family:'Cinzel Decorative',serif">NINDO</span>
-      <span id="missionNameDisplay" style="color:var(--white)"></span>
-      <span id="turnDisplay" class="turn-display">Turn 1</span>
-      <span id="phaseDisplay" class="phase-display">Player Phase</span>
-      <span id="objectiveDisplay" style="font-family:'Cinzel',serif;font-size:0.6rem;padding:0 0.4rem"></span>
-      <div id="ctQueue" style="display:flex;gap:3px;align-items:center;flex:1;overflow:hidden"></div>
-      <button class="nav-btn" onclick="confirmFleeMission()" style="margin-left:0.5rem;color:var(--crimson)">✗ Retreat</button>
+      <span style="font-size:0.85rem;color:var(--gold);font-family:'Cinzel Decorative',serif;letter-spacing:0.1em">NINDO</span>
+      <div class="turn-counter" id="turnDisplay">Turn 1</div>
+      <div class="phase-indicator">
+        <div class="phase-dot" id="phaseDot"></div>
+        <span id="phaseDisplay" style="font-size:0.65rem">Player Phase</span>
+      </div>
+      <span id="missionNameDisplay" style="color:var(--steel);font-size:0.62rem;letter-spacing:0.05em;opacity:0.8"></span>
+      <span id="objectiveDisplay" style="font-family:'Cinzel',serif;font-size:0.6rem;padding:0 0.3rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <div id="ctQueue" style="display:flex;gap:2px;align-items:center;overflow:hidden;max-width:260px"></div>
+      <button class="nav-btn" onclick="confirmFleeMission()" style="margin-left:auto;color:var(--crimson);flex-shrink:0">✗ Retreat</button>
     </div>
     <div class="combat-layout" style="position:relative">
       <div class="combat-sidebar-left">
-        <div class="section-title" style="font-size:0.55rem">Allies</div>
+        <div class="sidebar-label">Allies</div>
         <div id="allyList"></div>
-        <div class="separator"></div>
-        <div class="section-title" style="font-size:0.55rem">Selected</div>
-        <div id="selectedInfo"></div>
-        <div class="separator"></div>
-        <div class="section-title" style="font-size:0.55rem">CT Gauge</div>
-        <div id="ctBars" style="padding:0.2rem 0"></div>
+        <div style="margin-top:0.5rem;border-top:1px solid rgba(255,255,255,0.05);padding-top:0.4rem">
+          <div class="sidebar-label">CT</div>
+          <div id="ctBars" style="padding:0.1rem 0"></div>
+        </div>
       </div>
       <div class="combat-main" id="combatMainArea" style="position:relative">
         <!-- Mobile panel toggles -->
@@ -946,23 +1336,35 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
           <div class="section-title" style="font-size:0.55rem">Battle Log</div>
           <div class="combat-log" id="combatLogMobile" style="height:160px"></div>
         </div>
+        <!-- Phase transition banner -->
+        <div id="phaseBanner">
+          <div class="phase-banner-inner" id="phaseBannerText"></div>
+        </div>
+        <!-- Action mode banner (top-center of canvas) -->
+        <div id="actionModeBanner"></div>
+        <!-- Turn summary (bottom-center, fades in on end turn) -->
+        <div id="turnSummary"></div>
         <div id="combatScrollWrap" style="overflow:auto;width:100%;height:100%;display:flex;align-items:flex-start;justify-content:flex-start;">
-          <canvas id="combatCanvas" style="flex-shrink:0;display:block;cursor:pointer;"></canvas>
+          <canvas id="combatCanvas" style="flex-shrink:0;display:block;cursor:crosshair;"></canvas>
         </div>
       </div>
       <div class="combat-sidebar-right">
-        <div class="section-title" style="font-size:0.55rem">Enemies</div>
+        <div class="sidebar-label">Enemies</div>
         <div id="enemyList"></div>
-        <div class="separator"></div>
-        <div class="section-title" style="font-size:0.55rem">Battle Log</div>
-        <div class="combat-log" id="combatLog"></div>
+        <div style="margin-top:0.5rem;border-top:1px solid rgba(255,255,255,0.05);padding-top:0.4rem;flex:1;display:flex;flex-direction:column;min-height:0">
+          <div class="sidebar-label">Log</div>
+          <div class="combat-log-mini" id="combatLog"></div>
+        </div>
       </div>
+      <!-- HIDDEN legacy: selectedInfo lives here but is not shown in sidebar anymore — used by JS -->
+      <div id="selectedInfo" style="display:none"></div>
     </div>
     <div class="combat-controls">
-      <button class="action-btn" id="btnMove" onclick="setAction('move')">⊕ Move</button>
-      <button class="action-btn attack" id="btnAttack" onclick="setAction('attack')">⚔ Attack</button>
-      <button class="action-btn special" id="btnSpecial" onclick="setAction('special')">✦ Special</button>
-      <button class="action-btn" id="btnItem" onclick="setAction('item')">⊛ Item</button>
+      <div class="controls-active-label" id="controlsActiveLabel"></div>
+      <button class="action-btn" id="btnMove" onclick="setAction('move')">⊕ Move<span class="kbd-hint">M</span></button>
+      <button class="action-btn attack" id="btnAttack" onclick="setAction('attack')">⚔ Attack<span class="kbd-hint">A</span></button>
+      <button class="action-btn special" id="btnSpecial" onclick="setAction('special')">✦ Special<span class="kbd-hint">S</span></button>
+      <button class="action-btn" id="btnItem" onclick="setAction('item')">⊛ Item<span class="kbd-hint">I</span></button>
       <button class="action-btn special" id="btnObjective" onclick="performObjectiveAction()" style="display:none;border-color:rgba(255,140,0,0.5);color:#ffaa33">⚑ Objective</button>
       <button id="btnDiscardWeapon" onclick="combatDiscardWeapon()" style="display:none;background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--mist);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.05em;padding:0.35rem 0.7rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(192,57,43,0.12)'" onmouseout="this.style.background='transparent'">✕ Discard Weapon</button>
       <div style="width:1px;height:28px;background:rgba(255,255,255,0.1)"></div>
@@ -975,8 +1377,8 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
         </div>
       </div>
       <div style="width:1px;height:28px;background:rgba(255,255,255,0.1)"></div>
-      <button class="action-btn" id="btnUndoMove" onclick="undoMove()" style="border-color:rgba(255,200,60,0.35);color:#ffcc33">↩ Undo</button>
-      <button class="action-btn end-turn" id="btnEndTurn" onclick="finishAllyTurn()">⊳ End Turn</button>
+      <button class="action-btn" id="btnUndoMove" onclick="undoMove()" style="border-color:rgba(255,200,60,0.35);color:#ffcc33">↩ Undo<span class="kbd-hint">Z</span></button>
+      <button class="action-btn end-turn" id="btnEndTurn" onclick="finishAllyTurn()">⊳ End Turn<span class="kbd-hint">Enter</span></button>
       <div style="display:flex;flex-direction:column;gap:2px;margin-left:0.3rem">
         <div id="actionLabel" style="font-family:'Cinzel',serif;font-size:0.65rem;color:var(--mist)"></div>
         <div id="facingLabel" style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,162,39,0.6)"></div>
@@ -1006,6 +1408,22 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 </div>
 
 <div id="toastContainer"></div>
+
+<!-- HOVER INSPECT OVERLAY -->
+<div id="hoverInspect">
+  <div class="inspect-header">
+    <div class="inspect-emoji" id="inspectEmoji"></div>
+    <div class="inspect-title-block">
+      <div class="inspect-name" id="inspectName"></div>
+      <div class="inspect-class" id="inspectClass"></div>
+    </div>
+    <div class="inspect-type-badge" id="inspectBadge"></div>
+  </div>
+  <div id="inspectBody"></div>
+</div>
+
+<!-- DOOM VIGNETTE — visible when an ally is in doom countdown -->
+<div id="doomVignette"></div>
 
 <script>
 // ==========================================
@@ -1447,7 +1865,7 @@ const MISSIONS = [
   intro: 'Katsuro is bound in the castle cellar. His captors don\'t know who they have—yet.',
   floors: [
     { enemies: [{ type: 'bounty_hunter', count: 2 }, { type: 'elite_guard', count: 1 }], terrain: 'castle', name: 'Castle Approach',
-       carrierEnemy: 'captain', lootItem: { name: 'Cell Key', icon: '🔑' } },
+       carrierEnemy: 'elite_guard', lootItem: { name: 'Cell Key', icon: '\uD83D\uDD11' } },
     { enemies: [{ type: 'elite_guard', count: 2 }], terrain: 'dungeon', name: 'Castle Cellar',
        isRescueFloor: true }
   ]
@@ -3251,6 +3669,20 @@ function renderRecruitShop() {
 }
 
 
+// Jump to Missions section with this ninja pre-selected in the party
+function _quickDeployNinja(ninjaId) {
+  // Add to party if not already in it (up to 3)
+  if (!selectedParty.includes(ninjaId)) {
+    if (selectedParty.length < 3) {
+      selectedParty.push(ninjaId);
+    } else {
+      // Replace last party member
+      selectedParty[selectedParty.length - 1] = ninjaId;
+    }
+  }
+  showHubSection('missions');
+}
+
 function renderClan() {
   const el = document.getElementById('section-clan');
   const clanCards = GS.clan.map(n => ninjaCard(n)).join('');
@@ -3272,28 +3704,45 @@ function ninjaCard(n) {
   const hpPct = Math.round((n.hp / n.maxHp) * 100);
   const stmPct = Math.round((n.stamina / n.maxStamina) * 100);
   const chiPct = Math.round((n.chi / n.maxChi) * 100);
-  const trainingInfo = n.training ? `<span class="training-badge">⌛ Training: ${n.training.type} (${getTrainingTimeLeft(n)})</span>` : '';
-  const wpnBadge = n.weapon ? `<span class="weapon-badge" style="border-color:${tierColor(n.weapon.tier)};color:${tierColor(n.weapon.tier)}">${n.weapon.icon} ${n.weapon.name}</span>` : `<span class="weapon-badge" style="border-color:rgba(255,255,255,0.1);color:var(--mist)">No Weapon</span>`;
+  const xpPct = Math.round((n.exp / n.expToNext) * 100);
+  const jobData = getNinjaJobData(n);
+  const trainingInfo = n.training ? `<div style="margin-top:0.5rem"><span class="training-badge">⌛ ${n.training.type} · ${getTrainingTimeLeft(n)}</span></div>` : '';
+  const wpnBadge = n.weapon
+    ? `<span class="weapon-badge" style="border-color:${tierColor(n.weapon.tier)};color:${tierColor(n.weapon.tier)}">${n.weapon.icon} ${n.weapon.name}</span>`
+    : `<span class="weapon-badge" style="border-color:rgba(255,255,255,0.1);color:var(--mist)">✕ Unarmed</span>`;
+  const hpColor = hpPct > 60 ? '#e74c3c' : hpPct > 30 ? '#ddaa00' : '#cc2222';
+  const accentColor = cls.color;
 
   return `
-    <div class="ninja-card ${n.training ? 'training' : ''}" onclick="openNinjaDetail('${n.id}')">
+    <div class="ninja-card ${n.training ? 'training' : ''}" onclick="openNinjaDetail('${n.id}')" style="--card-accent:${accentColor}">
       <div class="ninja-card-header">
-        <div class="ninja-avatar" style="background:${cls.color}22;border-color:${cls.color}">${classImgOrEmoji(n.class, 36)}</div>
+        <div class="ninja-avatar" style="background:${accentColor}22;border-color:${accentColor}">
+          ${classImgOrEmoji(n.class, 36)}
+          <div class="ninja-xp-ring" style="--xp-pct:${xpPct * 3.6}deg"></div>
+        </div>
         <div class="ninja-info">
-          <div class="ninja-name">${n.name}</div>
+          <div class="ninja-name">${n.name}${n.training ? ' <span style="font-size:0.55rem;color:var(--gold);opacity:0.7">⌛</span>' : ''}</div>
           <div class="ninja-class">${cls.name}</div>
-          <div class="ninja-level">Level ${n.level} · ${n.exp}/${n.expToNext} XP</div>
-          <div class="ninja-level" style="color:var(--gold)">Skill Lv ${getNinjaJobData(n).level} · ${getNinjaJobData(n).jp} SP</div>
+          <div class="ninja-level-row">
+            <span class="ninja-lvl-badge">Lv ${n.level}</span>
+            <div class="ninja-xp-bar-wrap">
+              <div class="ninja-xp-bar-track"><div class="ninja-xp-bar-fill" style="width:${xpPct}%"></div></div>
+              <div class="ninja-xp-label">${n.exp} / ${n.expToNext} XP</div>
+            </div>
+          </div>
+          <div style="font-size:0.55rem;color:rgba(201,162,39,0.6);margin-top:2px;font-family:'Cinzel',serif">SP Lv ${jobData.level} · ${jobData.jp} pts</div>
         </div>
       </div>
       <div class="stat-bars">
-        <div class="stat-row"><span class="stat-label">HP</span><div class="stat-bar"><div class="stat-fill hp" style="width:${hpPct}%"></div></div><span class="stat-val">${n.hp}/${n.maxHp}</span></div>
+        <div class="stat-row"><span class="stat-label">HP</span><div class="stat-bar"><div class="stat-fill hp" style="width:${hpPct}%;background:linear-gradient(90deg,${hpColor},${hpColor}cc)"></div></div><span class="stat-val">${n.hp}/${n.maxHp}</span></div>
         <div class="stat-row"><span class="stat-label">STM</span><div class="stat-bar"><div class="stat-fill stamina" style="width:${stmPct}%"></div></div><span class="stat-val">${n.stamina}/${n.maxStamina}</span></div>
         <div class="stat-row"><span class="stat-label">CHI</span><div class="stat-bar"><div class="stat-fill chi" style="width:${chiPct}%"></div></div><span class="stat-val">${n.chi}/${n.maxChi}</span></div>
       </div>
-      <div class="ninja-card-footer">${wpnBadge}${trainingInfo}</div>
-      <div class="special-move-info">
-        <div class="special-move-name">✦ ${n.specialMove.name}</div>
+      <div class="ninja-card-footer" style="margin-top:0.7rem;justify-content:space-between">${wpnBadge}${trainingInfo}
+        ${!n.training ? `<button onclick="event.stopPropagation();_quickDeployNinja('${n.id}')" style="background:transparent;border:1px solid rgba(139,26,26,0.4);color:var(--crimson);font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.1em;padding:0.2rem 0.5rem;cursor:pointer;margin-left:auto;transition:all 0.15s" onmouseover="this.style.background='rgba(139,26,26,0.15)'" onmouseout="this.style.background='transparent'" title="Jump to Missions with this ninja selected">⚔ Deploy</button>` : ''}
+      </div>
+      <div class="special-move-info" style="margin-top:0.6rem">
+        <div class="special-move-name">✦ ${n.specialMove.name} <span style="color:rgba(136,170,255,0.6);font-size:0.6rem">χ${n.specialMove.chi}</span></div>
         <div class="special-move-desc">${n.specialMove.desc}</div>
       </div>
     </div>
@@ -3310,6 +3759,16 @@ function openNinjaDetail(id) {
 }
 
 let _loadoutNinjaId = null;
+
+// Refresh the missions party panel immediately if that section is currently visible.
+// Called after any loadout change (equip/unequip weapon, add/remove item) so party
+// slot badges update without requiring the player to navigate away and back.
+function _refreshMissionsIfActive() {
+  const mSection = document.getElementById('section-missions');
+  if (mSection && mSection.classList.contains('active')) {
+    renderMissions();
+  }
+}
 
 function renderLoadoutModal(id) {
   const n = GS.clan.find(x => x.id === id);
@@ -3357,7 +3816,13 @@ function renderLoadoutModal(id) {
     ${useHTML}
   `;
   openModal(`${cls.emoji} ${n.name} — ${cls.name}`, body,
-    [{ label: 'Done', fn: () => { closeModal(); renderClan(); saveGame(); }, cls: 'confirm' }]
+    [{ label: 'Done', fn: () => {
+      closeModal();
+      renderClan();
+      saveGame();
+      // Refresh mission party cards immediately so loadout changes show
+      _refreshMissionsIfActive();
+    }, cls: 'confirm' }]
   );
 }
 
@@ -3536,6 +4001,7 @@ function ninjaEquipWeapon(ninjaId, stashIndex) {
   GS.weaponStash.splice(stashIndex, 1);
   toast(n.name + ' equipped ' + w.name, 'success');
   renderLoadoutModal(ninjaId);
+  _refreshMissionsIfActive();
 }
 
 function ninjaUnequipWeapon(ninjaId) {
@@ -3546,6 +4012,7 @@ function ninjaUnequipWeapon(ninjaId) {
   toast(`${n.weapon.name} returned to stash`, 'success');
   n.weapon = null;
   renderLoadoutModal(ninjaId);
+  _refreshMissionsIfActive();
 }
 
 
@@ -3632,6 +4099,7 @@ function addItemToCarry(ninjaId, category, itemId) {
   n.carriedItems.push(prepared);
   inv.splice(idx, 1);
   renderLoadoutModal(ninjaId);
+  _refreshMissionsIfActive();
 }
 
 function removeItemFromCarry(ninjaId, carryIndex) {
@@ -3645,6 +4113,7 @@ function removeItemFromCarry(ninjaId, carryIndex) {
   n.carriedItems.splice(carryIndex, 1);
   toast(`${item.name} returned to stash`, 'success');
   renderLoadoutModal(ninjaId);
+  _refreshMissionsIfActive();
 }
 
 function useItemOutsideMission(ninjaId, carryIndex) {
@@ -3759,6 +4228,7 @@ function renderMissions() {
     const available = getAvailableMissions();
     const locked = !available.includes(m.id);
     const completed = m.isDynamic ? !!m.completed : GS.completedMissions.includes(m.id);
+    const isSelected = selectedMissionId === m.id;
     const tagHtml = m.tags.map(t => {
       const cls = t === 'assassination' ? 'assassination' : t === 'theft' ? 'theft' : t === 'espionage' ? 'espionage' : t === 'agitation' ? 'agitation' : 'recruit';
       return `<span class="mission-tag tag-${cls}">${t.toUpperCase()}</span>`;
@@ -3768,17 +4238,48 @@ function renderMissions() {
     const floorBadge = m.floors ? `<span style="font-size:0.55rem;font-family:'Cinzel',serif;color:var(--gold);border:1px solid rgba(201,162,39,0.3);padding:0.1rem 0.3rem;margin-left:0.3rem">${m.floors.length}F</span>` : '';
     const isClickable = !locked && !completed;
     const completedBadge = completed ? `<span style="font-size:0.55rem;font-family:'Cinzel',serif;color:var(--jade-bright);border:1px solid rgba(61,170,125,0.3);padding:0.1rem 0.3rem;margin-left:0.3rem">✓ DONE</span>` : '';
+
+    // Expanded detail panel when this card is selected
+    let detailPanel = '';
+    if (isSelected && !locked && !completed) {
+      const terrainLabel = { village:'Village','castle':'Castle Siege','dungeon':'Dungeon','fortress':'Fortress Gate','palace':'Palace','docks':'Docks','forest':'Forest','keep':'Keep' }[m.terrain] || m.terrain || 'Unknown';
+      const typeLabel = { assassination:'Eliminate target & escape', theft:'Steal loot & escape', espionage:'Gather intel & escape', agitation:'Cause chaos & escape', recruit:'Rescue the prisoner' }[m.type] || m.type;
+      const reqLabel = m.requiresMissions && m.requiresMissions.length ? `Req: ${m.requiresMissions.length} prior mission${m.requiresMissions.length>1?'s':''}` : '';
+      const introText = m.intro ? `"${m.intro}"` : '';
+      const floorText = m.floors ? m.floors.map((f,i) => `<span style="color:var(--steel)">F${i+1}: ${f.name||'Floor '+(i+1)}</span>`).join(' → ') : '';
+      const rewardExtras = [
+        `<span style="color:var(--gold)">+${m.reward}G</span>`,
+        m.recruitReward ? `<span style="color:var(--jade-bright)">+ ${CLASSES[m.recruitReward.class]?.emoji||''} Recruit</span>` : '',
+        m.armory ? `<span style="color:var(--tier-rare)">⚔ Armory Weapon</span>` : '',
+      ].filter(Boolean).join(' · ');
+
+      detailPanel = `
+        <div class="mission-card-detail">
+          ${introText ? `<div style="font-size:0.72rem;color:var(--steel);font-style:italic;margin-bottom:0.6rem;line-height:1.5">${introText}</div>` : ''}
+          <div class="mission-detail-grid">
+            <div class="mission-detail-stat"><span class="label">OBJECTIVE</span><span class="val">${typeLabel}</span></div>
+            <div class="mission-detail-stat"><span class="label">TERRAIN</span><span class="val">${terrainLabel}</span></div>
+            <div class="mission-detail-stat"><span class="label">DIFFICULTY</span><span class="val">${'◆'.repeat(m.difficulty)}${'◇'.repeat(5-m.difficulty)}</span></div>
+            <div class="mission-detail-stat"><span class="label">REWARD</span><span class="val">${rewardExtras}</span></div>
+            ${floorText ? `<div class="mission-detail-stat" style="grid-column:1/-1"><span class="label">FLOORS</span><span class="val" style="font-size:0.6rem">${floorText}</span></div>` : ''}
+            ${reqLabel ? `<div class="mission-detail-stat" style="grid-column:1/-1"><span class="label">PREREQ</span><span class="val" style="color:var(--mist);font-size:0.62rem">${reqLabel}</span></div>` : ''}
+          </div>
+          <button onclick="event.stopPropagation();launchMission()" style="width:100%;font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.15em;padding:0.5rem 1rem;background:linear-gradient(135deg,rgba(139,26,26,0.35),rgba(139,26,26,0.12));border:1px solid var(--blood);color:var(--white);cursor:pointer;transition:all 0.2s;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%)" onmouseover="this.style.background='linear-gradient(135deg,rgba(139,26,26,0.55),rgba(139,26,26,0.25))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(139,26,26,0.35),rgba(139,26,26,0.12))'">⚔ Deploy Party</button>
+        </div>`;
+    }
+
     return `
-      <div class="mission-card ${locked ? 'locked' : ''} ${completed ? 'completed' : ''}" onclick="${isClickable ? `selectMission('${m.id}')` : ''}" ${selectedMissionId === m.id ? 'style="border-color:var(--gold)"' : ''} style="${completed ? 'opacity:0.45;cursor:default;' : ''}${selectedMissionId === m.id ? 'border-color:var(--gold);' : ''}">
+      <div class="mission-card ${locked ? 'locked' : ''} ${completed ? 'completed' : ''} ${isSelected ? 'mission-card-selected' : ''}" onclick="${isClickable ? `selectMission('${m.id}')` : ''}" style="${completed ? 'opacity:0.45;cursor:default;' : ''}${isSelected ? 'border-color:var(--gold);background:rgba(201,162,39,0.04);' : ''}">
         <div class="mission-type-icon">${typeMap[m.type] || '❓'}</div>
-        <div class="mission-details">
-          <div class="mission-name">${m.name}${dynamicBadge}${floorBadge}${completedBadge} ${locked ? '\u{1F512}' : ''}</div>
+        <div class="mission-details" style="flex:1">
+          <div class="mission-name">${m.name}${dynamicBadge}${floorBadge}${completedBadge} ${locked ? '\u{1F512}' : ''}${isSelected ? ' <span style="color:rgba(201,162,39,0.5);font-size:0.6rem">▼</span>' : ''}</div>
           <div class="mission-desc">${m.desc}</div>
           <div class="mission-meta">
             ${tagHtml}
             <span class="difficulty-pip">${pips}</span>
             <span class="mission-reward">G ${m.reward} gold${m.recruitReward ? ' + Recruit' : ''}</span>
           </div>
+          ${detailPanel}
         </div>
       </div>`;
   }
@@ -4025,27 +4526,47 @@ function getMissionObjectiveType(mission) {
 // Returns array of {x, y, type, label, icon, done}
 function placeObjectiveTiles(grid, objType, count) {
   const W = CS.gridW, H = CS.gridH;
-  const PASSABLE = new Set('.1FRGSs~rT');
-  const candidates = [];
-  // Prefer right-centre cluster (where enemies are) — objective is usually deep in the map
-  for (let y = 2; y < H - 2; y++) {
-    for (let x = Math.floor(W * 0.4); x < W - 2; x++) {
-      const ch = grid[y]?.[x];
-      if (ch && PASSABLE.has(ch)) candidates.push({ x, y });
+  const _opPassable = (x, y) => { const k = grid[y]?.[x]; return k && (TERRAIN_TILES[k]||TERRAIN_TILES.empty).passable; };
+
+  // Build candidates from right-centre zone (x > 40% of map width)
+  // Fall back to entire interior if right zone lacks enough passable tiles
+  function buildCandidates(minX, maxX) {
+    const cands = [];
+    for (let y = 2; y < H - 2; y++) {
+      for (let x = minX; x < maxX; x++) {
+        if (_opPassable(x, y)) cands.push({ x, y });
+      }
     }
+    return cands;
   }
-  // Shuffle and pick 'count' well-spread tiles
+
+  let candidates = buildCandidates(Math.floor(W * 0.4), W - 2);
+  // If right zone has fewer candidates than needed, expand to whole interior
+  if (candidates.length < count) {
+    candidates = buildCandidates(2, W - 2);
+  }
+
+  // Shuffle and pick 'count' well-spread tiles (spacing >= 3)
   candidates.sort(() => Math.random() - 0.5);
   const chosen = [];
   for (const c of candidates) {
-    // Ensure chosen tiles are spread at least 3 tiles apart
     const tooClose = chosen.some(t => Math.abs(t.x - c.x) + Math.abs(t.y - c.y) < 3);
     if (!tooClose) {
       chosen.push(c);
       if (chosen.length >= count) break;
     }
   }
-  const icon = OBJECTIVE_TILE_ICONS[objType] || '⚑';
+  // If still not enough with spacing=3, relax to 1
+  if (chosen.length < count) {
+    for (const c of candidates) {
+      if (!chosen.some(t => t.x === c.x && t.y === c.y)) {
+        chosen.push(c);
+        if (chosen.length >= count) break;
+      }
+    }
+  }
+
+  const icon = OBJECTIVE_TILE_ICONS[objType] || '⧐';
   const label = OBJECTIVE_TILE_LABELS[objType] || 'Objective';
   return chosen.map((c, i) => ({ x: c.x, y: c.y, type: objType, label, icon, done: false, id: 'obj_' + i }));
 }
@@ -4065,6 +4586,14 @@ function initObjectiveTiles(mission, grid) {
   CS.objectiveTiles = placeObjectiveTiles(grid, objType, count);
   CS.objectiveTotal = CS.objectiveTiles.length;
   CS.objectiveProgress = 0;
+  // Log tile locations at mission start
+  if (CS.objectiveTiles.length > 0) {
+    const label = OBJECTIVE_TILE_LABELS[objType] || 'Objective';
+    const icon = OBJECTIVE_TILE_ICONS[objType] || '⧐';
+    const locs = CS.objectiveTiles.map(t => '(' + t.x + ',' + t.y + ')').join(', ');
+    addLog(icon + ' ' + CS.objectiveTiles.length + ' objective tile' + (CS.objectiveTiles.length > 1 ? 's' : '') +
+      ' marked on map — ' + label + ' at: ' + locs, 'system');
+  }
 }
 
 // Perform objective action — called when player uses the Objective button
@@ -4168,6 +4697,10 @@ function initCombat(mission, partyIds) {
   // Build grid
   CS.grid = generateGrid(mission.terrain);
 
+  // ── REACHABILITY FIX: ensure every exit and every spawn column can be reached
+  // by a unit with jump=1 (max height climb of 1 per step). Carves corridors as needed.
+  _ensureMapReachability(CS.grid, CS.gridW, CS.gridH, 'left');
+
   // Carve exit openings on the left wall (always present, activate later)
   const exitYs = [2, Math.floor(CS.gridH / 2), CS.gridH - 3];
   CS.exitTiles = exitYs.map(y => ({ x: 0, y }));
@@ -4176,18 +4709,58 @@ function initCombat(mission, partyIds) {
   // Place objective tiles (agitation/espionage missions)
   initObjectiveTiles(mission, CS.grid);
 
-  // Place allies
+  // Place allies — formation positions validated against actual grid passability
+  const _allyFormation = FORMATIONS[selectedFormation] || FORMATIONS.line;
+  const _allyPts = _allyFormation.positions(partyIds.length, CS.gridH);
+  // Track placed ally positions with a local set (CS.allies not yet built during map())
+  const _allyPlacedPositions = new Set();
+
+  // Helper: is a grid tile passable? CS.grid stores terrain KEY names ('empty','wall',etc)
+  function _tilePassable(x, y) {
+    const key = CS.grid[y]?.[x];
+    if (!key) return false;
+    return !!(TERRAIN_TILES[key] || TERRAIN_TILES.empty).passable;
+  }
+
+  function _findAllySpawn(preferred) {
+    const posKey = (x, y) => x + ',' + y;
+    // Try the formation's preferred position first
+    if (preferred &&
+        _tilePassable(preferred.x, preferred.y) &&
+        !_allyPlacedPositions.has(posKey(preferred.x, preferred.y))) {
+      _allyPlacedPositions.add(posKey(preferred.x, preferred.y));
+      return { x: preferred.x, y: preferred.y };
+    }
+    // Scan left-side columns for a free passable tile
+    for (let x = 1; x <= 4; x++) {
+      for (let y = 1; y < CS.gridH - 1; y++) {
+        if (_tilePassable(x, y) && !_allyPlacedPositions.has(posKey(x, y))) {
+          _allyPlacedPositions.add(posKey(x, y));
+          return { x, y };
+        }
+      }
+    }
+    // Last resort: pick any passable tile anywhere
+    for (let x = 1; x < CS.gridW - 1; x++) {
+      for (let y = 1; y < CS.gridH - 1; y++) {
+        if (_tilePassable(x, y) && !_allyPlacedPositions.has(posKey(x, y))) {
+          _allyPlacedPositions.add(posKey(x, y));
+          return { x, y };
+        }
+      }
+    }
+    return { x: 1, y: Math.floor(CS.gridH / 2) };
+  }
+
   CS.allies = partyIds.map((id, i) => {
     const n = GS.clan.find(x => x.id === id);
     const cls = CLASSES[n.class];
+    const _preferred = _allyPts[i] || { x: 1 + i, y: Math.floor(CS.gridH / 2) };
+    const _safePos = _findAllySpawn(_preferred);
     const ally = {
       ...JSON.parse(JSON.stringify(n)),
       gridId: 'ally_' + id,
-      ...(() => {
-        const f = FORMATIONS[selectedFormation] || FORMATIONS.line;
-        const pts = f.positions(partyIds.length, CS.gridH);
-        return pts[i] || { x: 1 + i, y: Math.floor(CS.gridH / 2) };
-      })(),
+      ..._safePos,
       buffs: [], status: null,
       carriedItems: JSON.parse(JSON.stringify(n.carriedItems || [])),
 
@@ -4227,7 +4800,9 @@ function initCombat(mission, partyIds) {
   _enemySpecs.forEach(group => {
     const type = ENEMY_TYPES[group.type];
     for (let i = 0; i < group.count; i++) {
-      const pos = findEmptyPos(CS.gridW - 5, CS.gridW - 2, 1, CS.gridH - 2);
+      // Spawn in right half of map (x = gridW-5 to gridW-2)
+      // Use _findEnemySpawnPos which enforces passable + low-height tiles
+      const pos = _findEnemySpawnPos(CS.gridW - 5, CS.gridW - 2, 1, CS.gridH - 2);
       const eWeapon = spawnEnemyWeapon(group.type, mission.difficulty || 1);
       // Weapon upgrades enemy attack range for ranged/thrown
       const eAttackRange = eWeapon && (eWeapon.type === 'ranged' || eWeapon.type === 'thrown')
@@ -4251,14 +4826,53 @@ function initCombat(mission, partyIds) {
     }
   });
 
-  // Tag the target enemy (assassination) and carrier (theft)
+  // ── ABSOLUTE SPAWN SAFETY: walk every enemy and guarantee it's on a passable tile ──
+  // This catches any edge case where _findEnemySpawnPos returned a fallback on an impassable tile.
+  CS.enemies.forEach(function(e) {
+    const ch = CS.grid[e.y]?.[e.x];
+    const tData = TERRAIN_TILES[ch] || TERRAIN_TILES.empty;
+    const heightOk = (tData.height || 0) <= 2;
+    if (!tData.passable || !heightOk) {
+      const safePos = _findEnemySpawnPos(CS.gridW - 5, CS.gridW - 2, 1, CS.gridH - 2, e.id);
+      // Double-check the safe pos is actually passable
+      const safeCh = CS.grid[safePos.y]?.[safePos.x];
+      const safeTile = TERRAIN_TILES[safeCh] || TERRAIN_TILES.empty;
+      if (safeTile.passable) {
+        e.x = safePos.x; e.y = safePos.y;
+      } else {
+        // Absolute fallback: linear scan for any passable tile
+        for (let sy = 1; sy < CS.gridH - 1 && !safeTile.passable; sy++) {
+          for (let sx = Math.floor(CS.gridW / 2); sx < CS.gridW - 1; sx++) {
+            const fch = CS.grid[sy]?.[sx];
+            const ft = TERRAIN_TILES[fch] || TERRAIN_TILES.empty;
+            if (ft.passable && (ft.height || 0) <= 2) {
+              e.x = sx; e.y = sy; break;
+            }
+          }
+          if ((TERRAIN_TILES[CS.grid[e.y]?.[e.x]] || TERRAIN_TILES.empty).passable) break;
+        }
+      }
+    }
+  });
+
+  // Tag the target enemy (assassination) and carrier (theft/rescue)
   if (_floorTarget) {
     const t = CS.enemies.find(e => e.type === _floorTarget);
-    if (t) { t.isTarget = true; t.name = '★ ' + t.name; }
+    if (t) { t.isTarget = true; t.name = '\u2605 ' + t.name; }
   }
   if (_floorCarrier && _floorLoot) {
-    const c = CS.enemies.find(e => e.type === _floorCarrier);
-    if (c) { c.isCarrier = true; c.carriedLoot = _floorLoot; c.name = '📦 ' + c.name; }
+    // Try to find the specified carrier type; fall back to highest-HP enemy if not present
+    let c = CS.enemies.find(e => e.type === _floorCarrier);
+    if (!c && CS.enemies.length > 0) {
+      // Assign carrier to the toughest non-carrier enemy available
+      c = CS.enemies.reduce((best, e) => (!best || e.maxHp > best.maxHp) ? e : best, null);
+      if (c) addLog('\u{1F4E6} The ' + c.name + ' is holding the ' + _floorLoot.name + '.', 'system');
+    }
+    if (c) {
+      c.isCarrier = true;
+      c.carriedLoot = { ..._floorLoot };
+      c.name = '\uD83D\uDD11 ' + c.name.replace(/^[\uD83D\uDCE6\u2605\uD83D\uDD11] /, '');
+    }
   }
 
   // Preload PNGs for this session (async, non-blocking)
@@ -4284,6 +4898,233 @@ function initCombat(mission, partyIds) {
 }
 
 
+
+// ═══════════════════════════════════════════════════════════════
+// ── MAP REACHABILITY HELPERS ──
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// ── ENEMY SPAWN HELPER ──
+// ═══════════════════════════════════════════════════════════════
+
+// Find a spawn position for an enemy unit in the given zone.
+// Prefers tiles that are: passable, height ≤ 2, unoccupied, in right half.
+// Falls back gracefully to any passable tile in zone, then expands rightward only.
+// `excludeId` is passed during re-validation so the enemy's own tile isn't blocked.
+function _findEnemySpawnPos(x1, x2, y1, y2, excludeId) {
+  const W = CS.gridW, H = CS.gridH;
+  excludeId = excludeId || null;
+
+  const tileOk = (x, y) => {
+    if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return false;
+    const k = CS.grid[y]?.[x] || 'empty';
+    const t = TERRAIN_TILES[k] || TERRAIN_TILES.empty;
+    if (!t.passable) return false;
+    if ((t.height || 0) > 2) return false; // don't spawn enemies on very high terrain
+    return true;
+  };
+
+  const posEmpty = (x, y) => {
+    if (!tileOk(x, y)) return false;
+    const allUnits = [...CS.allies, ...CS.enemies].filter(u => u.hp > 0 && !u.escaped);
+    return !allUnits.some(u => u.x === x && u.y === y && u.id !== excludeId && u.gridId !== excludeId);
+  };
+
+  // Phase 1: random attempts in preferred zone
+  for (let i = 0; i < 40; i++) {
+    const x = x1 + Math.floor(Math.random() * (x2 - x1 + 1));
+    const y = y1 + Math.floor(Math.random() * (y2 - y1 + 1));
+    if (posEmpty(x, y)) return { x, y };
+  }
+
+  // Phase 2: exhaustive scan of preferred zone
+  const ys = Array.from({ length: y2 - y1 + 1 }, (_, i) => y1 + i).sort(() => Math.random() - 0.5);
+  const xs = Array.from({ length: x2 - x1 + 1 }, (_, i) => x1 + i).sort(() => Math.random() - 0.5);
+  for (const y of ys) for (const x of xs) if (posEmpty(x, y)) return { x, y };
+
+  // Phase 3: relax height constraint, still in zone
+  for (const y of ys) for (const x of xs) {
+    const k = CS.grid[y]?.[x] || 'empty';
+    const t = TERRAIN_TILES[k] || TERRAIN_TILES.empty;
+    if (t.passable) {
+      const allUnits = [...CS.allies, ...CS.enemies].filter(u => u.hp > 0 && !u.escaped);
+      if (!allUnits.some(u => u.x === x && u.y === y && u.id !== excludeId && u.gridId !== excludeId)) return { x, y };
+    }
+  }
+
+  // Phase 4: expand from zone centre, right half only (x ≥ W/2)
+  const minX4 = Math.max(Math.floor(W / 2), 1);
+  const cx4 = Math.floor((x1 + x2) / 2), cy4 = Math.floor((y1 + y2) / 2);
+  for (let rad = 1; rad < W; rad++) {
+    for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) {
+      if (Math.abs(dx) !== rad && Math.abs(dy) !== rad) continue;
+      const nx = cx4 + dx, ny = cy4 + dy;
+      if (nx < minX4 || ny < 1 || nx >= W - 1 || ny >= H - 1) continue;
+      const k = CS.grid[ny]?.[nx] || 'empty';
+      const t = TERRAIN_TILES[k] || TERRAIN_TILES.empty;
+      if (t.passable) return { x: nx, y: ny };
+    }
+  }
+
+  // Phase 5: absolute last resort — ANY passable tile anywhere on map
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      const k = CS.grid[y]?.[x] || 'empty';
+      const t = TERRAIN_TILES[k] || TERRAIN_TILES.empty;
+      if (t.passable) return { x, y };
+    }
+  }
+
+  // Should truly never reach here — return a passable fallback that gets fixed by validation
+  return { x: Math.floor(W * 0.75), y: Math.floor(H / 2) };
+}
+
+// Find the nearest passable, unoccupied tile to (prefX, prefY) using outward BFS.
+// Avoids tiles occupied by any unit in the optional `units` array.
+function _findSafePassablePos(grid, W, H, prefX, prefY, units) {
+  units = units || [];
+  const occupied = new Set(units.filter(u => u.hp > 0).map(u => u.x + ',' + u.y));
+  const isOk = (x, y) => {
+    if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return false;
+    const key = grid[y]?.[x] || 'empty';
+    const tile = TERRAIN_TILES[key] || TERRAIN_TILES.empty;
+    if (!tile.passable) return false;
+    if (occupied.has(x + ',' + y)) return false;
+    return true;
+  };
+  // BFS outward from preferred position
+  const seen = new Set();
+  const queue = [{ x: prefX, y: prefY }];
+  seen.add(prefX + ',' + prefY);
+  while (queue.length) {
+    const { x, y } = queue.shift();
+    if (isOk(x, y)) return { x, y };
+    for (const [dx, dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]) {
+      const nx = x + dx, ny = y + dy;
+      const k = nx + ',' + ny;
+      if (!seen.has(k) && nx >= 0 && ny >= 0 && nx < W && ny < H) {
+        seen.add(k);
+        queue.push({ x: nx, y: ny });
+      }
+    }
+  }
+  // Absolute fallback: scan whole interior
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (isOk(x, y)) return { x, y };
+  return { x: prefX, y: prefY }; // should never reach here
+}
+
+// Ensure every exit tile and every spawn column tile is reachable by a unit
+// with jump stat = 1 (can climb at most 1 height unit per step).
+// `exitSide`: 'left' means exits are at x=0 (ally spawns x=1..4),
+//             'right' means exits are at x=gridW-1 (ally spawns x=gridW-5..gridW-2).
+// Strategy:
+//   1. For each exit, guarantee the tile immediately inside (1 step in) is passable and height ≤ 1.
+//   2. BFS from spawn zone; if no exit is reachable, carve a straight corridor from a spawn
+//      tile to the nearest exit tile, clearing walls and flattening height>1 tiles.
+function _ensureMapReachability(grid, W, H, exitSide) {
+  const tilePassable = (x, y) => {
+    const k = grid[y]?.[x] || 'empty';
+    return (TERRAIN_TILES[k] || TERRAIN_TILES.empty).passable;
+  };
+  const tileHeight = (x, y) => {
+    const k = grid[y]?.[x] || 'empty';
+    return (TERRAIN_TILES[k] || TERRAIN_TILES.empty).height || 0;
+  };
+  const clearTile = (x, y) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    // Don't clear border walls on the wrong edges
+    if (exitSide === 'left' && x === W - 1) return;
+    if (exitSide === 'right' && x === 0) return;
+    grid[y][x] = 'empty';
+  };
+
+  // Step 1: Force the tile immediately inside each exit row to be passable & low
+  const exitColInner = exitSide === 'left' ? 1 : W - 2;
+  const exitRows = [2, Math.floor(H / 2), H - 3];
+  exitRows.forEach(ey => {
+    if (ey < 1 || ey >= H - 1) return;
+    // Force the exit tile itself passable
+    const exitX = exitSide === 'left' ? 0 : W - 1;
+    grid[ey][exitX] = 'exit';
+    // Force the tile inside the exit to be passable and height ≤ 1
+    if (!tilePassable(exitColInner, ey) || tileHeight(exitColInner, ey) > 1) {
+      grid[ey][exitColInner] = 'empty';
+    }
+    // Also ensure adjacent row tiles aren't both walls (avoid dead-end corridors)
+    if (ey > 1 && !tilePassable(exitColInner, ey - 1)) grid[ey - 1][exitColInner] = 'empty';
+    if (ey < H - 2 && !tilePassable(exitColInner, ey + 1)) grid[ey + 1][exitColInner] = 'empty';
+  });
+
+  // Step 2: BFS from the spawn zone columns (jump=1 means can climb ≤1 height per step)
+  const spawnXs = exitSide === 'left'
+    ? [1, 2, 3, 4]
+    : [W - 2, W - 3, W - 4, W - 5];
+  const exitXs = exitSide === 'left' ? [1] : [W - 2]; // inner column of exits
+
+  // Find a good spawn seed — first passable tile in spawn zone
+  let seedX = spawnXs[0], seedY = Math.floor(H / 2);
+  outer:
+  for (const sx of spawnXs) {
+    for (let sy = 1; sy < H - 1; sy++) {
+      if (tilePassable(sx, sy) && tileHeight(sx, sy) <= 1) { seedX = sx; seedY = sy; break outer; }
+    }
+  }
+  // If no passable spawn seed, carve one
+  if (!tilePassable(seedX, seedY)) grid[seedY][seedX] = 'empty';
+
+  // BFS reachability with jump=1
+  const reached = new Set();
+  const bfsQ = [{ x: seedX, y: seedY }];
+  reached.add(seedX + ',' + seedY);
+  while (bfsQ.length) {
+    const { x, y } = bfsQ.shift();
+    const fromH = tileHeight(x, y);
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+      if (reached.has(nx + ',' + ny)) continue;
+      if (!tilePassable(nx, ny)) continue;
+      const toH = tileHeight(nx, ny);
+      if (toH - fromH > 1) continue; // jump=1 cannot climb this
+      reached.add(nx + ',' + ny);
+      bfsQ.push({ x: nx, y: ny });
+    }
+  }
+
+  // Step 3: Check each exit inner tile is reached; if not, carve a corridor
+  let anyUnreachable = false;
+  exitRows.forEach(ey => {
+    for (const ex of exitXs) {
+      if (!reached.has(ex + ',' + ey)) { anyUnreachable = true; }
+    }
+  });
+
+  if (anyUnreachable) {
+    // Carve a horizontal corridor at each exit row from spawnX to exitX
+    exitRows.forEach(ey => {
+      if (ey < 1 || ey >= H - 1) return;
+      const startX = exitSide === 'left' ? 1 : W - 2;
+      const endX   = exitSide === 'left' ? Math.floor(W * 0.6) : Math.floor(W * 0.4);
+      const step   = exitSide === 'left' ? 1 : -1;
+      let prevHeight = 0;
+      for (let cx = startX; cx !== endX + step; cx += step) {
+        if (cx < 1 || cx >= W - 1) break;
+        const curTile = grid[ey]?.[cx] || 'empty';
+        const curData = TERRAIN_TILES[curTile] || TERRAIN_TILES.empty;
+        if (!curData.passable) {
+          clearTile(cx, ey);
+        } else if ((curData.height || 0) - prevHeight > 1) {
+          // Height delta too large for jump=1 — flatten to prev height level
+          grid[ey][cx] = prevHeight <= 0 ? 'empty' : prevHeight === 1 ? 'floor1' : 'floor2';
+        }
+        prevHeight = tileHeight(cx, ey);
+      }
+      // Also clear the tile above and below in the corridor to prevent single-row dead ends
+      if (ey > 1 && !tilePassable(startX, ey - 1)) clearTile(startX, ey - 1);
+      if (ey < H - 2 && !tilePassable(startX, ey + 1)) clearTile(startX, ey + 1);
+    });
+  }
+}
 
 function generateGrid(terrainName) {
   // Try MAP_LIBRARY first — use a deterministic pick so replays feel consistent
@@ -4381,23 +5222,30 @@ function renderCTQueue() {
   const el = document.getElementById('ctQueue');
   if (!el) return;
   const order = calcTurnOrder(8);
-  const allUnits = getAllLiveUnits();
   el.innerHTML = order.map((u, i) => {
     const isAlly = !!u.gridId;
     const isActive = (u.gridId || u.id) === CS.activeUnit;
     const cls = isAlly ? CLASSES[u.class] : null;
-    const emoji = cls ? cls.emoji : u.emoji;
+    const emoji = cls ? cls.emoji : (u.emoji || '⚔');
     const color = isAlly ? (cls?.color || '#5a8a5a') : '#8a2a2a';
-    const pct = Math.min(100, Math.round(((u.ct || 0) / 100) * 100));
-    return '<div class="ct-slot' + (isActive ? ' active' : '') + (isAlly ? ' ally' : ' enemy') + '" style="border-color:' + color + '33">'
+    const hpPct = Math.max(0, Math.round(((u.hp || 0) / (u.maxHp || 1)) * 100));
+    const hpColor = hpPct > 60 ? '#3daa7d' : hpPct > 30 ? '#ddaa00' : '#e74c3c';
+    const tooltip = `${u.name} (${isAlly ? 'Ally' : 'Enemy'}) · HP ${u.hp}/${u.maxHp}`;
+    return '<div class="ct-slot' + (isActive ? ' active' : '') + (isAlly ? ' ally' : ' enemy') + '"'
+      + ' style="border-color:' + (isActive ? color : color + '44') + '"'
+      + ' title="' + tooltip + '">'
       + '<div class="ct-emoji">' + emoji + '</div>'
       + '<div class="ct-name">' + u.name.split(' ')[0] + '</div>'
-      + (i === 0 ? '<div class="ct-bar-wrap"><div class="ct-bar-fill" style="width:100%;background:' + color + '"></div></div>' : '')
+      + '<div class="ct-bar-wrap" style="width:30px;height:3px;background:rgba(255,255,255,0.08);margin-top:2px">'
+      +   '<div style="height:3px;width:' + hpPct + '%;background:' + hpColor + ';border-radius:2px;transition:width 0.3s"></div>'
+      + '</div>'
       + '</div>';
   }).join('');
-  // Also show current unit CT bars for all live units
+
+  // CT sidebar bars (compact — shows all live units)
   const barEl = document.getElementById('ctBars');
   if (barEl) {
+    const allUnits = getAllLiveUnits();
     barEl.innerHTML = allUnits.map(u => {
       const isAlly = !!u.gridId;
       const isActive = (u.gridId || u.id) === CS.activeUnit;
@@ -4405,8 +5253,8 @@ function renderCTQueue() {
       const color = isAlly ? (cls?.color || '#5a8a5a') : '#8a2a2a';
       const pct = Math.min(100, Math.round(((u.ct || 0) / 100) * 100));
       return '<div class="ctb-row" title="' + u.name + ' CT: ' + pct + '%">'
-        + '<div class="ctb-label" style="color:' + (isAlly ? '#aac' : '#c88') + '">'
-        + (isAlly ? CLASSES[u.class]?.emoji : u.emoji)
+        + '<div class="ctb-label" style="font-size:0.7rem;color:' + (isAlly ? '#aac' : '#c88') + '">'
+        + (isAlly ? (CLASSES[u.class]?.emoji || '🥷') : (u.emoji || '⚔'))
         + '</div>'
         + '<div class="ctb-track"><div class="ctb-fill' + (isActive ? ' ctb-active' : '') + '" style="width:' + pct + '%;background:' + color + '"></div></div>'
         + '</div>';
@@ -4426,6 +5274,16 @@ function renderCombat() {
     ? ((_activeU.gridId ? '👤 ' : '⚔ ') + _activeU.name + "'s Turn")
     : (CS.phase === 'player' ? '👤 Player Phase' : '⏳ Advancing...');
   document.getElementById('phaseDisplay').textContent = _phaseText;
+  // Update phase dot
+  const _phaseDot = document.getElementById('phaseDot');
+  if (_phaseDot) {
+    _phaseDot.className = 'phase-dot' + (CS.phase === 'player' ? '' : CS.phase === 'enemy' ? ' enemy' : ' waiting');
+  }
+  // Clear action mode banner when no action selected
+  if (!CS.selectedAction) {
+    const _banner = document.getElementById('actionModeBanner');
+    if (_banner && _banner.classList.contains('visible')) { _banner.textContent = ''; _banner.className = ''; }
+  }
   renderCTQueue();
 
   // Objective status bar
@@ -4445,13 +5303,29 @@ function renderCombat() {
       }
     } else if (m.floors && m.floors[CS.currentFloor]?.isRescueFloor) {
       if (CS.prisonerFreed) {
-        objText = 'Prisoner freed! Guide them to the exit!'; objColor = 'var(--jade-bright)';
+        objText = '\u2705 Prisoner freed! Guide them to the exit!'; objColor = 'var(--jade-bright)';
       } else if (CS.allyWithLoot) {
-        objText = 'Key secured — move to the prisoner!'; objColor = 'var(--gold)';
+        objText = '\uD83D\uDD11 Key secured — move to the prisoner!'; objColor = 'var(--gold)';
       } else if (CS.lootOnFloor) {
-        objText = '🔑 Key on floor — pick it up!'; objColor = 'var(--gold)';
+        objText = '\uD83D\uDD11 Key on floor (' + CS.lootOnFloor.x + ',' + CS.lootOnFloor.y + ') — pick it up!'; objColor = 'var(--gold)';
       } else {
-        objText = 'Clear the guards and get the cell key.'; objColor = 'var(--steel)';
+        objText = '\u26D3 Find and defeat the jailer to get the cell key.'; objColor = 'var(--steel)';
+      }
+    } else if (m.floors && !m.floors[CS.currentFloor]?.isRescueFloor && m.floors[CS.currentFloor]?.carrierEnemy) {
+      // Rescue floor 1: key carrier floor
+      const _kc = CS.enemies.find(e => e.isCarrier && e.hp > 0);
+      if (CS.allyWithLoot) {
+        const _allDead = CS.enemies.every(e => e.hp <= 0);
+        objText = _allDead
+          ? '\uD83D\uDD11 Key in hand! Reach the exit to advance.'
+          : '\uD83D\uDD11 Key secured! Defeat remaining enemies, then exit.';
+        objColor = 'var(--gold)';
+      } else if (CS.lootOnFloor) {
+        objText = '\uD83D\uDD11 Key dropped at (' + CS.lootOnFloor.x + ',' + CS.lootOnFloor.y + ')! Pick it up.'; objColor = 'var(--gold)';
+      } else if (_kc) {
+        objText = '\uD83D\uDD11 Defeat the ' + _kc.name.replace(/^\uD83D\uDCE6 /, '') + ' to get the cell key.'; objColor = 'var(--crimson-bright)';
+      } else {
+        objText = '\u26D3 Key carrier defeated. Pick up the key.'; objColor = 'var(--gold)';
       }
   } else if (m.type === 'theft' && m.carrierEnemy) {
       if (CS.objectivePhase === 'done') {
@@ -4503,6 +5377,7 @@ function renderCombat() {
   resizeCombatCanvas();
   drawCanvas();
   updateActionButtons();
+  _updateDoomVignette();
   // Kick off pulse animation for exits/loot if needed
   if (CS.exitsActive || CS.lootOnFloor || (CS.goldPickups && CS.goldPickups.length) || (CS.objectiveTiles && CS.objectiveTiles.some(t=>!t.done)) || CS.doomBags.length || CS.allies.some(a => a.doomed) || (CS.prisoner && !CS.prisoner.escaped)) schedulePulseRedraw();
 }
@@ -4556,23 +5431,18 @@ function renderAllyList() {
   const el = document.getElementById('allyList');
   el.innerHTML = CS.allies.filter(a => !a.perished).map(a => {
     const cls = CLASSES[a.class];
-    const hpPct = (a.hp / a.maxHp) * 100;
+    const hpPct = Math.max(0, (a.hp / a.maxHp) * 100);
     const isActive = CS.activeUnit === a.gridId;
+    const isDead = a.hp <= 0 && !a.doomed;
+    const hpClass = hpPct > 60 ? 'hp-high' : hpPct > 30 ? 'hp-mid' : 'hp-low';
     const moved = isActive && CS.unitMoved;
     const acted = isActive && CS.unitActed;
-    const wLabel = a.weapon ? (() => {
-      const w = a.weapon;
-      if (!weaponUsable(a)) return `<span style="color:var(--crimson);font-size:0.55rem">${w.icon} Empty</span>`;
-      const s = weaponStatusLabel(w);
-      const warn = (w.ammo !== undefined && w.ammo <= 3) || (w.usesLeft !== undefined && w.usesLeft <= 5);
-      return `<span style="color:${warn ? '#ddaa00' : 'var(--steel)'};font-size:0.55rem">${w.icon} ${s}</span>`;
-    })() : '';
-    const armorLabel = a.armorItem ? `<span style="font-size:0.55rem;color:${a.armorItem.durability <= 2 ? 'var(--crimson-bright)' : 'var(--jade-bright)'}">\u{1F6E1}${a.armorItem.durability}</span>` : '';
-    return `<div class="combatant-card ${isActive ? 'selected' : ''} ${a.doomed ? 'dead' : ''}" onclick="selectAlly('${a.gridId}')">
-      <div class="combatant-name">${cls.emoji} ${a.name} ${a.doomed ? '<span style="color:#ff3333;font-size:0.6rem">💀 ' + a.doomCountdown + '</span>' : ''} ${moved ? '·' : ''}${acted ? '⚔' : ''}</div>
-      <div style="font-size:0.6rem;color:var(--mist)">${a.hp}/${a.maxHp} HP · Chi ${a.chi}</div>
-      <div style="display:flex;gap:0.3rem;margin-top:1px">${wLabel}${armorLabel}</div>
-      <div class="combatant-mini-hp"><div class="combatant-mini-hp-fill" style="width:${hpPct}%"></div></div>
+    const statusIcons = (moved ? '·' : '') + (acted ? '⚔' : '');
+    return `<div class="combatant-strip ${isActive ? 'selected-strip' : ''} ${a.doomed ? 'dead-strip' : ''} ${isDead ? 'dead-strip' : ''}" onclick="selectAlly('${a.gridId}')" title="${a.name}">
+      <div class="strip-name">${cls.emoji} <span style="overflow:hidden;text-overflow:ellipsis">${a.name}</span>${statusIcons ? `<span style="color:var(--mist);margin-left:auto;font-size:0.48rem">${statusIcons}</span>` : ''}${a.doomed ? '<span style="color:#ff3333;margin-left:auto;font-size:0.5rem">💀'+a.doomCountdown+'</span>' : ''}</div>
+      <div class="strip-vals"><span style="color:#e74c3c">${a.hp}</span><span style="color:rgba(255,255,255,0.2)">/</span><span>${a.maxHp}</span></div>
+      <div class="strip-hp-bar"><div class="strip-hp-fill ${hpClass}" style="width:${hpPct}%"></div></div>
+      <div class="strip-chi">χ ${a.chi}/${a.maxChi}</div>
     </div>`;
   }).join('');
 }
@@ -4580,23 +5450,16 @@ function renderAllyList() {
 function renderEnemyList() {
   const el = document.getElementById('enemyList');
   el.innerHTML = CS.enemies.map(e => {
-    const hpPct = (e.hp / e.maxHp) * 100;
-    const wInfo = e.weapon
-      ? `<span style="font-size:0.55rem;color:${e.weapon.quiverEmpty ? 'var(--crimson)' : 'var(--steel)'}">${e.weapon.icon} ${e.weapon.name}${e.weapon.type === 'thrown' ? ' (' + e.weapon.ammo + ')' : e.weapon.type === 'ranged' ? ' (' + (e.weapon.quiverEmpty ? '✗' : e.weapon.ammo + '↓') + ')' : ''}</span>`
-      : `<span style="font-size:0.55rem;color:rgba(255,255,255,0.2)">Unarmed</span>`;
-    const badge = e.isTarget
-      ? `<span style="font-size:0.5rem;color:var(--crimson-bright);border:1px solid var(--crimson);padding:0.05rem 0.25rem">TARGET</span>`
-      : e.isCarrier && e.carriedLoot
-      ? `<span style="font-size:0.5rem;color:var(--gold);border:1px solid var(--gold);padding:0.05rem 0.25rem">\u{1F4E6} CARRIER</span>`
-      : '';
-    return `<div class="combatant-card ${e.hp <= 0 ? 'dead' : ''}">
-      <div class="combatant-name" style="display:flex;align-items:center;gap:0.3rem">
-        ${buildEnemySpriteImg(e.type, e.emoji, 22)}
-        <span>${e.name} ${e.isBoss ? '\u{1F451}' : ''}${badge}</span>
-      </div>
-      <div style="font-size:0.6rem;color:var(--mist)">${e.hp}/${e.maxHp} HP${e.status ? ' · ' + e.status : ''}</div>
-      <div style="margin-top:1px">${wInfo}</div>
-      <div class="combatant-mini-hp"><div class="combatant-mini-hp-fill" style="width:${hpPct}%;background:${e.isTarget ? 'var(--crimson-bright)' : 'var(--crimson)'}"></div></div>
+    const hpPct = Math.max(0, (e.hp / e.maxHp) * 100);
+    const isDead = e.hp <= 0;
+    const hpClass = hpPct > 60 ? 'hp-high' : hpPct > 30 ? 'hp-mid' : 'hp-low';
+    const badgeHtml = e.isTarget
+      ? `<span style="font-size:0.45rem;color:var(--crimson-bright);letter-spacing:0.05em;margin-left:auto">🎯</span>`
+      : e.isCarrier && e.carriedLoot ? `<span style="margin-left:auto;font-size:0.55rem">📦</span>` : '';
+    return `<div class="combatant-strip ${isDead ? 'dead-strip' : ''}" title="${e.name}${e.isBoss ? ' 👑' : ''}">
+      <div class="strip-name">${e.isBoss ? '👑' : (enemyImgOrEmoji(e.type,14) || '⚔')} <span style="overflow:hidden;text-overflow:ellipsis">${e.name}</span>${badgeHtml}</div>
+      <div class="strip-vals"><span style="color:#e74c3c">${e.hp}</span><span style="color:rgba(255,255,255,0.2)">/</span><span>${e.maxHp}</span>${e.status ? `<span style="color:#ffd060;font-size:0.45rem;margin-left:2px">${e.status.slice(0,3)}</span>` : ''}</div>
+      <div class="strip-hp-bar"><div class="strip-hp-fill ${e.isTarget ? '' : hpClass}" style="width:${hpPct}%;${e.isTarget ? 'background:var(--crimson-bright)' : ''}"></div></div>
     </div>`;
   }).join('');
 }
@@ -4644,6 +5507,17 @@ function updateActionButtons() {
   // Attack is always available (unarmed punches/kicks used when no weapon)
   document.getElementById('btnAttack').disabled = !isMyTurn || acted || !ally || ally.hp <= 0;
 
+  // Highlight the currently selected action button
+  const actionBtnMap = { move: 'btnMove', attack: 'btnAttack', special: 'btnSpecial', item: 'btnItem' };
+  ['btnMove','btnAttack','btnSpecial','btnItem'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.classList.remove('mode-active');
+  });
+  if (CS.selectedAction && actionBtnMap[CS.selectedAction]) {
+    const activeBtn = document.getElementById(actionBtnMap[CS.selectedAction]);
+    if (activeBtn && !activeBtn.disabled) activeBtn.classList.add('mode-active');
+  }
+
   // Show/hide discard button
   const discardBtn = document.getElementById('btnDiscardWeapon');
   if (discardBtn) {
@@ -4660,6 +5534,19 @@ function updateActionButtons() {
     }
   }
   document.getElementById('btnSpecial').disabled = !isMyTurn || acted || !ally || !hasChi || ally.hp <= 0;
+  // Update special button label with current move name and chi cost
+  const specialBtn = document.getElementById('btnSpecial');
+  if (specialBtn && ally && ally.specialMove) {
+    const sm = ally.specialMove;
+    const chiOk = ally.chi >= sm.chi;
+    specialBtn.innerHTML = `✦ ${sm.name} <span style="font-size:0.48rem;opacity:0.7;font-family:monospace">χ${sm.chi}</span><span class="kbd-hint">S</span>`;
+    specialBtn.style.borderColor = chiOk ? 'rgba(68,136,255,0.4)' : 'rgba(192,57,43,0.3)';
+    specialBtn.title = sm.desc;
+  } else if (specialBtn) {
+    specialBtn.innerHTML = '✦ Special<span class="kbd-hint">S</span>';
+    specialBtn.style.borderColor = '';
+    specialBtn.title = '';
+  }
   document.getElementById('btnItem').disabled = !isMyTurn || !ally || ally.hp <= 0;
   const endBtn = document.getElementById('btnEndTurn');
   if (endBtn) endBtn.disabled = !isMyTurn;
@@ -4756,18 +5643,83 @@ function drawCanvas() {
           ctx.fillText(tile.label, px + cs / 2, py + cs / 2);
         }
       }
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      // Grid lines: brighter on walls to show boundaries clearly
+      ctx.strokeStyle = tile.passable ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.35)';
+      ctx.lineWidth = 1;
       ctx.strokeRect(px, py, cs, cs);
     }
+  }
+
+  // Draw objective tiles (agitation / espionage missions)
+  if (CS.objectiveTiles && CS.objectiveTiles.length) {
+    const _opulse = 0.6 + 0.4 * Math.sin(Date.now() / 400);
+    CS.objectiveTiles.forEach(function(ot) {
+      const ox = ot.x * cs, oy = ot.y * cs;
+      if (ot.done) {
+        // Completed: faint green fill + checkmark
+        ctx.fillStyle = 'rgba(61,170,125,0.25)';
+        ctx.fillRect(ox, oy, cs, cs);
+        ctx.fillStyle = 'rgba(61,170,125,0.9)';
+        ctx.font = 'bold ' + Math.round(cs * 0.4) + 'px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('✓', ox + cs / 2, oy + cs / 2);
+        ctx.strokeStyle = 'rgba(61,170,125,0.5)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(ox + 1, oy + 1, cs - 2, cs - 2);
+      } else {
+        // Pending: pulsing orange border + large emoji icon
+        ctx.fillStyle = 'rgba(255,140,0,' + (0.12 + _opulse * 0.12) + ')';
+        ctx.fillRect(ox, oy, cs, cs);
+        ctx.strokeStyle = 'rgba(255,160,0,' + (0.7 + _opulse * 0.3) + ')';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(ox + 1, oy + 1, cs - 2, cs - 2);
+        // Draw icon
+        ctx.font = Math.round(cs * 0.5) + 'px serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(ot.icon, ox + cs / 2, oy + cs * 0.46);
+        // Draw label below icon
+        ctx.fillStyle = 'rgba(255,200,100,' + (0.7 + _opulse * 0.3) + ')';
+        ctx.font = 'bold ' + Math.round(cs * 0.14) + 'px sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ot.label.toUpperCase(), ox + cs / 2, oy + cs * 0.82);
+      }
+    });
   }
 
   // Highlight tiles
   CS.highlightedTiles.forEach(({ x, y, color }) => {
     ctx.fillStyle = color;
     ctx.fillRect(x * cs, y * cs, cs, cs);
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    // Subtle inner border
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1;
     ctx.strokeRect(x * cs + 1, y * cs + 1, cs - 2, cs - 2);
   });
+
+  // Active unit glow tile (drawn under the unit sprite)
+  if (CS.activeUnit) {
+    const activeAlly = CS.allies.find(a => a.gridId === CS.activeUnit && a.hp > 0 && !a.perished);
+    if (activeAlly) {
+      const _gPulse = 0.55 + 0.45 * Math.sin(Date.now() / 500);
+      const _gx = activeAlly.x * cs, _gy = activeAlly.y * cs;
+      // Soft gold glow beneath active ally
+      const _grad = ctx.createRadialGradient(_gx + cs/2, _gy + cs/2, 0, _gx + cs/2, _gy + cs/2, cs * 0.52);
+      _grad.addColorStop(0, `rgba(201,162,39,${(0.18 + _gPulse * 0.12).toFixed(2)})`);
+      _grad.addColorStop(1, 'rgba(201,162,39,0)');
+      ctx.fillStyle = _grad;
+      ctx.fillRect(_gx, _gy, cs, cs);
+      // Gold corner brackets
+      const _bl = cs * 0.22;
+      ctx.strokeStyle = `rgba(201,162,39,${(0.65 + _gPulse * 0.35).toFixed(2)})`;
+      ctx.lineWidth = 2;
+      const _corners = [[_gx, _gy], [_gx + cs, _gy], [_gx, _gy + cs], [_gx + cs, _gy + cs]];
+      const _dirs = [[1,1], [-1,1], [1,-1], [-1,-1]];
+      _corners.forEach(([cx2, cy2], i) => {
+        const [dx2, dy2] = _dirs[i];
+        ctx.beginPath(); ctx.moveTo(cx2 + dx2 * _bl, cy2); ctx.lineTo(cx2, cy2); ctx.lineTo(cx2, cy2 + dy2 * _bl); ctx.stroke();
+      });
+    }
+  }
 
   // Draw enemies
   CS.enemies.filter(e => e.hp > 0).forEach(e => {
@@ -4800,23 +5752,22 @@ function drawCanvas() {
     ctx.font = `${cs * 0.5}px serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(CS.lootOnFloor.icon, lx, ly);
+  }
 
-  // Draw collector gold bags on floor
+  // Draw collector gold bags on floor (outside lootOnFloor block)
   if (CS.goldPickups && CS.goldPickups.length) {
-    const pulse2 = 0.5 + 0.5 * Math.sin(Date.now() / 250 + 1);
-    CS.goldPickups.forEach(bag => {
-      const bx = bag.x * cs + cs / 2, by = bag.y * cs + cs / 2;
-      ctx.fillStyle = `rgba(255,210,0,${0.18 + pulse2 * 0.18})`;
+    var _p2 = 0.5 + 0.5 * Math.sin(Date.now() / 250 + 1);
+    CS.goldPickups.forEach(function(bag) {
+      var bx = bag.x * cs + cs / 2, by = bag.y * cs + cs / 2;
+      ctx.fillStyle = 'rgba(255,210,0,' + (0.18 + _p2 * 0.18) + ')';
       ctx.beginPath(); ctx.arc(bx, by, cs * 0.36, 0, Math.PI * 2); ctx.fill();
-      ctx.font = `${cs * 0.45}px serif`;
+      ctx.font = Math.round(cs * 0.5) + 'px serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('💰', bx, by);
-      // Amount label
       ctx.fillStyle = '#ffd700';
-      ctx.font = `bold ${cs * 0.18}px sans-serif`;
-      ctx.fillText(bag.amount + 'G', bx, by + cs * 0.32);
+      ctx.font = 'bold ' + Math.round(cs * 0.18) + 'px sans-serif';
+      ctx.fillText(bag.amount + 'G', bx, by + cs * 0.38);
     });
-  }
   }
 
   // Draw exit tiles with glow when active
@@ -4950,6 +5901,21 @@ function drawCanvas() {
       ctx.fillText("📦", a.x * cs + cs * 0.75, a.y * cs + 2);
     }
   });
+
+  // ── Hit flash overlays (damage/heal pulses on tiles) ──
+  if (!CS.hitFlashes) CS.hitFlashes = [];
+  const now = Date.now();
+  CS.hitFlashes = CS.hitFlashes.filter(f => now - f.t < f.dur);
+  CS.hitFlashes.forEach(f => {
+    const age = (now - f.t) / f.dur;  // 0→1
+    const alpha = (1 - age) * 0.65;
+    ctx.fillStyle = f.color.replace('A', String(alpha.toFixed(2)));
+    ctx.fillRect(f.x * cs, f.y * cs, cs, cs);
+    // Bright rim
+    ctx.strokeStyle = f.color.replace('A', String(Math.min(1, alpha * 1.8).toFixed(2)));
+    ctx.lineWidth = 2;
+    ctx.strokeRect(f.x * cs + 1, f.y * cs + 1, cs - 2, cs - 2);
+  });
 }
 
 function drawUnit(ctx, unit, fillColor, textColor, isAlly, selected = false) {
@@ -5032,6 +5998,29 @@ function drawUnit(ctx, unit, fillColor, textColor, isAlly, selected = false) {
   ctx.fillStyle = hpPct > 0.5 ? '#3daa7d' : hpPct > 0.25 ? '#ddaa00' : '#e74c3c';
   ctx.fillRect(barX, barY, barW * hpPct, barH);
 
+  // ── Facing indicator — small triangle at edge of unit circle ──
+  {
+    const _facingOffsets = { south: [0, 1], north: [0, -1], east: [1, 0], west: [-1, 0] };
+    const [fdx, fdy] = _facingOffsets[facing] || [0, 1];
+    const _tx = cx + fdx * (r + 2);
+    const _ty = cy + fdy * (r + 2);
+    const _ta = Math.atan2(fdy, fdx);
+    const _ts = cs * 0.095; // triangle size
+    ctx.save();
+    ctx.translate(_tx, _ty);
+    ctx.rotate(_ta + Math.PI / 2);
+    ctx.fillStyle = isAlly
+      ? (selected ? 'rgba(240,192,64,0.9)' : 'rgba(180,210,240,0.65)')
+      : 'rgba(255,100,100,0.65)';
+    ctx.beginPath();
+    ctx.moveTo(0, -_ts);
+    ctx.lineTo(_ts * 0.6, _ts * 0.5);
+    ctx.lineTo(-_ts * 0.6, _ts * 0.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   // ── Status badge ──
   const badges = [];
   if (unit.status === 'poisoned') badges.push('☠');
@@ -5039,6 +6028,9 @@ function drawUnit(ctx, unit, fillColor, textColor, isAlly, selected = false) {
   else if (unit.status === 'confused') badges.push('❓');
   else if (unit.status === 'blinded') badges.push('🌫');
   if (unit.bleeds > 0) badges.push('🩸');
+  if (unit.invisible) badges.push('👁');
+  if (unit.buffs?.some(b => b.type === 'iron_body' || b.type === 'armor')) badges.push('🛡');
+  if (unit.buffs?.some(b => b.type === 'rage')) badges.push('🔥');
   if (badges.length) {
     ctx.font = `${cs * 0.22}px serif`;
     ctx.textAlign = 'right'; ctx.textBaseline = 'top';
@@ -5093,8 +6085,17 @@ function setAction(action) {
   CS.selectedAction = action;
   CS.highlightedTiles = [];
 
-  const label = { move: '⊕ Click tile to Move', attack: '⚔ Click enemy to Attack', special: `✦ ${ally.specialMove.name} — click target`, item: '⊛ Using item...' };
+  const label = { move: '⊕ Click tile to Move', attack: '⚔ Click enemy to Attack', special: '✦ Click target for Special', item: '⊛ Using item...' };
   document.getElementById('actionLabel').textContent = label[action] || '';
+
+  // Update action mode banner
+  const banner = document.getElementById('actionModeBanner');
+  const modeLabelMap = { move: '↔ MOVE MODE', attack: '⚔ ATTACK MODE', special: '✦ SPECIAL MODE', item: '⊛ ITEM MODE' };
+  const modeClassMap = { move: 'mode-move', attack: 'mode-attack', special: 'mode-special', item: '' };
+  if (banner) {
+    banner.textContent = modeLabelMap[action] || '';
+    banner.className = 'visible ' + (modeClassMap[action] || '');
+  }
 
   if (action === 'move') {
     const range = getEffectiveMoveRange(ally);
@@ -5106,6 +6107,8 @@ function setAction(action) {
     const range = ally.weapon?.range || 2;
     CS.highlightedTiles = getAttackTiles(ally.x, ally.y, range + 1);
   } else if (action === 'item') {
+    const banner2 = document.getElementById('actionModeBanner');
+    if (banner2) { banner2.textContent = ''; banner2.className = ''; }
     useItem(ally);
   }
 
@@ -5113,17 +6116,6 @@ function setAction(action) {
 }
 
 
-function buildEnemySpriteImg(typeKey, emoji, size) {
-  const src = getEnemySpriteDataURL(typeKey, size);
-  if (!src) return '<span style="font-size:' + (size * 0.7) + 'px">' + emoji + '</span>';
-  return '<img src="' + src + '" width="' + size + '" height="' + size + '" style="border-radius:50%;border:1px solid rgba(220,80,80,0.45);object-fit:cover">';
-}
-
-function buildEnemySpriteImgLg(typeKey, emoji, size) {
-  const src = getEnemySpriteDataURL(typeKey, size);
-  if (!src) return '<span style="font-size:' + Math.round(size * 0.8) + 'px">' + emoji + '</span>';
-  return '<img src="' + src + '" width="' + size + '" height="' + size + '" style="border-radius:4px;border:1px solid rgba(255,255,255,0.1);object-fit:cover">';
-}
 
 // Bresenham line-of-sight check — returns false if a wall blocks the path between two tiles.
 // Tiles on non-passable terrain block LoS; forest/rubble do NOT (they're concealing, not blocking).
@@ -5289,6 +6281,339 @@ document.getElementById('combatCanvas').addEventListener('touchstart', function(
   }));
 }, { passive: false });
 
+// ==========================================
+// ===== HOVER INSPECT OVERLAY =====
+// ==========================================
+
+(function() {
+  const canvas = document.getElementById('combatCanvas');
+  const overlay = document.getElementById('hoverInspect');
+  let _hoverRAF = null;
+  let _lastHx = -1, _lastHy = -1;
+
+  function hpColorClass(pct) {
+    return pct > 60 ? 'hp-high' : pct > 30 ? 'hp-mid' : 'hp-low';
+  }
+
+  function buildUnitInspect(unit, isAlly) {
+    const hpPct = Math.max(0, Math.round((unit.hp / unit.maxHp) * 100));
+    const chiPct = unit.maxChi ? Math.max(0, Math.round((unit.chi / unit.maxChi) * 100)) : 0;
+    const cls = isAlly ? CLASSES[unit.class] : null;
+
+    // Header
+    document.getElementById('inspectEmoji').textContent = isAlly ? (cls?.emoji || '🥷') : (unit.emoji || '⚔️');
+    document.getElementById('inspectName').textContent = unit.name + (unit.isBoss ? ' 👑' : '');
+    document.getElementById('inspectClass').textContent = isAlly ? (cls?.name + ' · Lv ' + unit.level) : (unit.type || 'Enemy');
+    const badge = document.getElementById('inspectBadge');
+    badge.textContent = isAlly ? 'ALLY' : (unit.isTarget ? 'TARGET' : unit.isCarrier ? 'CARRIER' : 'ENEMY');
+    badge.className = 'inspect-type-badge ' + (isAlly ? 'inspect-type-ally' : 'inspect-type-enemy');
+    if (unit.isTarget) { badge.style.borderColor = 'rgba(192,57,43,0.7)'; badge.style.color = 'var(--crimson-bright)'; }
+    else badge.style.cssText = '';
+
+    let html = '';
+
+    // HP bar
+    html += `<div class="inspect-stat-row">
+      <div class="inspect-stat-label">HP</div>
+      <div class="inspect-stat-bar"><div class="inspect-stat-fill hp-fill ${hpColorClass(hpPct)}" style="width:${hpPct}%"></div></div>
+      <div class="inspect-stat-val">${unit.hp}/${unit.maxHp}</div>
+    </div>`;
+
+    // Chi / stamina
+    if (unit.chi !== undefined && unit.maxChi) {
+      html += `<div class="inspect-stat-row">
+        <div class="inspect-stat-label" style="color:#88aaff">χ</div>
+        <div class="inspect-stat-bar"><div class="inspect-stat-fill chi-fill" style="width:${chiPct}%"></div></div>
+        <div class="inspect-stat-val" style="color:#88aaff">${unit.chi}/${unit.maxChi}</div>
+      </div>`;
+    }
+
+    html += '<div class="inspect-divider"></div>';
+
+    // Stats grid
+    html += `<div class="inspect-row"><span class="inspect-row-label">Move</span><span class="inspect-row-val">${unit.moveRange || '—'}</span></div>`;
+    html += `<div class="inspect-row"><span class="inspect-row-label">Range</span><span class="inspect-row-val">${unit.attackRange || 1}</span></div>`;
+    if (unit.facing) {
+      const facingSymbol = { north: '↑', south: '↓', east: '→', west: '←' };
+      html += `<div class="inspect-row"><span class="inspect-row-label">Facing</span><span class="inspect-row-val">${facingSymbol[unit.facing] || unit.facing}</span></div>`;
+    }
+
+    // Weapon
+    if (unit.weapon) {
+      const w = unit.weapon;
+      const usable = isAlly ? weaponUsable(unit) : !w.quiverEmpty;
+      const ammoStr = w.ammo !== undefined ? ` (${w.ammo})` : w.usesLeft !== undefined ? ` ×${w.usesLeft}` : '';
+      html += '<div class="inspect-divider"></div>';
+      html += `<div class="inspect-row"><span class="inspect-row-label">${w.icon} Wpn</span><span class="inspect-row-val" style="color:${usable ? 'var(--gold)' : 'var(--crimson-bright)'}">${w.name}${ammoStr}</span></div>`;
+      if (w.dmg) html += `<div class="inspect-row"><span class="inspect-row-label">Damage</span><span class="inspect-row-val">${w.dmg[0]}–${w.dmg[1]}</span></div>`;
+    } else if (isAlly) {
+      const up = getUnarmedProfile(unit.class);
+      html += '<div class="inspect-divider"></div>';
+      html += `<div class="inspect-row"><span class="inspect-row-label">${up.icon} Wpn</span><span class="inspect-row-val" style="color:var(--jade-bright)">${up.name}</span></div>`;
+      html += `<div class="inspect-row"><span class="inspect-row-label">Damage</span><span class="inspect-row-val">${up.dmg[0]}–${up.dmg[1]}</span></div>`;
+    }
+
+    // Armor
+    if (isAlly && unit.armorItem) {
+      const dur = unit.armorItem.durability;
+      const maxDur = unit.armorItem.maxDurability || 5;
+      html += `<div class="inspect-row"><span class="inspect-row-label">🛡 Armor</span><span class="inspect-row-val" style="color:${dur <= 2 ? 'var(--crimson-bright)' : 'var(--jade-bright)'}">${unit.armorItem.name} ${dur}/${maxDur}</span></div>`;
+    }
+
+    // Status effects
+    const statuses = [];
+    if (unit.status) statuses.push(unit.status);
+    if (unit.invisible) statuses.push('Invisible');
+    if (unit.doomed) statuses.push('DOOMED (' + unit.doomCountdown + ')');
+    if (unit.bleeds > 0) statuses.push('Bleeding');
+    if (statuses.length) {
+      html += '<div class="inspect-status">' + statuses.map(s => `<div class="inspect-status-pill">${s}</div>`).join('') + '</div>';
+    }
+
+    // Special move (ally only)
+    if (isAlly && unit.specialMove) {
+      const sm = unit.specialMove;
+      const canUse = unit.chi >= sm.chi;
+      html += `<div class="inspect-special">
+        <div class="inspect-special-name">✦ ${sm.name} <span style="color:${canUse ? '#88aaff' : 'var(--crimson)'}">χ${sm.chi}</span></div>
+        <div class="inspect-special-desc">${sm.desc}</div>
+      </div>`;
+    }
+
+    // Terrain info for the tile this unit stands on
+    const terrainKey = CS.grid?.[unit.y]?.[unit.x] || 'empty';
+    const tileData = TERRAIN_TILES[terrainKey] || TERRAIN_TILES.empty;
+    const h = tileData.height || 0;
+    const light = tileData.light ?? 1.0;
+    const cover = tileData.cover || 0;
+    html += '<div class="inspect-divider"></div>';
+    html += `<div class="inspect-terrain">`;
+    html += `<div class="inspect-terrain-tag">⛰ <span>${terrainKey}</span></div>`;
+    if (h > 0) html += `<div class="inspect-terrain-tag">▲ <span>H:${h}</span></div>`;
+    if (light < 0.5) html += `<div class="inspect-terrain-tag">🌑 <span>Dark</span></div>`;
+    if (cover > 0) html += `<div class="inspect-terrain-tag">🛡 <span>Cover</span></div>`;
+    html += `<div class="inspect-terrain-tag">📍 <span>(${unit.x},${unit.y})</span></div>`;
+    html += '</div>';
+
+    document.getElementById('inspectBody').innerHTML = html;
+  }
+
+  function buildTerrainInspect(gx, gy) {
+    const terrainKey = CS.grid?.[gy]?.[gx] || 'empty';
+    const tile = TERRAIN_TILES[terrainKey] || TERRAIN_TILES.empty;
+
+    document.getElementById('inspectEmoji').textContent = tile.label && tile.label.length <= 2 ? tile.label : '🗺';
+    document.getElementById('inspectName').textContent = terrainKey.charAt(0).toUpperCase() + terrainKey.slice(1);
+    document.getElementById('inspectClass').textContent = tile.passable ? 'Passable' : 'Impassable';
+    const badge = document.getElementById('inspectBadge');
+    badge.textContent = 'TILE';
+    badge.className = 'inspect-type-badge';
+    badge.style.cssText = 'border:1px solid rgba(255,255,255,0.2);color:var(--mist)';
+
+    const h = tile.height || 0;
+    const light = tile.light ?? 1.0;
+    const cover = tile.cover || 0;
+    const moveCost = tile.moveCost || 1;
+
+    let html = '<div class="inspect-terrain" style="grid-template-columns:1fr">';
+    html += `<div class="inspect-row"><span class="inspect-row-label">Position</span><span class="inspect-row-val">(${gx}, ${gy})</span></div>`;
+    html += `<div class="inspect-row"><span class="inspect-row-label">Height</span><span class="inspect-row-val" style="color:${h > 0 ? '#ffcc44' : 'var(--mist)'}">${h > 0 ? '+' + h : '0'}</span></div>`;
+    html += `<div class="inspect-row"><span class="inspect-row-label">Move Cost</span><span class="inspect-row-val" style="color:${moveCost > 1 ? '#ddaa00' : 'var(--jade-bright)'}">${moveCost}×</span></div>`;
+    html += `<div class="inspect-row"><span class="inspect-row-label">Light</span><span class="inspect-row-val" style="color:${light < 0.5 ? '#8888cc' : 'var(--steel)'}">${light < 0.5 ? 'Shadow' : 'Lit'}</span></div>`;
+    if (cover > 0) html += `<div class="inspect-row"><span class="inspect-row-label">Cover</span><span class="inspect-row-val" style="color:var(--jade-bright)">+${Math.round(cover * 100)}%</span></div>`;
+    if (!tile.passable) html += `<div class="inspect-row" style="margin-top:0.3rem"><span style="color:var(--crimson-bright);font-size:0.55rem">✕ Blocks movement & LoS</span></div>`;
+
+    // Check for items / pickups on this tile
+    const loot = CS.lootOnFloor && CS.lootOnFloor.x === gx && CS.lootOnFloor.y === gy;
+    const gold = CS.goldPickups?.find(g => g.x === gx && g.y === gy);
+    const objTile = CS.objectiveTiles?.find(t => t.x === gx && t.y === gy);
+    const isExit = CS.exitTiles?.some(t => t.x === gx && t.y === gy);
+    if (loot) html += `<div class="inspect-status" style="margin-top:0.3rem"><div class="inspect-status-pill">${CS.lootOnFloor.icon} ${CS.lootOnFloor.name || 'Loot'}</div></div>`;
+    if (gold) html += `<div class="inspect-status" style="margin-top:0.3rem"><div class="inspect-status-pill">💰 ${gold.amount}G</div></div>`;
+    if (objTile) html += `<div class="inspect-status" style="margin-top:0.3rem"><div class="inspect-status-pill">${objTile.icon} ${objTile.label}</div></div>`;
+    if (isExit && CS.exitsActive) html += `<div class="inspect-status" style="margin-top:0.3rem"><div class="inspect-status-pill" style="border-color:rgba(61,170,125,0.6);color:var(--jade-bright)">⬡ EXIT — Step here!</div></div>`;
+    else if (isExit) html += `<div class="inspect-status" style="margin-top:0.3rem"><div class="inspect-status-pill" style="border-color:rgba(61,170,125,0.3);color:var(--mist)">⬡ Exit (inactive)</div></div>`;
+
+    html += '</div>';
+    document.getElementById('inspectBody').innerHTML = html;
+  }
+
+  function positionOverlay(e) {
+    const margin = 14;
+    const ow = overlay.offsetWidth || 220;
+    const oh = overlay.offsetHeight || 260;
+    let left = e.clientX + margin;
+    let top = e.clientY + margin;
+    if (left + ow > window.innerWidth - 8) left = e.clientX - ow - margin;
+    if (top + oh > window.innerHeight - 8) top = e.clientY - oh - margin;
+    overlay.style.left = Math.max(4, left) + 'px';
+    overlay.style.top = Math.max(4, top) + 'px';
+  }
+
+  canvas.addEventListener('mousemove', function(e) {
+    if (!CS.active || !CS.grid) { overlay.classList.remove('visible'); return; }
+    const rect = canvas.getBoundingClientRect();
+    const cs = CS.cellSize;
+    const gx = Math.floor((e.clientX - rect.left) / cs);
+    const gy = Math.floor((e.clientY - rect.top) / cs);
+
+    // Only rebuild inspect HTML when tile changes
+    if (gx !== _lastHx || gy !== _lastHy) {
+      _lastHx = gx; _lastHy = gy;
+      if (gx < 0 || gy < 0 || gx >= CS.gridW || gy >= CS.gridH) {
+        overlay.classList.remove('visible'); return;
+      }
+      // Check what's on this tile
+      const hoveredAlly = CS.allies.find(a => a.hp > 0 && !a.perished && !a.escaped && a.x === gx && a.y === gy);
+      const hoveredEnemy = CS.enemies.find(en => en.hp > 0 && en.x === gx && en.y === gy);
+      if (hoveredAlly) {
+        buildUnitInspect(hoveredAlly, true);
+        overlay.classList.add('visible');
+      } else if (hoveredEnemy) {
+        buildUnitInspect(hoveredEnemy, false);
+        overlay.classList.add('visible');
+      } else {
+        buildTerrainInspect(gx, gy);
+        overlay.classList.add('visible');
+      }
+    }
+    positionOverlay(e);
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    overlay.classList.remove('visible');
+    _lastHx = -1; _lastHy = -1;
+  });
+})();
+
+// ==========================================
+// ===== KEYBOARD SHORTCUTS =====
+// ==========================================
+document.addEventListener('keydown', function(e) {
+  // Don't fire shortcuts when typing in an input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  // Only active in combat player phase
+  if (!CS.active || CS.phase !== 'player' || !CS.activeUnit) return;
+  const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
+  if (!ally || ally.hp <= 0) return;
+
+  switch (e.key.toLowerCase()) {
+    case 'm':
+      if (!document.getElementById('btnMove').disabled) setAction('move');
+      break;
+    case 'a':
+      if (!document.getElementById('btnAttack').disabled) setAction('attack');
+      break;
+    case 's':
+      if (!document.getElementById('btnSpecial').disabled) setAction('special');
+      break;
+    case 'i':
+      if (!document.getElementById('btnItem').disabled) setAction('item');
+      break;
+    case 'z':
+      if (!document.getElementById('btnUndoMove').disabled) undoMove();
+      break;
+    case 'enter':
+      if (!document.getElementById('btnEndTurn').disabled) finishAllyTurn();
+      e.preventDefault();
+      break;
+    case 'escape':
+      // Cancel current action mode
+      if (CS.selectedAction) {
+        CS.selectedAction = null;
+        CS.highlightedTiles = [];
+        document.getElementById('actionLabel').textContent = '';
+        const banner = document.getElementById('actionModeBanner');
+        if (banner) { banner.textContent = ''; banner.className = ''; }
+        renderCombat();
+      }
+      break;
+  }
+});
+
+// ==========================================
+// ===== FLOATING DAMAGE NUMBERS =====
+// ==========================================
+function spawnFloatNumber(canvasX, canvasY, text, type = 'damage') {
+  const canvas = document.getElementById('combatCanvas');
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'float-dmg' + (type === 'crit' ? ' crit' : type === 'heal' ? ' heal' : type === 'miss' ? ' miss' : '');
+
+  // Color & size by type
+  const styles = {
+    damage: { color: '#ff6666', fontSize: '1.1rem' },
+    crit:   { color: '#ff2222', fontSize: '1.5rem' },
+    heal:   { color: '#44dd88', fontSize: '1.0rem' },
+    miss:   { color: '#aaaacc', fontSize: '0.85rem' },
+    special:{ color: '#88aaff', fontSize: '1.05rem' },
+    death:  { color: '#ff0000', fontSize: '1.3rem' },
+  };
+  const s = styles[type] || styles.damage;
+  el.style.color = s.color;
+  el.style.fontSize = s.fontSize;
+  el.textContent = text;
+
+  // Position: convert tile coords → viewport
+  const scaleX = rect.width / canvas.width;
+  const scaleY = rect.height / canvas.height;
+  const vx = rect.left + canvasX * scaleX + (Math.random() - 0.5) * 20;
+  const vy = rect.top + canvasY * scaleY;
+  el.style.left = Math.round(vx) + 'px';
+  el.style.top = Math.round(vy) + 'px';
+
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+// Helper: spawn a float at a unit's tile position
+function floatAtUnit(unit, text, type = 'damage') {
+  if (!CS.cellSize) return;
+  const cs = CS.cellSize;
+  spawnFloatNumber(unit.x * cs + cs / 2, unit.y * cs, text, type);
+}
+
+// ==========================================
+// ===== SMART CANVAS CURSOR =====
+// ==========================================
+(function() {
+  const canvas = document.getElementById('combatCanvas');
+  canvas.addEventListener('mousemove', function(e) {
+    if (!CS.active || !CS.grid) { canvas.style.cursor = 'default'; return; }
+    const rect = canvas.getBoundingClientRect();
+    const cs = CS.cellSize;
+    const gx = Math.floor((e.clientX - rect.left) / cs);
+    const gy = Math.floor((e.clientY - rect.top) / cs);
+    if (gx < 0 || gy < 0 || gx >= CS.gridW || gy >= CS.gridH) { canvas.style.cursor = 'default'; return; }
+
+    const onEnemy = CS.enemies.some(en => en.hp > 0 && en.x === gx && en.y === gy);
+    const onAlly  = CS.allies.some(a => a.hp > 0 && !a.perished && a.x === gx && a.y === gy);
+    const tile    = TERRAIN_TILES[CS.grid[gy]?.[gx] || 'empty'];
+    const highlighted = CS.highlightedTiles.some(t => t.x === gx && t.y === gy);
+    const isExit  = CS.exitTiles?.some(t => t.x === gx && t.y === gy);
+
+    if (CS.phase === 'player' && CS.selectedAction === 'attack' && onEnemy && highlighted) {
+      canvas.style.cursor = 'crosshair';
+    } else if (CS.phase === 'player' && CS.selectedAction === 'move' && highlighted) {
+      canvas.style.cursor = 'move';
+    } else if (CS.phase === 'player' && CS.selectedAction === 'special' && (onEnemy || onAlly) && highlighted) {
+      canvas.style.cursor = 'crosshair';
+    } else if (onAlly && CS.phase === 'player') {
+      canvas.style.cursor = 'pointer';
+    } else if (onEnemy) {
+      canvas.style.cursor = 'pointer';
+    } else if (!tile?.passable) {
+      canvas.style.cursor = 'not-allowed';
+    } else if (isExit && CS.exitsActive) {
+      canvas.style.cursor = 'cell';
+    } else {
+      canvas.style.cursor = 'default';
+    }
+  });
+  canvas.addEventListener('mouseleave', () => { canvas.style.cursor = 'default'; });
+})();
+
 function handleMove(ally, tx, ty) {
   if (CS.unitMoved) { toast('Already moved this turn.', 'error'); return; }
   const reachable = CS.highlightedTiles.find(t => t.x === tx && t.y === ty);
@@ -5364,21 +6689,38 @@ function handleMove(ally, tx, ty) {
     // DON'T return — let unitMoved stay true so turn can be ended normally
   }
 
-  // ── THEFT: step on dropped loot to pick it up ──
+  // ── THEFT / RESCUE KEY: step on dropped loot to pick it up ──
   if (CS.lootOnFloor && tx === CS.lootOnFloor.x && ty === CS.lootOnFloor.y) {
     ally.hasLoot = true;
     CS.allyWithLoot = ally.gridId;
     const lootName = CS.lootOnFloor.name;
+    const isKey = lootName.toLowerCase().includes('key');
     CS.lootOnFloor = null;
-    // Activate exits now that loot is secured
-    CS.exitsActive = true;
-    addLog(`${ally.name} picks up the ${lootName}! Reach the exit!`, 'system');
-    toast(`${lootName} secured — reach the exit!`, 'success');
+    // Activate exits — on rescue floor 1, only activate if all enemies already cleared
+    const _allEnemiesDead = CS.enemies.every(e => e.hp <= 0);
+    CS.exitsActive = _allEnemiesDead || !isKey;
+    if (CS.exitsActive) {
+      addLog(ally.name + ' picks up the ' + lootName + '! Reach the exit!', 'system');
+      toast(lootName + ' secured — reach the exit!', 'success');
+    } else {
+      addLog(ally.name + ' secures the ' + lootName + '! Defeat remaining enemies to unlock the exit.', 'system');
+      toast(lootName + ' secured — defeat remaining enemies!', 'success');
+    }
   }
 
   // ── ESCAPE: step onto active exit tile ──
   const onExit = CS.exitTiles.some(e => e.x === tx && e.y === ty);
-  if (onExit && CS.exitsActive && !CS.alliesEscaped.includes(ally.gridId)) {
+  // On rescue floor 1 (has a carrier/key), block exit until key is carried
+  const isRescueKeyFloor = (() => {
+    if (!CS.mission || !CS.mission.floors) return false;
+    const fd = CS.mission.floors[CS.currentFloor];
+    return !!(fd && fd.carrierEnemy && fd.lootItem && !fd.isRescueFloor);
+  })();
+  if (onExit && isRescueKeyFloor && !CS.allyWithLoot && CS.lootOnFloor === null
+      && CS.enemies.some(e => e.isCarrier && e.hp > 0)) {
+    toast('You must carry the cell key before leaving this floor!', 'error');
+    // Don't escape — step is cancelled
+  } else if (onExit && CS.exitsActive && !CS.alliesEscaped.includes(ally.gridId)) {
     CS.alliesEscaped.push(ally.gridId);
     ally.escaped = true;
 
@@ -5393,7 +6735,7 @@ function handleMove(ally, tx, ty) {
     } else {
       addLog(`✓ ${ally.name} reaches the exit!`, 'system');
     }
-    toast(`${ally.name} escaped!`, 'success');
+    toast(ally.name + ' escaped!', 'success');
 
     // Multi-floor: advance when all alive allies escaped
     const _mission = CS.mission;
@@ -5525,14 +6867,21 @@ function handleAttack(ally, tx, ty) {
   if (range > 1 && !hasLineOfSight(ally.x, ally.y, target.x, target.y)) {
     toast('No line of sight to target!', 'error'); return;
   }
-  // Cover miss chance for ranged attacks
+  // Cover miss chance for ranged attacks — point-blank (dist=1) has reduced miss chance
   let missFromCover = false;
   if (range > 1) {
     const tKey = CS.grid[target.y]?.[target.x] || 'empty';
     const cover = (TERRAIN_TILES[tKey] || TERRAIN_TILES.empty).cover || 0;
-    if (cover > 0 && Math.random() < cover * 0.08) {
-      missFromCover = true;
-      addLog(ally.name + ' fires at ' + target.name + ' — blocked by cover!', 'system');
+    if (cover > 0) {
+      // Point blank (dist 1): cover effectiveness halved (50% of normal miss chance)
+      // At max range: full cover penalty; scales linearly with distance
+      const distFactor = Math.min(1.0, dist / Math.max(1, range));
+      const effectiveMissChance = cover * 0.08 * distFactor;
+      if (Math.random() < effectiveMissChance) {
+        missFromCover = true;
+        addLog(ally.name + (dist === 1 ? ' point-blank — cover barely deflects!' : ' fires — cover deflects the shot!'), 'system');
+        if (CS.cellSize && target.x !== undefined) floatAtUnit(target, 'MISS', 'miss');
+      }
     }
   }
   const adx = target.x - ally.x, ady = target.y - ally.y;
@@ -5701,66 +7050,6 @@ function executeSpecial(caster, move, target, allyTarget) {
   }
 }
 
-function calcDamage(attacker, defender) {
-  const weapon = attacker.weapon;
-  let baseDmg;
-  if (weapon) {
-    baseDmg = weapon.dmg[0] + Math.floor(Math.random() * (weapon.dmg[1] - weapon.dmg[0] + 1));
-    const profType = getWeaponProfType(weapon);
-    const prof = attacker.proficiency?.[profType] || 1;
-    baseDmg = Math.floor(baseDmg * (1 + (prof - 3) * 0.05));
-  } else {
-    // Unarmed: use per-class profile
-    const up = getUnarmedProfile(attacker.class);
-    baseDmg = up.dmg[0] + Math.floor(Math.random() * (up.dmg[1] - up.dmg[0] + 1));
-  }
-  if (attacker.buffs?.some(b => b.type === 'rage' || b.type === 'damage_up')) baseDmg = Math.floor(baseDmg * 2);
-  if (attacker.buffs?.some(b => b.type === 'last_stand')) baseDmg = Math.floor(baseDmg * 3);
-  if (attacker.buffs?.some(b => b.type === 'bloodlust')) baseDmg = Math.floor(baseDmg * 1.3);
-  if (attacker.buffs?.some(b => b.type === 'invisible')) baseDmg = Math.floor(baseDmg * 1.5);
-  // Support damage bonus (Attack Up ability)
-  if (attacker.gridId) baseDmg = Math.floor(baseDmg * getSupportDmgBonus(attacker));
-
-  // Directional bonus on enemy (ally attacking enemy from behind/side)
-  if (attacker.gridId && defender && defender.x !== undefined) {
-    const dirMult = getDirDamageMult(defender, attacker.x, attacker.y);
-    if (dirMult !== 1) baseDmg = Math.round(baseDmg * dirMult);
-  }
-  // ── CLASS STRENGTHS ──
-  if (attacker.class === 'ronin' && weapon && (weapon.type === 'blades' || weapon.type === 'blunt')) {
-    baseDmg = Math.floor(baseDmg * 1.20); // +20% with blades/blunt
-  }
-  if (attacker.class === 'berserker') {
-    const hpLost = Math.max(0, attacker.maxHp - attacker.hp);
-    const berserkBonus = 1 + Math.floor(hpLost / 10) * 0.05;
-    baseDmg = Math.floor(baseDmg * berserkBonus); // +5% per 10 HP lost
-  }
-  if (attacker.class === 'kunoichi' && weapon && weapon.type === 'thrown') {
-    baseDmg = Math.floor(baseDmg * 1.10); // +10% with thrown (proficiency speciality)
-  }
-  if (defender.buffs?.some(b => b.type === 'defend' || b.type === 'iron_body')) baseDmg = Math.floor(baseDmg * 0.33);
-  // Armor passive: apply reduction while durability > 0
-  const armorBuff = defender.buffs?.find(b => b.type === 'armor_passive');
-  if (armorBuff) {
-    if (armorBuff.effect === 'armor' || armorBuff.effect === 'shadow_armor') {
-      baseDmg = Math.floor(baseDmg * (1 - armorBuff.value / 100));
-    }
-  }
-  // ── CLASS STRENGTHS (attacker bonuses) ──
-  if (attacker.class === 'ronin' && weapon && (weapon.type === 'blades' || weapon.type === 'blunt')) {
-    baseDmg = Math.floor(baseDmg * 1.20); // Ronin: +20% with blades/blunt
-  }
-  if (attacker.class === 'berserker') {
-    const hpLost = Math.max(0, (attacker.maxHp||0) - (attacker.hp||0));
-    const berserkBonus = 1 + (Math.floor(hpLost / 10) * 0.05);
-    baseDmg = Math.floor(baseDmg * berserkBonus); // Berserker: +5% per 10 HP lost
-  }
-  if (attacker.class === 'kunoichi' && weapon && weapon.type === 'thrown') {
-    baseDmg = Math.floor(baseDmg * 1.10); // Kunoichi: +10% with thrown
-  }
-  return Math.max(1, baseDmg);
-}
-
 function getWeaponProfType(weapon) {
   const type = weapon.type || Object.keys(WEAPONS).find(k => WEAPONS[k].items.find(i => i.id === weapon.id));
   return type || 'blades';
@@ -5800,12 +7089,22 @@ function spawnReinforcements(trigger) {
 
   for (let i = 0; i < count; i++) {
     const dy = doorYs[i % doorYs.length];
-    // Find nearest empty tile on the right edge
+    // Find nearest empty, passable tile on the right edge
     let rx = doorX, ry = dy;
-    for (let attempt = 0; attempt < 8; attempt++) {
-      if (isPosEmpty(rx, ry, null)) break;
-      ry = (ry + 1) % (CS.gridH - 1);
-      if (ry < 1) ry = 1;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const rk = CS.grid[ry]?.[rx] || 'empty';
+      const rTile = TERRAIN_TILES[rk] || TERRAIN_TILES.empty;
+      if (rTile.passable && isPosEmpty(rx, ry, null)) break;
+      ry = ry + 1;
+      if (ry >= CS.gridH - 1) ry = 1;
+      // Also try one column in if edge is blocked
+      if (attempt === 6) rx = Math.max(1, doorX - 1);
+    }
+    // Final passability safety net
+    const _rk = CS.grid[ry]?.[rx] || 'empty';
+    if (!(TERRAIN_TILES[_rk] || TERRAIN_TILES.empty).passable) {
+      const safe = _findEnemySpawnPos(CS.gridW - 4, CS.gridW - 2, 1, CS.gridH - 2);
+      rx = safe.x; ry = safe.y;
     }
 
     const w = spawnEnemyWeapon(baseType, mission.difficulty || 1);
@@ -5837,8 +7136,18 @@ function spawnReinforcements(trigger) {
 function applyDamage(target, dmg, attackerName = '') {
   target.hp = Math.max(0, target.hp - dmg);
   addLog(`${attackerName ? attackerName + ' → ' : ''}${target.name}: ${dmg} damage. (${target.hp}/${target.maxHp} HP)`, 'damage');
+  // Floating damage number
+  if (CS.cellSize && target.x !== undefined) {
+    const isBig = dmg >= 30;
+    floatAtUnit(target, '-' + dmg, isBig ? 'crit' : 'damage');
+    // Canvas hit flash
+    if (!CS.hitFlashes) CS.hitFlashes = [];
+    CS.hitFlashes.push({ x: target.x, y: target.y, color: 'rgba(255,60,60,A)', t: Date.now(), dur: isBig ? 500 : 320 });
+    schedulePulseRedraw();
+  }
   if (target.hp <= 0) {
     addLog(`${target.name} is defeated!`, 'death');
+    if (CS.cellSize && target.x !== undefined) floatAtUnit(target, '💀', 'death');
     recordKill(target); // reputation tracking
     if (target.gold) { GS.gold += target.gold; updateGoldDisplay(); }
     if (target.exp) {
@@ -5854,9 +7163,35 @@ function applyDamage(target, dmg, attackerName = '') {
     }
     // ── THEFT/RESCUE: carrier killed → drop loot on floor ──
     if (target.isCarrier && target.carriedLoot) {
-      CS.lootOnFloor = { x: target.x, y: target.y, ...target.carriedLoot };
+      // Find a reachable passable tile to drop loot — prefer carrier's tile,
+      // fall back to nearest ground-level passable tile so allies can reach it.
+      let dropX = target.x, dropY = target.y;
+      const dropCh = CS.grid[dropY]?.[dropX] || 'empty';
+      const dropTile = TERRAIN_TILES[dropCh] || TERRAIN_TILES.empty;
+      if (!dropTile.passable || (dropTile.height || 0) > 1) {
+        // BFS to nearest passable ground tile
+        const visited = new Set([dropX + ',' + dropY]);
+        const q = [{ x: dropX, y: dropY }];
+        let found = false;
+        while (q.length && !found) {
+          const cur = q.shift();
+          for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+            const nx = cur.x + dx, ny = cur.y + dy;
+            const k = nx + ',' + ny;
+            if (visited.has(k) || nx < 0 || ny < 0 || nx >= CS.gridW || ny >= CS.gridH) continue;
+            visited.add(k);
+            const ch2 = CS.grid[ny]?.[nx] || 'empty';
+            const td2 = TERRAIN_TILES[ch2] || TERRAIN_TILES.empty;
+            if (td2.passable && (td2.height || 0) <= 1) {
+              dropX = nx; dropY = ny; found = true; break;
+            }
+            q.push({ x: nx, y: ny });
+          }
+        }
+      }
+      CS.lootOnFloor = { x: dropX, y: dropY, ...target.carriedLoot };
       target.carriedLoot = null;
-      addLog('\u{1F4E6} Loot dropped at (' + target.x + ',' + target.y + ')! Move onto it to pick up.', 'system');
+      addLog('\u{1F4E6} ' + (target.carriedLoot?.name || 'Loot') + ' dropped at (' + dropX + ',' + dropY + ')! Pick it up.', 'system');
       toast('Loot dropped — pick it up!', 'success');
       setTimeout(() => spawnReinforcements('loot_dropped'), 400);
     }
@@ -6457,14 +7792,27 @@ function beginUnitTurn(unit) {
       const left = CS.turnLimit - CS.turn + 1;
       if (left <= 3) addLog('\u23f3 ' + left + ' turn' + (left !== 1 ? 's' : '') + ' remaining!', 'system');
     }
+    // Flash phase banner
+    _showPhaseBanner(unit.name + "'s Turn", '#f0c040');
     renderCombat();
     checkCombatEnd();
   } else {
     // ENEMY turn
     CS.phase = 'enemy_acting';
+    _showPhaseBanner('Enemy Phase', '#e74c3c');
     renderCombat();
     setTimeout(() => runEnemyUnitTurn(unit), 400);
   }
+}
+
+function _showPhaseBanner(text, color) {
+  const banner = document.getElementById('phaseBanner');
+  const inner = document.getElementById('phaseBannerText');
+  if (!banner || !inner) return;
+  inner.textContent = text;
+  inner.style.color = color;
+  banner.classList.add('show');
+  setTimeout(() => banner.classList.remove('show'), 900);
 }
 
 // Called at the end of every unit's turn (ally or enemy) to tick doom counters
@@ -6628,6 +7976,17 @@ function finishAllyTurn() {
   const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
   if (!ally) return;
 
+  // Build a brief turn summary before clearing state
+  const _tsMoved = CS.unitMoved;
+  const _tsActed = CS.unitActed;
+  const _tsName  = ally.name;
+  const _tsClass = CLASSES[ally.class]?.emoji || '';
+  const summaryParts = [];
+  if (_tsMoved)  summaryParts.push('Moved');
+  if (_tsActed)  summaryParts.push('Acted');
+  if (!_tsMoved && !_tsActed) summaryParts.push('Held position');
+  _showTurnSummary(`${_tsClass} ${_tsName} — ${summaryParts.join(' · ')}`);
+
   // JP for move without attack
   if (CS.unitMoved && !CS.unitActed) giveJP(ally, JP_AWARDS.move, 'move');
 
@@ -6647,8 +8006,27 @@ function finishAllyTurn() {
   CS.activeUnit = null;
   CS.phase = 'enemy_acting'; // briefly neutral while advancing
 
+  // Update doom vignette
+  _updateDoomVignette();
+
   checkCombatEnd();
   if (CS.active) setTimeout(advanceCT, 200);
+}
+
+function _showTurnSummary(text) {
+  const el = document.getElementById('turnSummary');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.add('visible');
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => el.classList.remove('visible'), 1600);
+}
+
+function _updateDoomVignette() {
+  const el = document.getElementById('doomVignette');
+  if (!el) return;
+  const hasDoom = CS.active && CS.allies.some(a => a.doomed && !a.perished && a.doomCountdown > 0);
+  el.classList.toggle('doom-active', hasDoom);
 }
 
 function tickUnitStatus(unit) {
@@ -6840,13 +8218,17 @@ function runEnemyUnitTurn(enemy) {
     if (d2 > e.attackRange) return false;
     if (e.attackRange > 1 && !hasLineOfSight(e.x,e.y,target.x,target.y)) return false;
     faceTarget(e, target.x, target.y);
-    // Cover miss chance for ranged AI
+    // Cover miss chance for ranged AI — scaled by distance (point-blank has reduced miss)
     if (e.attackRange > 1) {
       const tKey=CS.grid[target.y]?.[target.x]||'empty';
       const cover=(TERRAIN_TILES[tKey]||TERRAIN_TILES.empty).cover||0;
-      if (cover>0&&Math.random()<cover*0.08) {
-        addLog(e.name+' fires — cover deflects the shot!','system');
-        consumeEnemyWeaponUse(e); return true;
+      if (cover>0) {
+        const _aiDist=Math.abs(target.x-e.x)+Math.abs(target.y-e.y);
+        const _aiFactor=Math.min(1.0,_aiDist/Math.max(1,e.attackRange));
+        if (Math.random()<cover*0.08*_aiFactor) {
+          addLog(e.name+' fires — cover deflects the shot!','system');
+          consumeEnemyWeaponUse(e); return true;
+        }
       }
     }
     // Height damage bonus for AI
@@ -7172,6 +8554,15 @@ function applyDamageToAlly(ally, rawDmg, attackerName) {
   }
   ally.hp = Math.max(0, ally.hp - dmg);
   addLog(attackerName + " → " + ally.name + ": " + dmg + " damage. (" + ally.hp + "/" + ally.maxHp + " HP)", 'damage');
+  // Float damage number on ally tile
+  if (CS.cellSize && ally.x !== undefined) {
+    const isBig = dmg >= 25;
+    floatAtUnit(ally, '-' + dmg, isBig ? 'crit' : 'damage');
+    // Canvas hit flash - orange/red for ally damage
+    if (!CS.hitFlashes) CS.hitFlashes = [];
+    CS.hitFlashes.push({ x: ally.x, y: ally.y, color: 'rgba(220,80,20,A)', t: Date.now(), dur: isBig ? 550 : 350 });
+    schedulePulseRedraw();
+  }
   if (ally.hp <= 0 && !ally.doomed) {
     // Enter Doom Countdown instead of instant death
     ally.doomed = true;
@@ -7199,30 +8590,18 @@ function checkCombatEnd() {
   const floorData = isMultiFloor ? mission.floors[CS.currentFloor] : null;
   const isLastFloor = !isMultiFloor || CS.currentFloor >= CS.totalFloors - 1;
 
+  // ── Always check: defeat and time-out ──
   if (aliveAllies.length === 0) { setTimeout(() => endCombat('defeat'), 800); return; }
   if (CS.turnLimit > 0 && CS.turn > CS.turnLimit) {
     addLog('Time is up! Mission failed.', 'system');
     setTimeout(() => endCombat('timedout'), 800); return;
   }
 
-  // For multi-floor: check floor-specific win conditions
-  // A floor is cleared when all enemies dead (+ target dead if applicable) + all allies at exit
+  // Which target (if any) must die on this floor?
   const floorTarget = floorData ? floorData.targetEnemy : mission.targetEnemy;
   const targetDead = !floorTarget || !CS.enemies.find(e => e.isTarget && e.hp > 0);
 
-  // Assassination single-floor shortcut
-  if (!isMultiFloor && mission?.type === 'assassination' && mission.targetEnemy) {
-    if (targetDead && CS.exitsActive && !aliveAllies.filter(a => !a.escaped && !a.doomed).length) {
-      setTimeout(() => endCombat('victory'), 800);
-    }
-    return;
-  }
-  // Theft single-floor
-  if (!isMultiFloor && mission?.type === 'theft' && mission.carrierEnemy) {
-    if (CS.objectivePhase === 'done') setTimeout(() => endCombat('victory'), 800);
-    return;
-  }
-  // Rescue floor 2: all alive allies escaped with prisoner → victory
+  // ── RESCUE last floor: prisoner must escape ──
   if (isMultiFloor && isLastFloor && floorData?.isRescueFloor) {
     if (CS.prisonerFreed && CS.prisoner?.escaped && aliveAllies.filter(a => !a.escaped).length === 0) {
       setTimeout(() => endCombat('victory'), 800);
@@ -7230,28 +8609,108 @@ function checkCombatEnd() {
     return;
   }
 
-  // Objective missions (agitation/espionage): need objectives done + escape
-  if (CS.objectiveTiles && CS.objectiveTiles.length > 0 && !isMultiFloor) {
-    if (CS.objectiveProgress >= CS.objectiveTotal && CS.exitsActive) {
-      // Victory when all allies have escaped
-      const notEscaped = aliveAllies.filter(a => !a.escaped && !a.doomed);
-      if (notEscaped.length === 0) { setTimeout(() => endCombat('victory'), 800); }
-    }
-    return; // objective missions don't win by killing all enemies
+  // ── THEFT: loot extracted (objectivePhase === 'done') ──
+  // Handles both single-floor and multi-floor last floor
+  if ((mission?.type === 'theft' || (isLastFloor && floorData?.carrierEnemy)) && !mission?.floors?.every(f => f.isRescueFloor)) {
+    if (CS.objectivePhase === 'done') { setTimeout(() => endCombat('victory'), 800); return; }
+    if (!isMultiFloor) return; // single-floor theft: only wins via objectivePhase
   }
 
-  // Generic: all enemies cleared (and target dead if required)
-  if (aliveEnemies.length === 0 && targetDead) {
-    if (isMultiFloor && !isLastFloor) {
-      // Activate exits for floor transition
+  // ── OBJECTIVE MISSIONS (espionage/agitation): per-floor or last-floor win ──
+  if (CS.objectiveTiles && CS.objectiveTiles.length > 0) {
+    if (CS.objectiveProgress >= CS.objectiveTotal && CS.exitsActive) {
+      const notEscaped = aliveAllies.filter(a => !a.escaped && !a.doomed);
+      if (notEscaped.length === 0) {
+        if (!isMultiFloor || isLastFloor) {
+          // Final floor of objectives mission — full victory
+          setTimeout(() => endCombat('victory'), 800); return;
+        }
+        // Intermediate objective floor: all escaped → advance
+        setTimeout(advanceFloor, 600); return;
+      }
+    }
+    if (!isMultiFloor) return; // single-floor objective mission
+    // Multi-floor objective: also allow advancement when all enemies dead (no objectives left this floor)
+    // Fall through to generic handler for floor advancement
+  }
+
+  // ── ASSASSINATION (single or multi last floor): target dead + escaped ──
+  const isAssassination = (mission?.type === 'assassination') && !!(mission.targetEnemy || floorTarget);
+  if (isAssassination && (!isMultiFloor || isLastFloor)) {
+    if (targetDead) {
+      // Ensure exits are open so allies can escape
       if (!CS.exitsActive) {
         CS.exitsActive = true;
         CS.objectivePhase = 'extract';
-        addLog('Floor ' + (CS.currentFloor + 1) + ' cleared! Reach the exit to advance.', 'system');
-        toast('Floor cleared! Find the exit!', 'success');
+        addLog('🎯 Target eliminated — reach the exit!', 'system');
+        toast('Target down — escape now!', 'success');
         renderCombat();
+        return;
       }
+      // Exits open: check if all alive allies have escaped
+      const notEscaped = aliveAllies.filter(a => !a.escaped && !a.doomed);
+      if (notEscaped.length === 0) {
+        setTimeout(() => endCombat('victory'), 800);
+      }
+    }
+    return;
+  }
+
+  // ── GENERIC: all enemies cleared (intermediate floors + non-assassination last floor) ──
+  if (aliveEnemies.length === 0 && targetDead) {
+
+    // ── REINFORCEMENT missions: require escape ──
+    if (!isMultiFloor && CS.reinforcementsSpawned) {
+      if (!CS.exitsActive) {
+        CS.exitsActive = true;
+        CS.objectivePhase = 'extract';
+        addLog('All enemies defeated! Reach the exit to complete the mission.', 'system');
+        toast('Enemies cleared — escape now!', 'success');
+        renderCombat();
+      } else {
+        const _notEsc = aliveAllies.filter(a => !a.escaped && !a.doomed);
+        if (_notEsc.length === 0) setTimeout(() => endCombat('victory'), 800);
+      }
+      return;
+    }
+
+    if (isMultiFloor && !isLastFloor) {
+      // ── INTERMEDIATE FLOOR: open exit or handle rescue key floor ──
+      if (!CS.exitsActive) {
+        const _floorDef = mission.floors[CS.currentFloor];
+        const _isRescueKeyFloor = !!(_floorDef && _floorDef.carrierEnemy && _floorDef.lootItem && !_floorDef.isRescueFloor);
+        if (_isRescueKeyFloor && !CS.allyWithLoot) {
+          if (!CS.lootOnFloor) {
+            addLog('⚠ Defeat all enemies and pick up the cell key to advance!', 'system');
+          } else {
+            addLog('⚠ Pick up the cell key to unlock the exit!', 'system');
+            toast('Pick up the key to unlock the exit!', 'success');
+          }
+        } else {
+          CS.exitsActive = true;
+          CS.objectivePhase = 'extract';
+          addLog('Floor ' + (CS.currentFloor + 1) + ' cleared! Reach the exit to advance.', 'system');
+          toast('Floor cleared! Find the exit!', 'success');
+          renderCombat();
+        }
+      }
+      // Allies escape is handled in handleMove → advanceFloor
+
+    } else if (isMultiFloor && isLastFloor) {
+      // ── LAST FLOOR (non-assassination, non-rescue, non-theft): open exits then check escape ──
+      if (!CS.exitsActive) {
+        CS.exitsActive = true;
+        CS.objectivePhase = 'extract';
+        addLog('All enemies defeated! Reach the exit to complete the mission.', 'system');
+        toast('Enemies cleared — escape now!', 'success');
+        renderCombat();
+      } else {
+        const _notEsc = aliveAllies.filter(a => !a.escaped && !a.doomed);
+        if (_notEsc.length === 0) setTimeout(() => endCombat('victory'), 800);
+      }
+
     } else {
+      // ── SINGLE FLOOR, no target required, no reinforcements ──
       setTimeout(() => endCombat('victory'), 800);
     }
   }
@@ -7273,6 +8732,7 @@ function advanceFloor() {
   CS.allyWithLoot = null;
   CS.doomBags = [];
   CS.goldPickups = [];
+  CS.reinforcementsSpawned = false; // set true when any reinforcements arrive
   CS.objectiveTiles = [];
   CS.objectiveProgress = 0;
   CS.objectiveTotal = 0;
@@ -7297,7 +8757,7 @@ function advanceFloor() {
   (fd.enemies || []).forEach(group => {
     const type = ENEMY_TYPES[group.type];
     for (let i = 0; i < group.count; i++) {
-      const pos = findEmptyPos(CS.gridW - 5, CS.gridW - 2, 1, CS.gridH - 2);
+      const pos = _findEnemySpawnPos(CS.gridW - 5, CS.gridW - 2, 1, CS.gridH - 2);
       const w = spawnEnemyWeapon(group.type, mission.difficulty || 1);
       const ar = w && (w.type === 'ranged' || w.type === 'thrown') ? Math.max(type.attackRange, w.range || 3) : type.attackRange;
       CS.enemies.push({
@@ -7312,13 +8772,43 @@ function advanceFloor() {
     }
   });
 
+  // ── ABSOLUTE SPAWN SAFETY (advance floor) ──
+  CS.enemies.forEach(function(e) {
+    const ch = CS.grid[e.y]?.[e.x];
+    const tData = TERRAIN_TILES[ch] || TERRAIN_TILES.empty;
+    if (!tData.passable || (tData.height || 0) > 2) {
+      const safePos = _findEnemySpawnPos(CS.gridW - 5, CS.gridW - 2, 1, CS.gridH - 2, e.id);
+      const safeCh = CS.grid[safePos.y]?.[safePos.x];
+      const safeTile = TERRAIN_TILES[safeCh] || TERRAIN_TILES.empty;
+      if (safeTile.passable) {
+        e.x = safePos.x; e.y = safePos.y;
+      } else {
+        for (let sy = 1; sy < CS.gridH - 1; sy++) {
+          for (let sx = Math.floor(CS.gridW / 2); sx < CS.gridW - 1; sx++) {
+            const ft = TERRAIN_TILES[CS.grid[sy]?.[sx]] || TERRAIN_TILES.empty;
+            if (ft.passable && (ft.height || 0) <= 2) { e.x = sx; e.y = sy; break; }
+          }
+          if ((TERRAIN_TILES[CS.grid[e.y]?.[e.x]] || TERRAIN_TILES.empty).passable) break;
+        }
+      }
+    }
+  });
+
   if (fd.targetEnemy) {
     const t = CS.enemies.find(e => e.type === fd.targetEnemy);
     if (t) { t.isTarget = true; t.name = '★ ' + t.name; }
   }
   if (fd.carrierEnemy && fd.lootItem) {
-    const c = CS.enemies.find(e => e.type === fd.carrierEnemy);
-    if (c) { c.isCarrier = true; c.carriedLoot = fd.lootItem; c.name = '📦 ' + c.name; }
+    let c = CS.enemies.find(e => e.type === fd.carrierEnemy);
+    if (!c && CS.enemies.length > 0) {
+      c = CS.enemies.reduce((best, e) => (!best || e.maxHp > best.maxHp) ? e : best, null);
+      if (c) addLog('\u{1F4E6} The ' + c.name + ' is holding the ' + fd.lootItem.name + '.', 'system');
+    }
+    if (c) {
+      c.isCarrier = true;
+      c.carriedLoot = { ...fd.lootItem };
+      c.name = '\uD83D\uDD11 ' + c.name.replace(/^[\uD83D\uDCE6\u2605\uD83D\uDD11] /, '');
+    }
   }
 
   // Regenerate grid terrain for the new floor
@@ -7333,24 +8823,52 @@ function advanceFloor() {
     CS.exitTiles.push({ x: exitX, y });
   });
 
+  // ── REACHABILITY FIX: ensure every exit/spawn is passable for jump=1 units
+  _ensureMapReachability(CS.grid, CS.gridW, CS.gridH, 'right');
+
+  // Initialize objective tiles for this floor if it's an espionage/agitation type
+  // (multi-floor espionage/agitation missions need per-floor objectives)
+  const _advFloorMission = Object.assign({}, mission, {
+    type: mission.floors[CS.currentFloor]?.type || mission.type,
+    terrain: mission.floors[CS.currentFloor]?.terrain || mission.terrain
+  });
+  initObjectiveTiles(_advFloorMission, CS.grid);
+
   // Re-place allies back on the left side using current formation
   const partyIds = CS.allies.filter(a => !a.perished).map(a => a.id);
   const f = FORMATIONS[selectedFormation] || FORMATIONS.line;
   const pts = f.positions(partyIds.length, CS.gridH);
+  const _advPlaced = new Set();
   CS.allies.filter(a => !a.perished).forEach((a, i) => {
     const pt = pts[i] || { x: 1 + i, y: Math.floor(CS.gridH / 2) };
-    a.x = pt.x; a.y = pt.y; a.escaped = false;
+    // Validate position — CS.grid uses terrain key names, use TERRAIN_TILES to check
+    const _tryPlace = (px, py) => {
+      const k = CS.grid[py]?.[px];
+      return k && (TERRAIN_TILES[k]||TERRAIN_TILES.empty).passable && !_advPlaced.has(px+','+py);
+    };
+    let fx = pt.x, fy = pt.y;
+    if (!_tryPlace(fx, fy)) {
+      // Scan left columns for a free passable tile
+      outer: for (let x = 1; x <= 4; x++) {
+        for (let y = 1; y < CS.gridH - 1; y++) {
+          if (_tryPlace(x, y)) { fx = x; fy = y; break outer; }
+        }
+      }
+    }
+    _advPlaced.add(fx + ',' + fy);
+    a.x = fx; a.y = fy; a.escaped = false;
   });
 
-  // Spawn prisoner on rescue floor 2
+  // Spawn prisoner on rescue floor 2 — safe passable placement
   CS.prisoner = null;
   CS.prisonerFreed = false;
   const _rescFd = mission.floors[CS.currentFloor];
   if (_rescFd && _rescFd.isRescueFloor) {
-    // Place prisoner in centre-right of map, behind the remaining guards
-    const px = Math.floor(CS.gridW * 0.65);
-    const py = Math.floor(CS.gridH / 2);
-    CS.prisoner = { x: px, y: py, emoji: '⛓️', freed: false };
+    // Preferred position: centre-right of map behind guards
+    const _pPrefX = Math.floor(CS.gridW * 0.65);
+    const _pPrefY = Math.floor(CS.gridH / 2);
+    const _pPos = _findSafePassablePos(CS.grid, CS.gridW, CS.gridH, _pPrefX, _pPrefY, CS.enemies);
+    CS.prisoner = { x: _pPos.x, y: _pPos.y, emoji: '⛓️', freed: false };
     addLog('⛓ The prisoner is chained ahead. Move the key-holder to them to free them!', 'system');
     toast('Find the prisoner and use the key!', 'success');
   }
@@ -7402,6 +8920,11 @@ function endCombat(result) {
   if (!CS.active) return;  // already ended — block duplicate calls from queued setTimeout
   CS.active = false;
   CS.phase = 'result';
+  // Clear doom vignette
+  const _dv = document.getElementById('doomVignette');
+  if (_dv) _dv.classList.remove('doom-active');
+  const _ts = document.getElementById('turnSummary');
+  if (_ts) _ts.classList.remove('visible');
   const mission = CS.mission;
 
   if (result === 'fled') {
@@ -7537,20 +9060,26 @@ function endCombat(result) {
     updateGoldDisplay();
 
     const st2 = getStealthTier(), ht2 = getHonorTier();
-    const repLine = `<br><span style="font-size:0.65rem;color:var(--mist)">${st2.icon} ${st2.name} · ${ht2.icon} ${ht2.name}</span>`;
-    openModal('Mission Complete!',
-      `<b style="color:var(--jade-bright)">Victory!</b><br><br>
-      Mission: ${mission.name}<br>
-      Gold earned: <b style="color:var(--gold)">+${mission.reward} G</b>${recruitMsg}${armoryMsg}${repLine}`,
-      [{ label: 'Return to Hub', fn: () => {
-        closeModal(); showScreen('hub'); showHubSection('clan'); selectedMissionId = null; selectedParty = [];
-        // Show pending arc completion modal after navigation
+    const repLine = `<span style="font-size:0.65rem;color:var(--mist)">${st2.icon} ${st2.name} · ${ht2.icon} ${ht2.name}</span>`;
+    const aliveNames = CS.allies.filter(a => !a.perished && !a.doomed).map(a => `<span style="font-family:'Cinzel',serif;font-size:0.75rem;color:var(--jade-bright)">${CLASSES[a.class]?.emoji} ${a.name}</span>`).join('  ');
+    showResultScreen('victory', {
+      title: 'Mission Complete',
+      subtitle: mission.name,
+      gold: mission.reward,
+      repLine,
+      aliveNames,
+      recruitMsg,
+      armoryMsg,
+      onContinue: () => {
+        closeResultScreen();
+        showScreen('hub'); showHubSection('clan');
+        selectedMissionId = null; selectedParty = [];
         if (CS._pendingArcModal) {
           const _am = CS._pendingArcModal; CS._pendingArcModal = null;
           setTimeout(() => openModal(_am.title, _am.body, [{ label: 'Onwards!', fn: closeModal, cls: 'confirm' }]), 300);
         }
-      }, cls: 'confirm' }]
-    );
+      }
+    });
   } else {
     // Return uncollected doom bags
     CS.doomBags.forEach(bag => {
@@ -7563,7 +9092,6 @@ function endCombat(result) {
     CS.doomBags = [];
 
     // Final purge of perished allies from roster
-    // Remove perished allies from roster permanently (belt-and-suspenders after triggerPermadeath)
     const defPeriSet = new Set(CS.allies.filter(a => a.perished).map(a => a.id));
     if (defPeriSet.size) {
       GS.clan = GS.clan.filter(n => !defPeriSet.has(n.id));
@@ -7583,15 +9111,101 @@ function endCombat(result) {
       }
     });
     applyMissionReputation(result, mission);
-    saveGame();  // save AFTER purge so roster is correct on disk
-    const defeatMsg = result === 'timedout'
-      ? `<b style="color:var(--crimson-bright)">Time's Up!</b><br><br>You failed to complete the mission in time.<br>Return to the hub and try again.`
-      : `<b style="color:var(--crimson-bright)">Defeat.</b><br><br>All your ninja have fallen.<br>Return to the hub to heal and regroup.`;
-    openModal(result === 'timedout' ? 'Time Expired' : 'Mission Failed',
-      defeatMsg,
-      [{ label: 'Retreat to Hub', fn: () => { closeModal(); showScreen('hub'); showHubSection('clan'); selectedMissionId = null; selectedParty = []; }, cls: 'danger' }]
-    );
+    saveGame();
+    showResultScreen('defeat', {
+      title: result === 'timedout' ? 'Time Expired' : 'Mission Failed',
+      subtitle: mission.name,
+      reason: result === 'timedout' ? 'You ran out of time.' : 'All ninja have fallen.',
+      onContinue: () => { closeResultScreen(); showScreen('hub'); showHubSection('clan'); selectedMissionId = null; selectedParty = []; }
+    });
   }
+}
+
+// ── Result screen (victory/defeat) ──
+function showResultScreen(type, data) {
+  // Remove any existing
+  const old = document.getElementById('resultScreen');
+  if (old) old.remove();
+
+  const isVictory = type === 'victory';
+  const el = document.createElement('div');
+  el.id = 'resultScreen';
+  el.style.cssText = `position:fixed;inset:0;z-index:800;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.92);animation:fadeIn 0.4s ease;backdrop-filter:blur(6px)`;
+
+  const accentColor = isVictory ? 'var(--jade-bright)' : 'var(--crimson-bright)';
+  const accentGlow  = isVictory ? 'rgba(61,170,125,0.25)' : 'rgba(192,57,43,0.25)';
+  const titleIcon   = isVictory ? '✦' : '✕';
+
+  el.innerHTML = `
+    <div style="max-width:480px;width:90%;text-align:center;position:relative">
+      <!-- Glow orb -->
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+        width:300px;height:300px;border-radius:50%;
+        background:radial-gradient(${accentGlow},transparent 70%);
+        pointer-events:none;"></div>
+
+      <!-- Icon -->
+      <div style="font-size:3.5rem;margin-bottom:0.8rem;text-shadow:0 0 30px ${accentColor};
+        animation:phasePop 0.6s ease">${isVictory ? '⭐' : '💀'}</div>
+
+      <!-- Title -->
+      <div style="font-family:'Cinzel Decorative',serif;font-size:2rem;color:${accentColor};
+        letter-spacing:0.15em;text-shadow:0 0 20px ${accentColor};margin-bottom:0.3rem;
+        animation:phasePop 0.5s 0.1s ease both">
+        ${titleIcon} ${data.title} ${titleIcon}
+      </div>
+
+      <!-- Subtitle -->
+      <div style="font-family:'Cinzel',serif;font-size:0.8rem;color:var(--mist);
+        letter-spacing:0.2em;margin-bottom:1.8rem">${data.subtitle || ''}</div>
+
+      <!-- Divider -->
+      <div style="height:1px;background:linear-gradient(90deg,transparent,${accentColor},transparent);margin-bottom:1.5rem;opacity:0.4"></div>
+
+      ${isVictory ? `
+        <!-- Gold reward -->
+        <div style="font-family:'Cinzel Decorative',serif;font-size:2.2rem;color:var(--gold);
+          text-shadow:0 0 16px rgba(201,162,39,0.5);margin-bottom:0.4rem">+ ${data.gold} G</div>
+        <div style="font-size:0.7rem;color:rgba(201,162,39,0.5);font-family:'Cinzel',serif;
+          letter-spacing:0.2em;margin-bottom:1.2rem">GOLD EARNED</div>
+
+        ${data.aliveNames ? `<div style="margin-bottom:1rem;display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap">${data.aliveNames}</div>` : ''}
+        ${data.recruitMsg ? `<div style="font-size:0.8rem;color:var(--jade-bright);margin-bottom:0.8rem">${data.recruitMsg}</div>` : ''}
+        ${data.armoryMsg || ''}
+        <div style="margin-top:0.8rem">${data.repLine || ''}</div>
+      ` : `
+        <!-- Defeat reason -->
+        <div style="font-size:0.9rem;color:var(--mist);margin-bottom:1.2rem">${data.reason || ''}</div>
+        <div style="font-size:0.75rem;color:rgba(192,57,43,0.6);font-family:'Cinzel',serif;letter-spacing:0.1em">
+          Surviving ninja return at reduced HP.
+        </div>
+      `}
+
+      <!-- Divider -->
+      <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin:1.5rem 0"></div>
+
+      <!-- Continue button -->
+      <button onclick="document.getElementById('resultScreen').__continue()"
+        style="font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.2em;text-transform:uppercase;
+          padding:0.8rem 2.5rem;background:${isVictory ? 'rgba(61,170,125,0.15)' : 'rgba(139,26,26,0.2)'};
+          border:1px solid ${accentColor};color:${accentColor};cursor:pointer;
+          clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+          transition:all 0.2s"
+        onmouseover="this.style.background='${isVictory ? 'rgba(61,170,125,0.28)' : 'rgba(139,26,26,0.35)'}'"
+        onmouseout="this.style.background='${isVictory ? 'rgba(61,170,125,0.15)' : 'rgba(139,26,26,0.2)'}'">
+        ${isVictory ? '◈ Return to Shadow Council' : '↩ Retreat to Hub'}
+      </button>
+    </div>
+  `;
+
+  el.__continue = data.onContinue;
+  document.body.appendChild(el);
+}
+
+function closeResultScreen() {
+  const el = document.getElementById('resultScreen');
+  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity 0.25s'; setTimeout(() => el.remove(), 260); }
 }
 
 function useItem(ally) {
@@ -7638,16 +9252,24 @@ function executeCombatItem(gridId, itemIndex) {
     // If ally is doomed, healing revives them
     if (ally.doomed) {
       reviveAlly(ally, item.value || 25);
+      if (CS.cellSize && ally.x !== undefined) floatAtUnit(ally, '✦ Revived!', 'heal');
     } else {
       const healed = Math.min(ally.maxHp - ally.hp, item.value || 0);
       ally.hp = Math.min(ally.maxHp, ally.hp + (item.value || 0));
       addLog(`${ally.name} uses ${item.name}. +${healed} HP -> ${ally.hp}/${ally.maxHp}`, 'heal');
+      if (CS.cellSize && ally.x !== undefined && healed > 0) {
+        floatAtUnit(ally, '+' + healed, 'heal');
+        if (!CS.hitFlashes) CS.hitFlashes = [];
+        CS.hitFlashes.push({ x: ally.x, y: ally.y, color: 'rgba(61,200,120,A)', t: Date.now(), dur: 400 });
+        schedulePulseRedraw();
+      }
     }
   } else if (item.effect === 'aoe_heal') {
     CS.allies.forEach(a => {
       if (a.hp > 0) {
         a.hp = Math.min(a.maxHp, a.hp + (item.value || 0));
         addLog(`${a.name} healed ${item.value} HP.`, 'heal');
+        if (CS.cellSize && a.x !== undefined) floatAtUnit(a, '+' + item.value, 'heal');
       }
     });
   } else if (item.effect === 'dodge' || item.effect === 'stealth' || item.effect === 'armor' || item.effect === 'shadow_armor') {
@@ -8188,7 +9810,6 @@ function buildTerrainCodex() {
     html += '<div>';
     html += '<div style="font-family:Cinzel,serif;font-size:0.85rem;color:var(--white)">' + t.label + '</div>';
     html += '<div style="font-family:monospace;font-size:0.6rem;color:var(--mist);margin-top:1px">char: ' + t.ch + ' &middot; move: ' + t.move + ' &middot; height: ' + t.height + '</div>';
-    html += '<div style="font-family:monospace;font-size:0.55rem;color:rgba(100,180,255,0.7);margin-top:2px">img: ' + t.file + '</div>';
     html += '</div></div>';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.3rem;margin-bottom:0.5rem">';
     html += '<div style="font-size:0.65rem"><span style="color:var(--mist)">Cover</span> <span style="color:var(--steel)">' + t.cover + '</span></div>';
@@ -8421,18 +10042,21 @@ function renderCodexContent() {
   }).join('');
 
   // ── MECHANICS ──
-  const mechanicsContent = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.8rem">
-      ${[
-        { title: '⚔ Combat Flow', body: 'Each turn: Move → Act (attack/special/item). Both actions can happen in any order. Enemies act after all allies pass. Chi regenerates +1 per enemy turn.' },
-        { title: '\u{1F3AF} Weapon Range', body: 'Melee weapons (blades/melee) have range 1. Blades cause Bleed on hit, scaling with tier. Melee weapons can Stun or break armor. Ranged weapons use listed range. Thrown weapons deplete on use.' },
-        { title: '\u{1F6E1} Armor', body: 'One armor item per kit. Applied passively for the whole mission. Loses 1 durability per hit. When durability reaches 0 armor is destroyed and its protection is lost.' },
-        { title: '\u{1F4CA} Proficiency', body: 'Each class has affinities for weapon types (1-7 scale). Matching weapon type adds ±5% damage per point above/below 3. Proficiency improves via training.' },
-        { title: '✦ Special Moves', body: 'Every ninja has a unique special assigned at creation. Specials cost Chi. Some specials (thrown-type) consume weapon ammo. Chi regenerates each enemy turn.' },
-        { title: '\u{1F4A8} Smoke Bombs', body: 'Smoke bombs blind all enemies in a radius for several turns. Blinded enemies attack random targets. A smoke bomb also opens the option to flee — ninja escape at 50% HP with equipment intact.' },
-        { title: '\u{1F480} Defeat', body: 'Fallen ninja survive at 10% HP — they are not lost forever. Equipment state (weapon ammo/durability, armor) is preserved after combat ends.' },
-      ].map(m => card(`<div style="font-family:'Cinzel',serif;font-size:0.8rem;color:var(--gold);margin-bottom:0.4rem">${m.title}</div><div class="text-xs text-mist" style="line-height:1.7">${m.body}</div>`)).join('')}
-    </div>`;
+  const mechanicsContent = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.8rem">' +
+    [
+      { t: '⚔ Combat Flow', b: 'ATB system: each unit\'s SPD stat sets action frequency. On your turn: Move then Act, or Act then Move. Undo Move is available until you act. You can End Turn without acting.' },
+      { t: '🎯 Attacks & LoS', b: 'Melee (range 1) always connects when adjacent. Ranged needs clear line of sight — walls block. Targets in Forest/Shadow have a miss chance (8% per cover point). Height: +12% dmg at H1, +25% at H3.' },
+      { t: '✊ Unarmed Combat', b: 'Each class has a unique unarmed move when no weapon is held: Shinobi → Palm Strike, Monk → Iron Fist, Berserker → Haymaker etc. Use the Discard button in combat to drop a depleted weapon.' },
+      { t: '✨ Specials', b: 'Every ninja has one special. Range and LoS are enforced. Teleport and Phase Walk do NOT use the move action. Execute needs target below 30% HP. Last Stand needs caster below 25% HP.' },
+      { t: '💥 Status Effects', b: 'Poisoned: 5 dmg/turn (10 if Kunoichi). Stunned: skip turn. Confused: attack a random adjacent unit — may hit allies. Blinded: 80% miss. Bleed: ongoing HP loss from blades. Effects tick at unit turn start.' },
+      { t: '🛡 Class Strengths & Weaknesses', b: 'Shinobi: blunt +25% taken. Kunoichi: blade +25% taken, poison deals 10/turn. Ronin: +20% blade dealt, ranged +20% taken. Monk: ranged +15% taken, chi +2/turn. Berserker: +5% dmg per 10 HP lost, immune to one-shot above 25% HP.' },
+      { t: '🌍 Terrain & Height', b: 'Elevated tiles: +12–25% dmg vs lower targets. Shadow: enemy detection halved, Shinobi/Shadow +50% first-strike. Forest: heavy cover, dim light. Water: costs 3 move. Berserker (jump 1) needs stepping stones to reach H2/H3 tiles.' },
+      { t: '📦 Missions & Objectives', b: 'Theft: kill carrier, pick up loot, escape. Assassination: kill marked target, escape. Rescue: get cell key, free prisoner, escort out. Agitation/Espionage: stand on orange objective tiles and press the Objective button. All types require reaching the exit.' },
+      { t: '💰 Collector Gold Bags', b: 'Killing a Tax Collector drops a 💰 gold bag on the map tile where they fell. Move any ally onto the tile to collect the gold instantly. The bag pulses until picked up or combat ends.' },
+      { t: '⚔ Armor & Weapons', b: 'One armor item per kit, applied passively. Loses 1 durability per hit; destroyed at 0. Weapons have finite uses by tier. Sell weapons from the stash in the Armory — depleted sell at 50%. Armory missions may reward a bonus weapon on victory.' },
+      { t: '💀 Doom & Permadeath', b: 'Allies at 0 HP enter Doom countdown. When it expires they die permanently. A Doom bag with their gear drops on the map — step on it to retrieve. Healing items can revive a Doomed ally before the countdown expires.' },
+      { t: '✳ Job System', b: 'Earn JP through attacks, specials, kills, and objectives. Spend JP in a ninja\'s detail screen to unlock Reaction (triggers on hit), Support (always-on passives), and Movement abilities.' },
+    ].map(function(m){ return card('<div style="font-family:Cinzel,serif;font-size:0.78rem;color:var(--gold);margin-bottom:0.4rem">' + m.t + '</div><div class="text-xs text-mist" style="line-height:1.7">' + m.b + '</div>'); }).join('') + '</div>';
 
   el.innerHTML = `
     ${section('Ninja Classes', grid(290, classCards))}
@@ -8975,115 +10599,124 @@ function _drawHeightOverlay() {
 //      ~ water   G gate    E exit      C cliff     s stone
 
 const MAP_LIBRARY = {
+  // ── VILLAGE: town squares, alleys, buildings. Use r(H:2) for rooftops, 1(H:1) for steps.
+  // No 2 or 3 tiles. Mostly flat ground with walls, gates, rubble.
   village: [
-    ['WWWWWWWWWWWWWW','W....W.....r1W','E....G.....r.W','W....WWWWWWWWW','W............W','W............W','EGGWWWWWWWWWGW','W....W.....r1W','W....W.....r.W','E....W.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','Wr1.W......W.W','Er..G......W.W','WWWWG.WGWW.W.W','W....W....WW.W','W....W....WW.W','E....WWWWWWW.W','W....W.......W','Wr1.rG......rW','Er..rW.....1rW','W....W......rW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...W...W....W','E...G...G....W','WWWGG...GWWWWW','S...W...W....S','S...W...W....S','E...WWWWWW...W','W...W....W...W','W...G....G...W','EWW.W....W.WWW','W...W....W...W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.rr1.....1rr.','E.rr.R.R...rr.','W.WWWGWWWWWWWW','W...........RW','W...R.R.R....W','EGGW.WWWWWW..W','W.rr......1rrW','W.rr.......rrW','E.WWWWWW...WWW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W............W','EWWWWWWW.WWWWW','W.....W..W...W','W.....G..G...W','WGGWWWW..WWWWW','E........W...W','W........G...W','WWWWWWW..WWWWW','E..G.....W...W','W..W.........W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','Wrrr.WrrrW...W','Errr.WrrrG...W','W.1..G...WWWWW','W....W...W...W','W....WWWGG...W','EGGWWW...G...W','W....G...GWWWW','Wrrr.G...GrrrW','Errr.W...WrrrW','W.1..W...W...W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.rW.......WrW','E.rG.......GrW','W..WWW.WWWWWWW','W.........R..W','W.........R..W','EGG.WWWWWW...W','W.........R..W','W.rW.......WrW','E1rWWWWWWGWrGW','W.rW.......WrW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WWWW....W','E....W..W....W','W....G..G....W','W..1rW..Wr...W','W...rW..Wr1..W','EGGWWW..WWWWWW','W....W..W....W','W....G..G....W','E....W..W....W','W....WWWW....W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.............','E.R.R.R.R.R..W','WWWWW.WWWWWWWW','S...........SW','S.....WW.....S','E...........SW','WGGWWW.WWWWWWW','W.R.R.R.R.R..W','E.............','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.SS.W.SS.W..W','E.SS.G.SS.G..W','WWWWWG.WWWWWWW','W....W...W...W','W....G...G...W','EGGWWW...WWWWW','W.SS.W...W.SSW','W.SS.G...G.SSW','E.....WWW....W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...W......W.W','E...WrrrW..G.W','WWW.GrrrG..W.W','W...W....WWWWW','W...W........W','E...WWWWWWWWWW','W..........1rW','WWW.WWWWWW..rW','E...W....W...W','W...G....G...W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W....W..W','E....G....G..W','W....W....W..W','WW.WWWWWWWWWWW','W.............','E.............','WGGWWWWWWWW.WW','W...W.....W..W','E...G.....G..W','W...W.....W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WrrW.......Wrr','ErrG.......Grr','GWWWW.WWW.WGWW','G....W...W...W','G....G...G...W','EGGWWWWWWWWWWW','W....W...W...W','WrrW.G...G1rrW','ErrW.WWWWW.rrW','W.1..W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.........W..W','E.........G..W','WWWWW.WWWGWWWW','W....W.......W','W....G.......W','EGGWWW.WWWWWWW','W~~~~.........','W~~~~.........','E~~~~.........','W.....W......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W22W.......W22','E22G.......G22','W22WWWWWWWWW22','W....W...W...W','W....G...G...W','EGGWWW...WWWWW','W....W...W...W','W22W.....W122W','E.2G.....G.22W','W..W.....W...W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WS...W....W..W','ES...G....G..W','WS...WWWWWWWWW','WS...W.....S.W','WS...G.....S.W','EGGWWG.....S.W','W....W.....S.W','WS...W....W..W','ES...G....G..W','W....W....W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...WWW...WWWW','E...W2G...W2..','W...G2W...G2..','W...W2WWWWW2..','W...W2....W2..','E...W2....W2..','W...WWWWWWWWWW','W............W','E...R.R.R....W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','W....WWWWWWWWW','W....W.......W','W....G.......W','EGGWWG.......W','W.....WWWWWWWW','W....2.......W','E....21......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...CCC....W.W','E...CCC....G.W','WGWWWWWWWGWWWW','W22.........SW','W222........SW','E22WWWWWWWWWWW','W2222222....SW','W33332222..W.W','E23332222..G.W','W2222W22...W.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.W.W.W.W.W..W','E.G.G.G.G.G..W','W...........rW','W.W.W.W.W.W1rW','W.G.G.G.G.G..W','E..........1rW','W.G.W.W.W.W.rW','W.G.G.G.G.G..W','E............W','W...R........W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.rW.......W.W','E.rG.......G.W','W.WWWWWWWWWWWW','W............W','W...R..R.R...W','E............W','WGGWWWWWWWWGWW','W....W.....r.W','E....G.....r.W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WrrW.......W.W','ErrG.......G.W','W..WWWWWWWWWWW','W............W','W...R........W','E............W','WWWWWWWWWGWWWW','W....W.......W','E..rr.......rW','W..rr.......rW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.R.....W','E....G.R.....W','WWWWWGWWWWWWWW','W............W','W....R.R.R...W','E............W','WWWWWWWWGWWWWW','W.r.W........W','E.r.G........W','W...W........W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..WW.....WW.W','E..WW.....WW.W','WWWWWWWWWWWWWW','W...R.....R..W','W...R.....R..W','E............W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W.r..W......rW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.1.W.......1W','E...G.........','W.1.WWWWWWWWWW','W............W','W...R.R......W','E...R........W','WGGWWWWWWGWWWW','W....W.......W','E....G.......W','W.1..W......1W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....W.......W','WWWWWWWWWWWWWW','W...R.R.R.R..W','W............W','E.............','WWWWGWWWWGWWWW','W....W.......W','E....G.......W','W....W...r..rW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.SS.W.......W','E.SS.G.......W','WWWWWWWWWWWWWW','W..S.........W','W..S.R..R....W','E..S.........W','WGGWWWWWWWWWWW','W....W.rr....W','E....G.rr....W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WWW.....W','E....W.W.....W','WWWWWW.W.WWWWW','W....W...W...W','W....G...G...W','E............W','WWWWWW.WWWWWWW','W....W.......W','E....G....R..W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.rW.......rWW','E.rG.......r.W','W.WWWWWWWWWWWW','W............W','W.SS.....SS..W','E............W','WWWWWWWWWWWWWW','W.r.W......r.W','E.r.G......r.W','W...W........W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWW.WWWWWWW','W....W.......W','W....W.......W','E....WWWGWWWWW','W....W.......W','W..rr.......rW','E..rr.......rW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WW....WWW','E....WW....W.W','WWWWWWWWWWWWWW','W..R.........W','W..R.R.R.....W','E............W','WGGWWWWWGWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.r.WWWW.....W','E.r.W..W.....W','W...G..G.....W','W...WWWW.....W','W............W','E............W','WWWWGWWWWWWWWW','W....W......rW','E....G......rW','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W.R..........W','W.R..R.R.....W','E.R..........W','WWWWWWWWWWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...W.....W..W','E...G.....G..W','WWWWG.....GWWW','W...W.....W..W','W...........SS','E...........SS','WWWWG.....GWWW','W...W.....W..W','E...G.....G..W','W...W.....W..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.1..W.....1.W','E....G.......W','W.1..WWWWWWWWW','W............W','W.R..R.......W','E............W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W.1..W......1W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','Wrr..W.....r.W','Err..G.....r.W','W...WWWWWWWWWW','W............W','W...R.R.R....W','E...R........W','WWWWWWWWGWWWWW','W....W.......W','E....G.......W','W..rr.......rW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WW......W','E....WW......W','WWWWWWWWWWWWWW','W.............','W.R.R........W','E.R..........W','WWWWWWWGWWWWWW','W....W.......W','E....G.r...r.W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.S.W......S.W','E.S.G......S.W','W.SWWWWWWWWSWW','W.S..........W','W.S..R.R.....W','E............W','WWWWGWWWWGWWWW','W....W.......W','E....G.......W','W.1..W......1W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWGWWWW','W...........RW','W....R.......W','E............W','WWWWWWWWWWWWWW','W.rr.W.......W','E.rr.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.r.W......r.W','E.r.G......r.W','W.r.WWWWWWWWWW','W............W','W............W','E...R.R.R....W','WGGWWWWWWWWWWW','W..r.W.......W','E..r.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.rr.W.......W','E.rr.G.......W','WWWWWWGWWWWWWW','W....W...R...W','W....G...R...W','E............W','WWWWWWWWWWWWWW','W....W.......W','E....G.......W','W.rr.W.......W','WWWWWWWWWWWWWW'],
   ],
+  // ── FORTRESS_GATE: military fortifications. Use 1(step), 2(rampart walk 1-tile wide),
+  // 3(single tower peaks). Ramparts on enemy side. Allies approach through flat ground.
   fortress_gate: [
-    ['WWWWWWWWWWWWWW','W333W......W3W','E322W......G2W','W32.G......W.W','W32.W......W.W','WGGWWW....WWWW','E.....GGGG....','W.............','W.R.R.....R.R.','EWWWWWWWWGWWWW','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3333W....W333','E33332....2333','W3333WWWWWWW33','W2222.W....W2W','W.22..G....G2W','EGGWWWWGGGWWWW','W...........R.','W.R.........R.','E.............','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W2222W....W222','E2222G....G222','WWWWWWG.GWWWWW','W.............','W.R.........R.','EG2WWWG.GWWWWW','W3333W....W333','W3333G...22333','EWWWWWWWWGWWWW','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..WWW....WWW.','E..WWW....WWW.','W..G.......G.W','W..W.......W.W','W..WWGGG.GGWWW','E.............','WGGWWGGG.GWWWW','W..W.......G.W','E..WWW....WWW.','W..WWW....WWW.','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W333W222222W33','E3332222222233','WWWWW222222WWW','W..2222222222.','R.R2222222222.','E...222222222.','WG2WW222222WWW','W333G222222233','E.33W..2222W33','W....W..22W22W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.............','E2..WWWWWWWWWW','W32.W........W','W32.GG......GW','G2..W........W','E...WWWWWWWWWW','G2............','W32.WWWWWGWWWW','E2..W..RR..R.W','W32.W........W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..W.......G.W','E..WRRRR.RRRWW','WGWWW...R..WWW','W..R.......R.W','W.............','E.R.R.....R.R.','WG2WWWWWWGWWWW','W3333G...22333','E.333W....W333','W..2.W....W22.','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W333WWWWWWWW33','E322W......W2.','W32.WGGGGGGW2.','W32.W......G2.','WGGWW......WWW','E.............','W.............','WWWWGWWWWWWWWW','E3332222222233','W333W.22222W33','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','GGC3W2...22W3C','EGC3222.22223C','WWWWWWGGGWWWWW','W.............','W.R.R.....R.R.','E.............','WGGWWWGGGWWWWW','WCC3222.22223C','E.C3W2...22W3C','W2222W....2.WW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3332222222333','E322W22222W22.','W322W22222W22.','WWWWW22.22WWWW','WS...2...2...W','ES...S..222..W','WGGWWS.222WWWW','W32.WS2222W22.','E333WS22222333','W....G222W222W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W32W.......W.W','E32G.......G.W','WWWWWWWWWGWWWW','W.R...........','W.R...........','E.............','WGGWWWWWWGWWWW','W32G.......G.W','E3.W.......W.W','W...W.....W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W2222.....2222','E22221...12222','W2222.....2222','WWWWW.....WWWW','W.............','E.R...........','WGGWWWWWWGWWWW','W32G.......G.W','E3.W.......W.W','W...W.....W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3222W.....W.W','E3222G.....G.W','WWWWWW.....WWW','W....W.....W.W','W....G.....G.W','EGGWWW.....WWW','W2...W.....W.W','W32..G.....G.W','E32..WWWWGWWGW','W3...W.....W.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.R........R.W','E.R........R.W','WWWWWWWWWGWWWW','W.............','W.............','EGGWWG.GGWWWWW','W.22....22222.','W3333G.2222333','E.333W..22W333','W..2.W...2W22W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3.W.222222W3W','E32G222222223W','W3.W.222222W3W','W3.W..22222W3W','WGG.GWWWWWWWWW','E.....2222222.','WGGWWWWWWWW2WW','W32G222222223W','E32W..22222W3W','W3.WWWWWWWW23W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..W........Ws','E..G........Gs','GWWWWWWWWGWWWW','Gs...........s','Gs...R.R.R...s','EGGWWWWWWWWWWW','W..G........G.','W..W........W.','E..WWWWWWWWWWW','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3333W....W333','E33332....2333','WWWWWG....GWWW','W.............','W.............','EGGWWG....GWWW','W.22R.....222.','W3333G....2333','E.333W....W333','W..2.W....W22.','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WSSSW.....GSSW','ESSSW.....WSSW','WGWWWG...GWWWW','W.............','W.R...........','E.............','WGGWWG...GWWWW','WSSSW.....WSSW','ESSSW.....WSSW','W....G.....G.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W333W.....W333','E322W.....W223','W2WWWWGWWWWGWW','W222R.R.R.R..W','W22.R.R.R.R..W','E2............','WGGWWWWWWGWWWW','W32.G.....G223','E233W.....W333','W....W....W.2.','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W32G.....2223W','E3.W.R.R.22W3W','WWWWWWWWWGWWWW','W.............','W.............','E.............','WGGWWWWWWGWWWW','W3.W.R.R.22W3W','E32G.....2223W','W3.W......2W3W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W2W','E....G.....G2W','W....WWWWWWW2W','W..........12W','W...R......12W','E..........12W','WGGWWWWWWWWW2W','W....W.....W2W','E....G.....G2W','W....W.....W2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.............','WWWWWWWWWGWWWW','W..........R.W','W.R........R.W','E..........R.W','WGGWWWWWWWGWWW','W..........12W','E..........12W','W..........12W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...W......W2W','E...G......G2W','WWWWW......W2W','W.........W22W','W..........12W','E..........12W','WWWWWGWWWWWWWW','W...W......W.W','E...G......G.W','W...W......W.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....3WW','E....G.....2WW','WWWWWW.....2WW','W..........2.W','W..R.......2.W','E..........2.W','WWWWGWWWWWWWWW','W....W.....2WW','E....G.....3WW','W....W.....2WW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WWWWWWWWW','E....W.......W','WWWWWG.......W','W....W.......W','W....WWWWWWW2W','E..........122W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....WWWWWW22W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWGW2WW','W...........2W','W.R.........2W','E...........2W','WWWWWWWWWGW2WW','W....W......2W','E....G......2W','W....W......2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W......1W','E....G......2W','WWWWWWWWWWWW2W','W..............','W.R.R..........','E...........W2W','WGGWWWWWWWWW2W','W....W......1W','E....G......2W','W....W......2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.........W2.W','E.........G2.W','WWWWGWWWWWW2.W','W..........2..','W.R.R......2..','E..........2.WW','WWWWWWWWWWW2WW','W.........W2.W','E.........G2.W','W.........W2.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWWWWWWW1WW','W.........W12W','W..........12W','E...R......12W','WGGWWWWWWWWWWW','W....W.........','E....G.........','W....W.....W.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.3.W......3WW','E.2.G......2WW','W.2.WWWWWWW2WW','W...........2W','W.R.........2W','E...........2W','WGGWWWWWWWWWWW','W.2.W......2WW','E.2.G......2WW','W.3.W......3WW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.............','WWWWWWWWWWWWWW','W..R.......12W','W..R.......12W','E..........12W','WGGWWWWWWWWWWW','W..........12W','E..........12W','W..........12W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWGWWWWWWWW','W.R...........','W.R.R.....W22W','E.........W22W','WWWWGWWWWWWWWW','W.R...........','E.R.R.......2W','W...........2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWGWWWW','W...........2W','W............W','E...........2W','WGGWWWWWWGWWWW','W..........22W','E..........12W','W..........12W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WWWWWW2WW','E....W.....2WW','WWWWWG.....2WW','W....W.....2..','W....G.....2..','E.........W2WW','WGGWWWWWWWW2WW','W....W.....2WW','E....G.....2WW','W....W.....2WW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWWWWWWWWWW','W..R.......12W','W..R.......12W','E..........22W','WGGWWWWWWWWWWW','W............W','E.............','W..........12W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.2.W......3.W','E.2.G......2.W','W.2.WWWWWWWWWW','W............W','W.R.R......2.W','E..........2.W','WGGWWWWWWWWWWW','W.............','E..........2.W','W..........12W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWGWWWWWWWW','W..........W2W','W..R.......122','E...........12','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W....W.....W2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWWWW2W','W.R.R.......2W','W...........2W','E...........2W','WGGWWWWWWWWW2W','W....W......2W','E....G......2W','W....WWWWWWW2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W......1W','E....G......2W','WWWWWWWWWWWW3W','W.R.R.......2W','W...........2W','E...........2W','WGGWWWWWWWWW2W','W....W......2W','E....G......3W','W....W......1W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWGWWWW','W.R........12W','W..........12W','E..........22W','WWWWWWWWWGWWWW','W..........12W','E..........12W','W....W.......W','WWWWWWWWWWWWWW'],
+  ],
+  // ── CASTLE_SIEGE: fortress assault / dungeon. Use 1(step) and 2(platform) as
+  // interior raised areas. Single-tile 2s only. 3 very rarely as pinnacle.
+  castle_siege: [
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W..R.........W','W..R.R...W.2.W','E........W.2.W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W.SS.........W','W.SS.....W.2.W','E........G.2.W','WWWWWWWWWW.2.W','W..2.W.......W','E..2.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WW......W','E....WW......W','WWWWWWWWWWWWWW','W.R..........W','W.R..R...W12.W','E........G12.W','WGGWWWWWWW12.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.S.W.......SW','E.S.G.......SW','W.SWWWWWWWWSWW','W.S..........W','W.S......W.2.W','E........G.2.W','WGGWWWWWWW.2.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W..R.........W','W..R.....WW.2W','E........WG.2W','WGGWWWWWWWW.2W','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W............W','W.R..R...W.22W','E........G.22W','WWWWWWWWWW.22W','W....W.......W','E....G.......W','W.2..W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.SS.W.......W','E.SS.G.......W','WWWWWWWWWWWWWW','W.SS.........W','W........W12.W','E........G12.W','WGGWWWWWWW12.W','W............W','E..2.G.......W','W..2.W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWWWW2W','W.R..........W','W.R......W...W','E........G...W','WGGWWWWWWWWWWW','W....W......2W','E....G......2W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WWWWWWWWW','E....W.......W','WWWWWG.......W','W..R.W.....W.W','W....G.....G.W','E....WWWWWWWWW','WGGWW........W','W..2.W.......W','E..2.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWGWWWW','W.R..........W','W.R......W12.W','E........G12.W','WGGWWWWWWW12.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.2.W........W','E.2.G........W','W.2.WWWWWWWWWW','W............W','W..R.....W12.W','E........G12.W','WWWWGWWWWWWWWW','W............W','E....G.......W','W.2..W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W.SS.........W','W.SS.....W.2.W','E........G.2.W','WGGWWWWWWWWWWW','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WW......W','E....WG......W','WWWWWWWWWWWWWW','W..R.........W','W..R.R...W12.W','E........G12.W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W......2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W.R..........W','W.R......W12.W','E........W12.W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W..2.W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWWWW2W','W..R.........W','W..R.....W.12W','E........G.12W','WGGWWWWWWWWWWW','W............W','E....G.......W','W....W......2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.S.W.......SW','E.S.G.......SW','W.SWWWWWWWWSWW','W..S.........W','W..S.....W.2.W','E........G.2.W','WGGWWWWWWW.2.W','W....W.......W','E....G.......W','W.2..W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W.R..........W','W.R......W12.W','E........G12.W','WGGWWWWWWWWWWW','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W............W','W.R..R...W22.W','E........G22.W','WWWWWWWWWWWWWW','W....W.......W','E....G.......W','W.12.W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.2.W........W','E.2.G........W','W.2.WWWWWGWWWW','W............W','W..R.....W12.W','E........G12.W','WGGWWWWWWWWWWW','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWGWWWW','W.R.R........W','W..R.....W12.W','E........G12.W','WGGWWWWWWWWWWW','W....W.......W','E....G......2W','W....W......2W','WWWWWWWWWWWWWW'],
+  ],
+  // ── FOREST_AMBUSH: dense natural terrain. F=forest, R=rubble, ~=water, S=shadow.
+  // Almost no elevation (never 2 or 3). Occasional 1 for rocky outcrop.
+  forest_ambush: [
+    ['WWWWWWWWWWWWWW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','WFFF.....FFFFW','W............W','W.FFF...FFF..W','E............W','WFFF.....FFFFW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFF.......FFFW','EFFF.......FFFW','W.F..........FW','W.F..........FW','W.F...R.R....FW','E.F..........FW','W.F..........FW','WFFF.......FFFW','EFFF.......FFFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FFF.F.FFF..W','E.FFF.F.FFF..W','WFFFF.F.FFFFFW','W.....F......W','W.F...F...F..W','E.F...F...F..W','W.F...F...F..W','WFFFF.F.FFFFFW','E.FFF.F.FFF..W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FFF....FFF.W','E.FFF....FFF.W','W.F...RR...F.W','W.F...RR...F.W','W.F..........W','E.F..........W','W.FFFFFFFFFFF.W','W.FFFFFFFFFFF.W','E............W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..F.......F.W','E..F.......F.W','W..FFFFF.FFFFW','W............W','W.~~~.....~~~W','E.~~~.....~~~W','W.~~~.....~~~W','W..FFFFF.FFFFW','E..F.......F.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFF.FFF.FFF.W','EFFF.FFF.FFF.W','W............W','W.RR.RRR.RR..W','W............W','E............W','W............W','WFFF.FFF.FFF.W','EFFF.FFF.FFF.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FFFFFFFFFFF.','E.F.........FW','W.F.FFFFFFFFFFF','W.F.F.......FW','W.F.F.......FW','E.F.F.......FW','W.F.FFFFFFFFFFF','W.F.........FW','E.FFFFFFFFFFF.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FF.....FF..W','E.FF.....FF..W','WFFFFWWWFFFFFW','W....W...W...W','W....G...G...W','E....WWWWWWWWW','W............W','W.FF.....FF..W','E.FF.....FF..W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FFFF.FFFFF.W','E.F.........FW','WFFFFF.FFFFFF.','W.F.R.R.R....W','W.F..........W','E.F..........W','WFFFFF.FFFFFF.','W.F.........FW','E.FFFF.FFFFF.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFF...FFF...W','EFFF...FFF...W','W......FFF...W','W....R.......W','W....R.......W','E....R.......W','WFFF.......FFFW','WFFF.......FFFW','EFFF.......FFFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...F.......FW','E...F.......FW','WFFFFFFFFFFFF W','W............W','W.RR.......RR.','E.RR.......RR.','WFFFFFFFFFFFF.W','W...F.......FW','E...F.......FW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FF.......FF.','E.FF.......FFW','W.FF.FFFFF.FFW','W....F...F...W','W.R..F...F...W','E.R..F...F...W','W.R..F...F...W','W.FF.FFFFF.FFW','E.FF.......FFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...S.S.S....W','E...S.S.S....W','WWWWWWWWWWWWWW','W.FFF........W','W.FFF....FFFW.','E.FFF....FFFW.','WWWWWWWWWWWWWW','W.S.S.S.S....W','E.S.S.S.S....W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.F.F.F.F.F..W','E.F.F.F.F.F..W','W.FFFFFFFFFFF.W','W............W','W.R..R..R....W','E............W','WFFFFFFFFFFFFF','W............W','E.F.F.F.F.F..W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...F....F...W','E...F....F...W','WFFFFWWWWFFFFFW','W....W.....W.W','W....G.....G.W','E....WWWWWWWWW','W............W','W.FF.......FFW','E.FF.......FFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FFF.FFF.FF.W','E.FFF.FFF.FF.W','W............W','W.~~.......~~W','W.~~.......~~W','E............W','WFFF.....FFFFW','WFFF.....FFFFW','EFFF.....FFFFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.F.........FW','E.F.........FW','W.FFFFFFFFFFFF','W............W','W.RR.R.RR....W','E...R........W','WFFFFFFFFFFFF.W','W.F.........FW','E.F.........FW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFF.......FFFW','EFFF.......FFFW','W.F.FFFFF.F..W','W.F.F...F.F..W','W.F.F...F.F..W','E.F.F...F.F..W','W.F.FFFFF.F..W','WFFF.......FFFW','EFFF.......FFFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FF.......FF.W','E.FF.......FF.W','W.FFFFFFFFFFF.W','W...R.R.R....W','W............W','E............W','W.FFFFFFFFFFF.W','W.FF.......FF.W','E.FF.......FF.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','WFFF.....FFFFW','W.S..........W','W.S..R.......W','E.S..........W','WFFF.....FFFFW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WWWWWWWWWWWWWW'],
   ],
   temple_rooftop: [
     ['WWWWWWWWWWWWWW','W............W','E.1111111111.W','W.1222222221.W','W.1233333321.W','W.1233333321.W','E.1233333321.W','W.1233333321.W','W.1222222221.W','E.1111111111.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W233WW..WW333W','E222WW..WW223W','W32.WW..WW.23W','W32.22..22.23W','G2..221.22.23W','E...22..22123W','G2..22..22.23W','W32.WW..WW223W','E233WW..WW333W','W.2.......222W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W1111111111..W','E1222222221..W','W1232222321..W','W1233W33321..W','W1233G33321..W','E1232222321..W','W1222222221..W','W1111111111..W','E............W','W.....R......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33333333333W','E2..222222232W','W32.......23.W','W32111111123.W','G..1......123W','E..1......1.3W','G..1111111.3.W','W32.....2..3.W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.22..22..22.W','E233223322332W','W233223322332W','W.22..22..22.W','W122..22.122.W','E.22.122..22.W','W..2.........W','W.332233..33.W','E233..332233.W','W.2....2.....W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W1111.....W..W','E1221.....W..W','W1221.....W..W','W1111.....W..W','W.........W..W','E.........G..W','W........32..W','W.......23W..W','E.......23W..W','W.......23W..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W............W','E.11111111...W','W.12222221...W','W.12333321...W','W.123..321...W','E.123..321...W','W.12333321...W','W.12222221...W','E.11111111...W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W23WW...222223','E22WW...222W2.','W32WW....22WW.','W3222.....222.','G2.22......22.','E..221....122.','G2.22.....222.','W32WW....22WW.','E23WW....22W23','W.2.....22222W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W233333333333W','E222222222222W','W32..........W','W32..........W','G2...........W','E............W','G2...........W','W32..........W','E233333333333W','W......2.....W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.22222222222W','E.....2222..2W','W21...2.....2W','W2....2.....2W','G.....21....2W','E.....2.....2W','G.....2222..2W','W21.........2W','E.22222222222W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.3.WW..WW.3.W','E.2.WW..WW.2.W','W.2.WW..WW.2.W','W122.......221W','W.2..........2W','E.1..........1W','W.2..........2W','W122.......221W','E.2.WW..WW.2.W','W.3.WW..WW.3.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W1111111111..W','E1222222221..W','W1232222321..W','W1233333321..W','W1233333321..W','E1232222321..W','W1222222221..W','W1111111111..W','E............W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E.22222222222W','W.21111111112W','W.2.........2W','W.2.........2W','E.2.........2W','W.2.........2W','W.21111111112W','E.22222222222W','W.33333333333W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.22..22..22.W','E.23..23..23.W','W.22..22..22.W','W.12..12..12.W','W............W','E............W','W.12..12..12.W','W.22..22..22.W','E.23..23..23.W','W.22..22..22.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W1111.....W..W','E1221.....W..W','W1221.....W..W','W1111.....W..W','W.........W..W','E.........G..W','W.........W..W','W.........W..W','E.1....1..W..W','W.2....2.....W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.11111111...W','W.12222221...W','W.12333321...W','W.12333321...W','E.12333321...W','W.12333321...W','W.12222221...W','E.11111111...W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.3WW...2223.W','E.2WW...222..W','W.2WW....22..W','W.222.....22.W','W.2.2......22W','E..22......12W','W.2.2......22W','W.222.....22.W','E.2WW....22.3W','W.3WW...222.2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E.22222222222W','W.2..........W','W.2..........W','W.2..........W','E.2..........W','W.2..........W','W.2..........W','E.22222222222W','W.33333333333W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.22222222222W','E.2.........2W','W.2.........2W','W.21.......12W','W.2.........2W','E.2.........2W','W.2.........2W','W.21.......12W','E.2.........2W','W.22222222222W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','E.1111..1111.W','W.1221..1221.W','W.1221..1221.W','W.1111..1111.W','E............W','W.1111..1111.W','W.1221..1221.W','E.1221..1221.W','W.1111..1111.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.3333........','E..2.......33.','W321111111123.','W3.12......1.3','G..12......123','E..12......1.3','G..12......1.3','W321111111123.','E..2.......323','W33333........','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W111111111111W','E1..........1W','W1..WWWWWW..1W','W1.2W333322.1W','W12223333W2.1W','E1..W3333W..1W','W1..WWWWWW..1W','W1..........1W','E111111111111W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W233W.....W333','E222W22222W223','W32.22222222..','W322222222222.','G2.2222222222.','E..2222222222.','G2.2222222222.','W32.222222222.','E233W22222W333','W.2..........W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W222222222222W','E123222222233W','W232222222223W','W232222222223W','W233332223333W','E122222222222.','W233332223333W','W232222222223W','E123222222233W','W222222222222W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W332222222222.','E122222222222.','W332222222222.','W222222222222.','W222222222222.','E122222222222.','W222222222222.','W222223333322.','E122223333322.','W222222222222.','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333.','E..222222222..','W.21.......12.','W.3..1...1..3.','W...1.....1..W','E...1.....1..W','W.3..1...1..3.','W.21.......12.','E..222222222..','W.33333333333.','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W111111111111W','E1..........1W','W1..WWWWWW..1W','W1.2W....W2.1W','W1.2W....W2.1W','E1..W....W..1W','W1..WWWWWW..1W','W1..........1W','E111111111111W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33W.....W33.W','E.22W.....W22.W','W.22W22222W22.W','W.222222222222W','W.22..........W','E.12..........W','W.22..........W','W.222222222222W','E.22W22222W22.W','W.33W.....W33.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W222222222222W','E123222222331W','W232222222223W','W232222222223W','W233332223333W','E122222222222W','W233332223333W','W232222222223W','E123222222331W','W222222222222W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33222222233.W','E.22222222222.W','W.22222222222.W','W.22222222222.W','W.22222222222.W','E.22222222222.W','W.22222222222.W','W.22222222222.W','E.22222222222.W','W.33222222233.W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','E.1..1..1..1.W','W.1..1..1..1.W','W.1..1..1..1.W','W.1222222221.W','E.123......1.W','W.123......1.W','W.122222..21.W','E.1111111111.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33333333333W','E..1.2222221.W','W321.......1.W','W3.1.......1.W','G..1.......1.W','E..1.......1.W','G..1.......1.W','W321.......1.W','E.33333333333W','W......2.....W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W......2.....W','E.....333....W','W.1..23332...W','W.1..23332...W','W.1..2332....W','E.1...332....W','W.11111111...W','W.12222221...W','E.11111111...W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.22222222222W','E...........2W','W21.333333..2W','W2..333333..2W','G...3222232.2W','E..2322223.12W','G...333333..2W','W21.333333..2W','E.....2.....2W','W222222222222W','WWWWWWWWWWWWWW'],
-  ],
-  forest_ambush: [
-    ['WWWWWWWWWWWWWW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WFFF.FFF.FFFFW','WFFF.FFF.FFFFW','EFFF.FFF.FFFFW','W............W','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFFFFFFFFFFF.','EFFFFFFFFFFFF.','W............W','W...FF...FF..W','W...FF...FF..W','E...FF...FF..W','W............W','WFFFFFFFFFFFF.','EFFFFFFFFFFFF.','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFF.....FFFFF','EFFF.....FFFFF','W............W','W....~~~.....W','W....~~~.....W','E....~~~.....W','W............W','WFFF.~~~~.FFFF','EFFF.~~~~.FFFF','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFFFF.FFFFFFF','EFFFFF.FFFFFFF','W............W','W......FFFFFFF','W......FFFFFFF','E......FFFFFFF','W............W','WFFFFF.FFFFFFF','EFFFFF.FFFFFFF','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFFFFFFFFFFF.','EFFFFFFFFFFFF.','W............W','WF....RRRR...F','WF....RRRR...F','EF....RRRR...F','W............W','WFFFFFFFFFFFF.','EFFFFFFFFFFFF.','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WSFSFSFSFSFSFW','ESFSFSFSFSFSFW','W............W','W..SFS.SFS...W','W..SFS.SFS...W','E..SFS.SFS...W','W............W','WSFSFSFSFSFSFW','ESFSFSFSFSFSFW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFFFFFFFFFFFF','EFFFFFFFFFFFFF','W............W','W.F.........FW','W.F.........FW','E.F.........FW','W............W','WFFFFFFFFFFFFF','EFFFFFFFFFFFFF','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','Wf...f...f...W','Ef...f...f...W','W............W','WF...F...F...W','WF...F...F...W','EF...F...F...W','W............W','Wf...f...f...W','Ef...f...f...W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFFCCCCCCFFFW','EFFFCCCCCCFFFW','W............W','W...C......C.W','W...C......C.W','E...C......C.W','W............W','WFFFCCCCCCFFFW','EFFFCCCCCCFFFW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WSSS.FFF.SSSSW','ESSS.FFF.SSSSW','W............W','W..........S.W','W..........S.W','E..........S.W','W............W','WSSS.FFF.SSSSW','ESSS.FFF.SSSSW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WF.F.F.F.F.F.W','EF.F.F.F.F.F.W','W............W','W............W','W............W','E............W','W............W','WF.F.F.F.F.F.W','EF.F.F.F.F.F.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFFF........F','EFFFF........F','W............W','W....FFFFF...F','W....FFFFF...F','E....FFFFF...F','W............W','WFFFF........F','EFFFF........F','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.F.F.F.F.F..W','E.F.F.F.F.F..W','W............W','WFF.FFF.FFF.FW','WFF.FFF.FFF.FW','EFF.FFF.FFF.FW','W............W','W.F.F.F.F.F..W','E.F.F.F.F.F..W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.SFSFSFSFSF.W','E.SFSFSFSFSF.W','W............W','WFSFSFSFSFSFFW','WFSFSFSFSFSFFW','EFSFSFSFSFSFFW','W............W','W.SFSFSFSFSF.W','E.SFSFSFSFSF.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFFFFFF.FFFFF','EFFFFFFF.FFFFF','W............W','W.............','W.............','E.............','W............W','WFFFFFFF.FFFFF','EFFFFFFF.FFFFF','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W~~~~~~~~~~~~W','E~~~~~~~~~~~~W','W............W','W.FF...FF....W','W.FF...FF....W','E.FF...FF....W','W............W','W~~~~~~~~~~~~W','E~~~~~~~~~~~~W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.FF.FFF.FF.FW','E.FF.FFF.FF.FW','W............W','WWWWW...WWWWWW','WGGWW...WWWWWW','EGGWW...WWWWWW','W............W','W.FF.FFF.FF.FW','E.FF.FFF.FF.FW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.FF.......FF.','E.FF.......FF.','W............W','WfFF.......FFf','WfFF.......FFf','EfFF.......FFf','W............W','W.FF.......FF.','E.FF.......FF.','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.SS.FFF.SS..W','E.SS.FFF.SS..W','W............W','WSSS.FSSS.SSSS','WSSS.FSSS.SSSS','ESSS.FSSS.SSSS','W............W','W.SS.FFF.SS..W','E.SS.FFF.SS..W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFFFF.FFFFFF.','EFFFFF.FFFFFF.','W............W','W.....R.R....W','W.....R.R....W','E.....R.R....W','W............W','WFFFFF.FFFFFF.','EFFFFF.FFFFFF.','W............W','WWWWWWWWWWWWWW'],
-  ],
-  castle_siege: [
-    ['WWWWWWWWWWWWWW','W333W......W33','E322W......W2.','W32.W......W2.','GGGGGWWWWGWWGW','G.............','E.R.R...R.R...','GGGWWWWWWWWWWW','W32.G......G2.','E32.W......W2.','W333W......W33','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W2222222222222','E2.1111111111W','W2.1.........W','W2.1.........W','W2.1.........W','E2.1.........W','W2.1.........W','W2.1111111111W','E.222222222222','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W............W','E.WWWWWWWWWWWW','W........2223W','W........2223W','W.....2.22223W','E.....2122223W','W........2223W','W........2223W','E.WWWWWWWWWWWW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...RRRRRRRR.W','E...R......R.W','WWWWR......RWW','W...R......R.W','W...R......R.W','EGGWR......RWW','W...R......R.W','W...R......R.W','EWWWRRRRRRRRRW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W2332222222333','E22W..22222W3W','W32W...2222W3W','W32WWWWWWWWW3W','G2.G..2222223W','E..G...2222W3W','G2.GWWWWWWWW3W','W32W..22222W3W','E233.222222333','W.2...2222222W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33333333333W','E2.WWWG2.WWWWW','W32W..........','W32W..........','G2.GWW...WWW.W','E....W...W...W','G2...WWWWW...W','W32..W.......W','E233333333333W','W......2.....W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.RR.RR.RR.R.W','E............W','W.RR.RR.RR.R.W','GWWWGWWWWWWWWW','G3332222222333','E333.222222333','GG2WWWWWWWWWWW','W.RR.RR.RR.R.W','E............W','W.RR.RR.RR.R.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.WWWWWWWWWWWW','E.G..........W','W.W.WWWWWWWWWW','W.W.W........W','W.G.W.WWWWWWWW','E.G.W.W......W','W.G.W.WWWGWWWG','W.W.W........G','E.W.WWWWWWWWGG','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W222222222222W','E123333333332W','W232222222222W','W232222222222W','W232222222222W','E122222222222W','W232222222222W','W233333333332W','E122222222222W','W222222222222W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W222222222333S','E122222222333S','W222222222222.','W222222222222.','W222222222222S','E122222222222S','W222222222222.','W222222222333S','E122222222333S','W222222222222.','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...W..2222W3W','E2..G.2222223W','W32.WWWWWWWW3W','W32.W.22222W3W','G2..G22222223W','E...W.22222W3W','G2..WWWWWWWW3W','W32.G.2222223W','E2..W..2222W3W','W32.W...222W3W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.222222222222','E............2','W21111111111.2','W2.1.......1.2','G..1.......112','E..1.......1.2','G..111111111.2','W21..........2','E.222222222222','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33W.....W333','E2.2G.....G223','W32.WWWWWWWW23','W32.........23','G2..........23','E...........23','G2..........23','W32.WWWWWWWW23','E22.G.....G.23','W333W.....W333','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W............W','EWWWWWWWWWWGWW','W.R.R.R.R.R.WW','W.R.R.R.R.R.WW','W............W','E............W','W.R.R.R.R.R.WW','WWWWGWWWWWWWWW','E............W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W323232323232W','E122222222222W','W222222222222W','W222222222222W','W323232323232W','E122222222222W','W323232323232W','W222222222222W','E122222222222W','W222222222222W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W232323232322W','E122222222222.','W232323232322W','W222222222222.','W323232323232W','E122222222222.','W232323232322W','W222222222222.','E123232323232W','W222222222222.','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..W.......G.W','E..WWWWWWWGGWW','W..W.......W.W','W..G.......G.W','WGGG.......GWW','E..G.......G.W','W..W.......W.W','W..WWWWWWWWWGW','E..W.......W.W','W..G.......W.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W3332222222333','E3222222.2232.','WWWWWWWWWGWWWW','W..R.R.R.R.R.W','W.............','E.............','WGGWWWWWWGWWWW','W32......2232.','E333.....22333','W.........222.','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..W.R.R.W...W','EGWG.....GWGWW','W.R.......R..W','W.R.......R..W','WGGG.....GWWWW','E..W.R.R.W...W','W..W.R.R.W...W','WWWG.....GWGWW','E.R.......R..W','W.R.......R..W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..W..22222W3W','E2.G.22222223W','W32WWWWWWWWW3W','W32W.222222W3W','G2.G222222223W','E..G.222222W3W','G..GWWWWWWWW3W','W32G.22222223W','E2.W..22222W3W','W32W...2222W3W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33333333333W','E..1.2222221.W','W.3.1.......1W','W.3.1.......1W','W...1.......1W','E...1.......1W','W.3.1.......1W','W.3.1.......1W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.3...3...3..W','E.2...2...2..W','W.11111111111W','W............W','W.11111111111W','E.2...2...2..W','W.3...3...3..W','W............W','E.11111111111W','W.2...2...2..W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.22222222222W','E...........2W','W.3.333333..2W','W.2.333333..2W','W...3222232.2W','E..2322223.12W','W...333333..2W','W.3.333333..2W','E...........2W','W.22222222222W','WWWWWWWWWWWWWW'],
   ],
   night_ambush: [
     ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS...........S','WS...........S','WS...........S','ES...........S','WS...........S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
@@ -9108,7 +10741,6 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS.S.S.S.S.S.S','WS.S.S.S.S.S.S','WS.S.S.S.S.S.S','ES.S.S.S.S.S.S','WS.S.S.S.S.S.S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
   ],
 };
-
 // ==========================================
 // ===== INITIALIZATION =====
 // ==========================================
