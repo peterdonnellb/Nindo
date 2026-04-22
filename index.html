@@ -1209,6 +1209,28 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
   .action-btn { padding: 0.5rem 0.4rem; font-size: 0.55rem; min-width: 44px; }
   .facing-btn { width: 20px; height: 20px; font-size: 0.6rem; }
 }
+/* ── HONORS HALL ── */
+.honors-hall { padding: 1rem 1.2rem 2rem; max-width: 900px; margin: 0 auto; }
+.honors-title { font-family: 'Cinzel Decorative', serif; font-size: 1.1rem; color: var(--gold); text-align: center; letter-spacing: 0.12em; margin-bottom: 0.2rem; }
+.honors-subtitle { text-align: center; font-size: 0.65rem; color: var(--mist); letter-spacing: 0.1em; margin-bottom: 1.4rem; opacity: 0.7; }
+.honors-summary { display: flex; gap: 1.2rem; justify-content: center; margin-bottom: 1.4rem; flex-wrap: wrap; }
+.honors-stat { background: rgba(201,162,39,0.07); border: 1px solid rgba(201,162,39,0.18); border-radius: 4px; padding: 0.4rem 1rem; text-align: center; }
+.honors-stat-num { font-family: 'Cinzel', serif; font-size: 1.3rem; color: var(--gold); }
+.honors-stat-lbl { font-size: 0.55rem; color: var(--mist); letter-spacing: 0.08em; text-transform: uppercase; }
+.honors-category { margin-bottom: 1.6rem; }
+.honors-cat-title { font-family: 'Cinzel', serif; font-size: 0.68rem; color: var(--gold); letter-spacing: 0.14em; text-transform: uppercase; border-bottom: 1px solid rgba(201,162,39,0.2); padding-bottom: 0.3rem; margin-bottom: 0.8rem; }
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 0.7rem; }
+.badge-card { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 0.6rem 0.3rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; cursor: default; transition: transform 0.15s, border-color 0.15s; position: relative; }
+.badge-card.earned { border-color: rgba(201,162,39,0.35); background: rgba(201,162,39,0.06); }
+.badge-card.earned:hover { transform: translateY(-2px); border-color: rgba(201,162,39,0.6); }
+.badge-card.earned .badge-name { color: var(--gold); }
+.badge-canvas { width: 60px; height: 60px; display: block; }
+.badge-name { font-family: 'Cinzel', serif; font-size: 0.5rem; color: var(--mist); text-align: center; letter-spacing: 0.04em; line-height: 1.3; }
+.badge-locked-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.55); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; opacity: 0.6; }
+.badge-tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: rgba(10,10,18,0.97); border: 1px solid rgba(201,162,39,0.3); border-radius: 4px; padding: 0.4rem 0.6rem; font-size: 0.58rem; color: var(--mist); white-space: nowrap; z-index: 100; pointer-events: none; min-width: 120px; text-align: center; }
+.badge-card:hover .badge-tooltip { display: block; }
+.badge-card.earned .badge-tooltip { color: #ddd; }
+@media (max-width: 600px) { .badge-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 0.5rem; } .badge-canvas { width: 52px; height: 52px; } }
 </style>
 </head>
 <body>
@@ -1260,6 +1282,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
       <button class="nav-btn" onclick="showHubSection('weaponShop')" id="nav-weaponShop">Armory</button>
       <button class="nav-btn" onclick="showHubSection('itemShop')" id="nav-itemShop">Supplies</button>
       <button class="nav-btn" onclick="showHubSection('exchange')" id="nav-exchange">Exchange</button>
+      <button class="nav-btn" onclick="showHubSection('honors')" id="nav-honors">🏅 Honors</button>
       <button class="nav-btn" onclick="openCodex()" id="nav-codex">Codex</button>
       <button onclick="saveGame(false)" title="Save game" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--mist);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;padding:0.25rem 0.7rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(201,162,39,0.4)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='var(--mist)'">&#128190; Save</button>
       <div class="gold-display">⚜ <span id="goldDisplay">0</span> Gold</div>
@@ -1275,6 +1298,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
       <div id="section-itemShop" class="hub-section"></div>
       <div id="section-exchange" class="hub-section"></div>
       <div id="section-codex" class="hub-section" style="display:none!important"></div>
+      <div id="section-honors" class="hub-section"></div>
     </div>
     <!-- Mobile bottom nav -->
     <nav class="mobile-nav" id="mobileNav">
@@ -1288,6 +1312,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
         <button class="mob-nav-btn" id="mob-itemShop" onclick="showHubSection('itemShop')"><span class="icon">🧪</span>Supply</button>
         <button class="mob-nav-btn" id="mob-exchange" onclick="showHubSection('exchange')"><span class="icon">💰</span>Shop</button>
         <button class="mob-nav-btn" id="mob-codex" onclick="openCodex()"><span class="icon">📜</span>Codex</button>
+        <button class="mob-nav-btn" id="mob-honors" onclick="showHubSection('honors')"><span class="icon">🏅</span>Honors</button>
       </div>
     </nav>
   </div>
@@ -2296,10 +2321,11 @@ const MISSION_TEMPLATES = {
       'They cannot know we were here. Leave nothing behind.'
     ],
     tags: ['theft'],
+    // All groups MUST include a scribe or advisor (valid carrier types for theft)
     enemyGroups: [
       [{ type: 'guard', count: 2 }, { type: 'scribe', count: 1 }],
       [{ type: 'patrol_guard', count: 3 }, { type: 'scribe', count: 1 }],
-      [{ type: 'guard', count: 2 }, { type: 'jailer', count: 1 }],
+      [{ type: 'guard', count: 2 }, { type: 'advisor', count: 1 }],
       [{ type: 'elite_guard', count: 2 }, { type: 'scribe', count: 1 }]
     ]
   },
@@ -2406,11 +2432,18 @@ function generateDynamicMission(seed, difficultyBias, forcedType) {
     const lastGroup = scaledEnemies[scaledEnemies.length - 1];
     if (lastGroup) targetEnemy = lastGroup.type;
   } else if (tKey === 'theft') {
-    const carrier = scaledEnemies.find(g => g.type === 'scribe' || g.type === 'advisor');
+    // Prefer scribe or advisor; fall back to any non-guard type; last resort: use last enemy type
+    let carrier = scaledEnemies.find(g => g.type === 'scribe' || g.type === 'advisor');
+    if (!carrier) carrier = scaledEnemies.find(g => g.type !== 'guard' && g.type !== 'patrol_guard' && g.type !== 'elite_guard');
+    if (!carrier) carrier = scaledEnemies[scaledEnemies.length - 1]; // absolute fallback
     if (carrier) {
       carrierEnemy = carrier.type;
       const lootNames = ['Sacred Scroll','War Chest','Poison Formula','Clan Seal','Trade Ledger','Forbidden Map','Jade Cipher','Ancestral Blade'];
       lootItem = { name: lootNames[r(lootNames.length)], icon: ['📜','💰','🧪','🔖','📒','🗺️','💎','⚔️'][r(8)] };
+    }
+    // Safety: ensure at least one carrier-type enemy exists in the group
+    if (carrierEnemy && !scaledEnemies.some(g => g.type === carrierEnemy)) {
+      scaledEnemies.push({ type: carrierEnemy, count: 1 });
     }
   } else if (tKey === 'espionage') {
     turnLimit = 16 + difficulty * 4;
@@ -2508,6 +2541,405 @@ function getHonorTier() {
 }
 
 // Active combat tracking flags reset at mission start
+// ═══════════════════════════════════════════════════════════════
+// ── ACHIEVEMENT SYSTEM ──
+// ═══════════════════════════════════════════════════════════════
+
+const ACHIEVEMENTS = [
+  // ── FIRST BLOOD: one per enemy type ──
+  { id: 'kill_guard',        cat: 'first_blood', name: 'First Guard',        desc: 'Defeat your first Guard',            badge: 'shield',   color: '#8888aa' },
+  { id: 'kill_patrol_guard', cat: 'first_blood', name: 'Off The Beat',       desc: 'Defeat your first Patrol Guard',     badge: 'patrol',   color: '#7788aa' },
+  { id: 'kill_elite_guard',  cat: 'first_blood', name: 'Crack The Shield',   desc: 'Defeat your first Elite Guard',      badge: 'elite',    color: '#5599cc' },
+  { id: 'kill_captain',      cat: 'first_blood', name: 'Headless Command',   desc: 'Defeat your first Captain',          badge: 'captain',  color: '#cc5533' },
+  { id: 'kill_advisor',      cat: 'first_blood', name: 'Silenced Counsel',   desc: 'Defeat your first Advisor',          badge: 'advisor',  color: '#9944bb' },
+  { id: 'kill_scribe',       cat: 'first_blood', name: 'Burn The Records',   desc: 'Defeat your first Scribe',           badge: 'scroll',   color: '#bb9933' },
+  { id: 'kill_jailer',       cat: 'first_blood', name: 'Lost The Key',       desc: 'Defeat your first Jailer',           badge: 'key',      color: '#aa7733' },
+  { id: 'kill_thug',         cat: 'first_blood', name: 'Tougher Shadow',     desc: 'Defeat your first Thug',             badge: 'fist',     color: '#aa4422' },
+  { id: 'kill_boss_thug',    cat: 'first_blood', name: 'Big Fish',           desc: 'Defeat your first Boss Thug',        badge: 'bigfist',  color: '#cc3311' },
+  { id: 'kill_collector',    cat: 'first_blood', name: 'Tax Relief',         desc: 'Defeat your first Tax Collector',    badge: 'coin',     color: '#ddaa22' },
+  { id: 'kill_bounty_hunter',cat: 'first_blood', name: 'Hunted The Hunter',  desc: 'Defeat your first Bounty Hunter',    badge: 'target',   color: '#cc6622' },
+  { id: 'kill_kunoichi_boss',cat: 'first_blood', name: 'Rival Falls',        desc: 'Defeat the Rival Ninja',             badge: 'rival',    color: '#cc8822' },
+  { id: 'kill_warlord',      cat: 'first_blood', name: 'The Warlord Falls',  desc: 'Defeat the Warlord',                 badge: 'warlord',  color: '#dd2222' },
+
+  // ── MISSION FEATS ──
+  { id: 'flawless_mission',  cat: 'feats', name: 'Untouched',          desc: 'Complete a mission with no ally taking any damage',   badge: 'ghost',    color: '#44aacc' },
+  { id: 'solo_mission',      cat: 'feats', name: 'Lone Shadow',        desc: 'Complete a mission with a single ninja',               badge: 'lone',     color: '#aa44cc' },
+  { id: 'solo_arc',          cat: 'feats', name: 'One Against All',    desc: 'Complete an entire Arc with the same single ninja',    badge: 'solosarc', color: '#ff4444' },
+  { id: 'flawless_solo',     cat: 'feats', name: 'Perfect Phantom',    desc: 'Complete a mission alone and without taking damage',   badge: 'phantom',  color: '#22ddaa' },
+  { id: 'no_kills',          cat: 'feats', name: 'Mercy Path',         desc: 'Complete a non-assassination mission with 0 kills',    badge: 'mercy',    color: '#44cc88' },
+  { id: 'speed_run',         cat: 'feats', name: 'Like Wind',          desc: 'Complete a mission in 5 turns or fewer',              badge: 'wind',     color: '#88ccff' },
+  { id: 'full_squad',        cat: 'feats', name: 'Shadow Triad',       desc: 'Complete a mission with all 3 squad slots filled',     badge: 'triad',    color: '#cc9922' },
+
+  // ── ARC COMPLETIONS ──
+  { id: 'arc1_complete', cat: 'arcs', name: "Shadow's First Blood",  desc: 'Complete Arc 1',   badge: 'arc1', color: '#886644' },
+  { id: 'arc2_complete', cat: 'arcs', name: 'Shadow of the Coast',   desc: 'Complete Arc 2',   badge: 'arc2', color: '#446688' },
+  { id: 'arc3_complete', cat: 'arcs', name: 'Mountain Shadow',       desc: 'Complete Arc 3',   badge: 'arc3', color: '#557744' },
+  { id: 'arc4_complete', cat: 'arcs', name: 'Shadow of the Palace',  desc: 'Complete Arc 4',   badge: 'arc4', color: '#774455' },
+  { id: 'arc5_complete', cat: 'arcs', name: 'The Grand Shadow',      desc: 'Complete Arc 5',   badge: 'arc5', color: '#885522' },
+
+  // ── KILL MILESTONES ──
+  { id: 'kills_10',   cat: 'milestones', name: 'Drawing Blood',     desc: '10 total enemy defeats',    badge: 'blade10',  color: '#aa5533' },
+  { id: 'kills_50',   cat: 'milestones', name: 'Seasoned Blade',    desc: '50 total enemy defeats',    badge: 'blade50',  color: '#cc6633' },
+  { id: 'kills_100',  cat: 'milestones', name: 'Blood Debt',        desc: '100 total enemy defeats',   badge: 'blade100', color: '#dd3333' },
+  { id: 'kills_250',  cat: 'milestones', name: 'Shadow Reaper',     desc: '250 total enemy defeats',   badge: 'reaper',   color: '#882222' },
+
+  // ── CLASS FEATS ──
+  { id: 'class_shinobi',   cat: 'class', name: 'Born In Shadow',   desc: 'Recruit or play a Shinobi',          badge: 'shinobi',   color: '#5a5a8a' },
+  { id: 'class_kunoichi',  cat: 'class', name: 'Poison Bloom',     desc: 'Recruit or play a Kunoichi',         badge: 'kunoichi',  color: '#c87820' },
+  { id: 'class_ronin',     cat: 'class', name: 'Masterless Blade', desc: 'Recruit or play a Ronin',            badge: 'ronin',     color: '#6a5a2a' },
+  { id: 'class_monk',      cat: 'class', name: 'Still Water',      desc: 'Recruit or play a Monk',             badge: 'monk',      color: '#2a6a4a' },
+  { id: 'class_shadow',    cat: 'class', name: 'Void Walker',      desc: 'Recruit or play a Shadow',           badge: 'shadow',    color: '#2a2a5a' },
+  { id: 'class_berserker', cat: 'class', name: 'Unbroken Fury',    desc: 'Recruit or play a Berserker',        badge: 'berserker', color: '#6a2a2a' },
+  { id: 'all_classes',     cat: 'class', name: 'Full Spectrum',    desc: 'Have all 6 classes in your clan',    badge: 'rainbow',   color: '#ddaa22' },
+
+  // ── SPECIAL MOVES ──
+  { id: 'special_first',   cat: 'combat', name: 'Chi Awakens',     desc: 'Use your first special move in combat',     badge: 'chi',      color: '#4488cc' },
+  { id: 'first_poison',    cat: 'combat', name: 'Tainted Touch',   desc: 'Poison an enemy for the first time',        badge: 'poison',   color: '#44aa44' },
+  { id: 'first_stealth_kill', cat: 'combat', name: 'Ghost Strike',  desc: 'Land a stealth first-strike bonus hit',    badge: 'stealth',  color: '#223355' },
+  { id: 'first_execute',   cat: 'combat', name: 'Final Breath',    desc: 'Execute an enemy with Silent Kill',          badge: 'execute',  color: '#881111' },
+  { id: 'first_revive',    cat: 'combat', name: 'Back From The Edge', desc: 'Revive a doomed ally in combat',          badge: 'revive',   color: '#22aa66' },
+  { id: 'fire_set',        cat: 'combat', name: 'Arsonist',        desc: 'Set fire to an objective for the first time',badge: 'fire',     color: '#cc5511' },
+  { id: 'loot_collected',  cat: 'combat', name: 'Spoils of War',   desc: 'Collect your first gold bag in combat',      badge: 'gold',     color: '#ddaa22' },
+
+  // ── CLAN MILESTONES ──
+  { id: 'clan_3',   cat: 'clan', name: 'A Small Clan',   desc: 'Have 3 ninja in your clan',    badge: 'clan3',  color: '#446655' },
+  { id: 'clan_6',   cat: 'clan', name: 'Growing Shadow', desc: 'Have 6 ninja in your clan',    badge: 'clan6',  color: '#557766' },
+  { id: 'level5',   cat: 'clan', name: 'Veteran',        desc: 'Raise a ninja to level 5',     badge: 'vet',    color: '#886633' },
+  { id: 'first_recruit', cat: 'clan', name: 'Strength In Numbers', desc: 'Recruit your second ninja', badge: 'recruit', color: '#446688' },
+];
+
+// Category labels shown in the hall
+const ACH_CATEGORIES = {
+  first_blood: { label: '⚔ First Blood — Enemy Encounters', order: 1 },
+  feats:       { label: '🌑 Mission Feats',                  order: 2 },
+  arcs:        { label: '⛩ Arc Completions',                 order: 3 },
+  milestones:  { label: '💀 Kill Milestones',                 order: 4 },
+  combat:      { label: '☯ Combat Arts',                     order: 5 },
+  class:       { label: '🥷 Class Chronicles',               order: 6 },
+  clan:        { label: '🏯 Clan Legacy',                    order: 7 },
+};
+
+// Ensure GS has achievements arrays; called after loadGame
+function initAchievements() {
+  if (!GS.achievements) GS.achievements = [];
+  if (!GS.achievementStats) GS.achievementStats = {};
+  const st = GS.achievementStats;
+  if (!st.killsByType)  st.killsByType  = {};
+  if (!st.totalKills)   st.totalKills   = 0;
+  if (!st.classesUsed)  st.classesUsed  = [];
+  if (!st.soloMissions) st.soloMissions = [];  // mission ids completed solo
+  // Check class achievements for existing clan members on load
+  _checkClassAchievements();
+  _checkClanSizeAchievements();
+}
+
+function _hasAch(id)  { return (GS.achievements || []).includes(id); }
+
+function _earnAch(id) {
+  if (_hasAch(id)) return;
+  const def = ACHIEVEMENTS.find(a => a.id === id);
+  if (!def) return;
+  GS.achievements.push(id);
+  // Toast notification with badge colours
+  const earned = GS.achievements.length;
+  const total  = ACHIEVEMENTS.length;
+  toast(`🏅 Achievement: ${def.name}  (${earned}/${total})`, 'success');
+  addLog(`🏅 Achievement unlocked: ${def.name} — ${def.desc}`, 'special');
+  saveGame();
+}
+
+function _checkClassAchievements() {
+  const classes = new Set(GS.clan.map(n => n.class));
+  ['shinobi','kunoichi','ronin','monk','shadow','berserker'].forEach(c => {
+    if (classes.has(c)) _earnAch('class_' + c);
+  });
+  if (classes.size >= 6) _earnAch('all_classes');
+}
+
+function _checkClanSizeAchievements() {
+  if (GS.clan.length >= 2) _earnAch('first_recruit');
+  if (GS.clan.length >= 3) _earnAch('clan_3');
+  if (GS.clan.length >= 6) _earnAch('clan_6');
+}
+
+// Called from recordKill — checks first-kill and milestone achievements
+function achOnEnemyKill(enemyTypeKey) {
+  if (!GS.achievementStats) initAchievements();
+  const st = GS.achievementStats;
+  if (!st.killsByType) st.killsByType = {};
+  st.killsByType[enemyTypeKey] = (st.killsByType[enemyTypeKey] || 0) + 1;
+  st.totalKills = (st.totalKills || 0) + 1;
+
+  // First kill achievements
+  const firstKillMap = {
+    guard: 'kill_guard', patrol_guard: 'kill_patrol_guard',
+    elite_guard: 'kill_elite_guard', captain: 'kill_captain',
+    advisor: 'kill_advisor', scribe: 'kill_scribe',
+    jailer: 'kill_jailer', thug: 'kill_thug',
+    boss_thug: 'kill_boss_thug', collector: 'kill_collector',
+    bounty_hunter: 'kill_bounty_hunter', kunoichi_boss: 'kill_kunoichi_boss',
+    warlord: 'kill_warlord',
+  };
+  if (firstKillMap[enemyTypeKey]) _earnAch(firstKillMap[enemyTypeKey]);
+
+  // Kill milestones
+  const t = st.totalKills;
+  if (t >= 10)  _earnAch('kills_10');
+  if (t >= 50)  _earnAch('kills_50');
+  if (t >= 100) _earnAch('kills_100');
+  if (t >= 250) _earnAch('kills_250');
+}
+
+// Called at end of mission victory — checks feats
+function achOnVictory(mission, partySize, turnCount) {
+  if (!GS.achievementStats) initAchievements();
+  const st = GS.achievementStats;
+
+  // Full squad
+  if (partySize >= 3) _earnAch('full_squad');
+
+  // Speed run (5 turns or fewer)
+  if (turnCount <= 5) _earnAch('speed_run');
+
+  // No kills (non-assassination)
+  if (mission.type !== 'assassination' && CS.missionStats?.totalKills === 0) _earnAch('no_kills');
+
+  // Flawless — no ally took any damage
+  if (!CS.missionStats?.alliesTookDamage) {
+    _earnAch('flawless_mission');
+    if (partySize === 1) _earnAch('flawless_solo');
+  }
+
+  // Solo arc check
+  if (partySize === 1) {
+    _earnAch('solo_mission');
+    if (!st.soloMissions) st.soloMissions = [];
+    if (mission.id && !st.soloMissions.includes(mission.id)) st.soloMissions.push(mission.id);
+
+    // Check solo arc — did we complete ALL missions in an arc solo?
+    // (mission.id is already in completedMissions when this runs for non-dynamic missions)
+    const tentativeCompleted = new Set([...(GS.completedMissions || []), mission.id]);
+    STORY_ARCS.forEach(arc => {
+      if (_hasAch('arc' + arc.arc + '_solo_internal')) return;
+      const allDone = arc.ids.every(id => tentativeCompleted.has(id));
+      const allSolo = arc.ids.every(id => st.soloMissions.includes(id));
+      if (allDone && allSolo) {
+        _earnAch('solo_arc');
+        if (!GS.achievements.includes('arc' + arc.arc + '_solo_internal'))
+          GS.achievements.push('arc' + arc.arc + '_solo_internal');
+      }
+    });
+  }
+} // end achOnVictory
+
+// ── BADGE RENDERER ──
+// Draws a themed SVG-style badge on a canvas element.
+// Each badge has a unique shape + icon combination.
+function drawBadge(canvas, achId, earned) {
+  const def   = ACHIEVEMENTS.find(a => a.id === achId);
+  if (!def) return;
+  const ctx   = canvas.getContext('2d');
+  const W     = canvas.width, H = canvas.height;
+  const cx    = W / 2, cy = H / 2;
+  const R     = Math.min(W, H) * 0.44;
+  ctx.clearRect(0, 0, W, H);
+
+  const col   = earned ? def.color : '#333344';
+  const alpha = earned ? 1 : 0.45;
+  ctx.globalAlpha = alpha;
+
+  // ── Outer ring shape (category determines shape) ──
+  const shapeFn = {
+    first_blood: () => _drawHexBadge(ctx, cx, cy, R, col, earned),
+    feats:       () => _drawStarBadge(ctx, cx, cy, R, col, earned),
+    arcs:        () => _drawDiamondBadge(ctx, cx, cy, R, col, earned),
+    milestones:  () => _drawShieldBadge(ctx, cx, cy, R, col, earned),
+    combat:      () => _drawCircleBadge(ctx, cx, cy, R, col, earned),
+    class:       () => _drawOctBadge(ctx, cx, cy, R, col, earned),
+    clan:        () => _drawScrollBadge(ctx, cx, cy, R, col, earned),
+  }[def.cat] || (() => _drawCircleBadge(ctx, cx, cy, R, col, earned));
+  shapeFn();
+
+  // ── Inner icon ──
+  const iconSize = Math.round(R * 0.72);
+  const iconMap = {
+    shield: '🛡️', patrol: '🗡️', elite: '⚔️', captain: '👑', advisor: '🧙',
+    scroll: '📜', key: '🔑', fist: '🥊', bigfist: '💪', coin: '🪙',
+    target: '🎯', rival: '🐡', warlord: '👹', ghost: '👻', lone: '🌑',
+    solosarc: '⭐', phantom: '✨', mercy: '🌿', wind: '💨', triad: '⛩',
+    arc1: '①', arc2: '②', arc3: '③', arc4: '④', arc5: '⑤',
+    blade10: '🗡️', blade50: '⚔️', blade100: '💀', reaper: '☠️',
+    shinobi: '🥷', kunoichi: '🐡', ronin: '⚔️', monk: '☯️',
+    shadow: '🌑', berserker: '💢', rainbow: '🌈',
+    chi: '☯️', poison: '☠️', stealth: '🌒', execute: '💀',
+    revive: '💊', fire: '🔥', gold: '💰',
+    clan3: '🏯', clan6: '🏰', vet: '⭐', recruit: '⊕',
+  };
+  const icon = iconMap[def.badge] || '●';
+  ctx.font = `${iconSize}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.globalAlpha = earned ? 0.92 : 0.25;
+  ctx.fillText(icon, cx, cy + iconSize * 0.04);
+
+  // ── Earned glow ring ──
+  if (earned) {
+    ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 3, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Shape helpers
+function _hexPoints(cx, cy, R) {
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i - Math.PI / 6;
+    pts.push([cx + R * Math.cos(a), cy + R * Math.sin(a)]);
+  }
+  return pts;
+}
+function _polyPath(ctx, pts) {
+  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+  pts.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.closePath();
+}
+function _drawHexBadge(ctx, cx, cy, R, col, earned) {
+  const pts = _hexPoints(cx, cy, R);
+  _polyPath(ctx, pts);
+  ctx.fillStyle = earned ? col + '22' : '#22222a';
+  ctx.fill();
+  ctx.strokeStyle = earned ? col : '#444455';
+  ctx.lineWidth = 2.5; ctx.stroke();
+  // Inner hex
+  const innerPts = _hexPoints(cx, cy, R * 0.82);
+  _polyPath(ctx, innerPts);
+  ctx.strokeStyle = earned ? col + '88' : '#33334455'; ctx.lineWidth = 1; ctx.stroke();
+}
+function _drawStarBadge(ctx, cx, cy, R, col, earned) {
+  const pts = [], n = 5, ir = R * 0.46;
+  for (let i = 0; i < n * 2; i++) {
+    const a = (Math.PI / n) * i - Math.PI / 2;
+    const r = i % 2 === 0 ? R : ir;
+    pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+  }
+  _polyPath(ctx, pts);
+  ctx.fillStyle = earned ? col + '22' : '#22222a'; ctx.fill();
+  ctx.strokeStyle = earned ? col : '#444455'; ctx.lineWidth = 2.5; ctx.stroke();
+}
+function _drawDiamondBadge(ctx, cx, cy, R, col, earned) {
+  ctx.beginPath(); ctx.moveTo(cx, cy - R); ctx.lineTo(cx + R * 0.7, cy);
+  ctx.lineTo(cx, cy + R); ctx.lineTo(cx - R * 0.7, cy); ctx.closePath();
+  ctx.fillStyle = earned ? col + '22' : '#22222a'; ctx.fill();
+  ctx.strokeStyle = earned ? col : '#444455'; ctx.lineWidth = 2.5; ctx.stroke();
+}
+function _drawShieldBadge(ctx, cx, cy, R, col, earned) {
+  const t = cy - R, b = cy + R, l = cx - R * 0.75, r2 = cx + R * 0.75;
+  ctx.beginPath(); ctx.moveTo(l, t); ctx.lineTo(r2, t);
+  ctx.lineTo(r2, cy); ctx.quadraticCurveTo(r2, b, cx, b);
+  ctx.quadraticCurveTo(l, b, l, cy); ctx.lineTo(l, t); ctx.closePath();
+  ctx.fillStyle = earned ? col + '22' : '#22222a'; ctx.fill();
+  ctx.strokeStyle = earned ? col : '#444455'; ctx.lineWidth = 2.5; ctx.stroke();
+}
+function _drawCircleBadge(ctx, cx, cy, R, col, earned) {
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.fillStyle = earned ? col + '22' : '#22222a'; ctx.fill();
+  ctx.strokeStyle = earned ? col : '#444455'; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.82, 0, Math.PI * 2);
+  ctx.strokeStyle = earned ? col + '66' : '#33334455'; ctx.lineWidth = 1; ctx.stroke();
+}
+function _drawOctBadge(ctx, cx, cy, R, col, earned) {
+  const pts = [];
+  for (let i = 0; i < 8; i++) {
+    const a = (Math.PI / 4) * i - Math.PI / 8;
+    pts.push([cx + R * Math.cos(a), cy + R * Math.sin(a)]);
+  }
+  _polyPath(ctx, pts);
+  ctx.fillStyle = earned ? col + '22' : '#22222a'; ctx.fill();
+  ctx.strokeStyle = earned ? col : '#444455'; ctx.lineWidth = 2.5; ctx.stroke();
+}
+function _drawScrollBadge(ctx, cx, cy, R, col, earned) {
+  const rw = R * 0.8, rh = R * 0.9;
+  ctx.beginPath();
+  ctx.roundRect(cx - rw, cy - rh, rw * 2, rh * 2, R * 0.18);
+  ctx.fillStyle = earned ? col + '22' : '#22222a'; ctx.fill();
+  ctx.strokeStyle = earned ? col : '#444455'; ctx.lineWidth = 2.5; ctx.stroke();
+  // Scroll curl lines
+  ctx.strokeStyle = earned ? col + '55' : '#33334455'; ctx.lineWidth = 1;
+  [-0.5, 0, 0.5].forEach(oy => {
+    ctx.beginPath(); ctx.moveTo(cx - rw * 0.55, cy + oy * rh * 0.45);
+    ctx.lineTo(cx + rw * 0.55, cy + oy * rh * 0.45); ctx.stroke();
+  });
+}
+
+// ── HONORS HALL RENDERER ──
+function renderHonors() {
+  if (!GS.achievements) initAchievements();
+  const el = document.getElementById('section-honors');
+  if (!el) return;
+
+  const earned    = GS.achievements.length;
+  const total     = ACHIEVEMENTS.length;
+  const pct       = Math.round((earned / total) * 100);
+  const totalKills= GS.achievementStats?.totalKills || 0;
+
+  // Group by category
+  const byCat = {};
+  ACHIEVEMENTS.forEach(a => {
+    if (!byCat[a.cat]) byCat[a.cat] = [];
+    byCat[a.cat].push(a);
+  });
+
+  const cats = Object.entries(ACH_CATEGORIES).sort((a,b) => a[1].order - b[1].order);
+
+  let html = `
+    <div class="honors-hall">
+      <div class="honors-title">⛩ Hall of Shadows ⛩</div>
+      <div class="honors-subtitle">WHERE DEEDS ARE CARVED IN DARKNESS</div>
+      <div class="honors-summary">
+        <div class="honors-stat"><div class="honors-stat-num">${earned}</div><div class="honors-stat-lbl">Earned</div></div>
+        <div class="honors-stat"><div class="honors-stat-num">${total}</div><div class="honors-stat-lbl">Total</div></div>
+        <div class="honors-stat"><div class="honors-stat-num">${pct}%</div><div class="honors-stat-lbl">Complete</div></div>
+        <div class="honors-stat"><div class="honors-stat-num">${totalKills}</div><div class="honors-stat-lbl">Kills</div></div>
+      </div>`;
+
+  cats.forEach(([catKey, catDef]) => {
+    const achs = byCat[catKey];
+    if (!achs) return;
+    const catEarned = achs.filter(a => GS.achievements.includes(a.id)).length;
+    html += `
+      <div class="honors-category">
+        <div class="honors-cat-title">${catDef.label} <span style="color:var(--mist);font-size:0.58rem;font-family:sans-serif;font-weight:normal">(${catEarned}/${achs.length})</span></div>
+        <div class="badge-grid" id="badge-grid-${catKey}">`;
+    achs.forEach(a => {
+      const isEarned = GS.achievements.includes(a.id);
+      html += `
+        <div class="badge-card ${isEarned ? 'earned' : ''}" id="badge-${a.id}">
+          <canvas class="badge-canvas" width="60" height="60" data-ach="${a.id}" data-earned="${isEarned}"></canvas>
+          <div class="badge-name">${a.name}</div>
+          ${!isEarned ? '<div class="badge-locked-overlay">🔒</div>' : ''}
+          <div class="badge-tooltip">${a.desc}</div>
+        </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  el.innerHTML = html;
+
+  // Render all badges via canvas after DOM is updated
+  requestAnimationFrame(() => {
+    el.querySelectorAll('canvas[data-ach]').forEach(canvas => {
+      const id     = canvas.dataset.ach;
+      const isEarned = canvas.dataset.earned === 'true';
+      drawBadge(canvas, id, isEarned);
+    });
+  });
+}
+
 // CS.missionStats tracks per-mission events for rep calculation
 function initMissionStats() {
   CS.missionStats = {
@@ -2516,6 +2948,7 @@ function initMissionStats() {
     totalKills: 0,
     nonTargetKills: 0,       // kills that weren't the assassination target
     alliesAlerted: false,    // were enemies ever alerted?
+    alliesTookDamage: false, // did any ally take any damage this mission?
   };
 }
 
@@ -2538,6 +2971,8 @@ function recordKill(target) {
   if (CS.mission?.type === 'assassination' && !target.isTarget) {
     CS.missionStats.nonTargetKills++;
   }
+  // Achievement tracking
+  if (target.type) achOnEnemyKill(target.type);
 }
 
 // Called in endCombat to apply end-of-mission reputation
@@ -2931,11 +3366,13 @@ let GS = {
   weaponStash: [],
   equippedCostume: null,
   shopStock: { weapons: [], items: [] },
-  activeMissions: [],        // dynamically generated missions
-  missionNextRefresh: 0,     // timestamp of next auto-refresh
-  reputation: { stealth: 0, honor: 0 },  // shadow reputation
-  recruitRoster: [],         // available-for-hire ninja
-  recruitNextRefresh: 0      // timestamp of next roster refresh
+  activeMissions: [],
+  missionNextRefresh: 0,
+  reputation: { stealth: 0, honor: 0 },
+  recruitRoster: [],
+  recruitNextRefresh: 0,
+  achievements: [],          // array of earned achievement ids
+  achievementStats: {}       // running counters: kills per enemy type, total kills, etc.
 };
 
 // ==========================================
@@ -3054,6 +3491,209 @@ const TILE_PNG = {
 function tilePng(tileKey) {
   return TILE_PNG[tileKey] || 'tile_stone_floor.png';
 }
+
+// ═══════════════════════════════════════════════════════
+// ── SOUND EFFECTS SYSTEM ──
+// All audio is loaded lazily from a "sounds/" folder next to the HTML file.
+// If AudioContext is unavailable or any file is missing the system silently
+// falls back to a no-op so gameplay is never interrupted.
+//
+// FILE LIST (place all .mp3 files in a "sounds/" folder):
+//
+//  WEAPON ATTACKS
+//  sfx_blade_hit.mp3       — Blades weapon strike (kunai, wakizashi, ninjato, Shadow Fang, Dragon's Edge)
+//  sfx_blunt_hit.mp3       — Blunt/melee weapon strike (manriki, tsuruhashi, motayu, kanazuchi, sasumata)
+//  sfx_bow_shoot.mp3       — Ranged bow/crossbow fire (shortbow, longbow, crossbow, Spirit Bow, Phoenix's Call)
+//  sfx_throw_whoosh.mp3    — Thrown weapon launch (shuriken, kunai set, explosive tags, wind stars, shadow needles)
+//  sfx_unarmed_hit.mp3     — Unarmed/fist strike (when weapon broken or empty)
+//
+//  SPECIAL MOVES
+//  sfx_special_chi.mp3       — Chi Blast (chi_bolt), Void Strike (void_bolt)
+//  sfx_special_heal.mp3      — Healing Touch (heal_ally), Calm Mind / meditate
+//  sfx_special_smoke.mp3     — Smoke Screen (blind_all), Dark Shroud (darkness)
+//  sfx_special_vanish.mp3    — Vanish (invisible)
+//  sfx_special_clone.mp3     — Shadow Clone (decoy), Mirror Image (mirror)
+//  sfx_special_stomp.mp3     — Earthquake Stomp (stomp)
+//  sfx_special_spin.mp3      — Whirlwind Cut (spin_attack)
+//  sfx_special_throw_fan.mp3 — Fan of Knives (aoe_thrown), Shuriken Storm (multi_thrown)
+//  sfx_special_poison.mp3    — Poison Dart (poison effect)
+//  sfx_special_paralyze.mp3  — Pressure Point (paralyze), Seduction (stun special)
+//  sfx_special_drain.mp3     — Soul Drain (life_drain)
+//  sfx_special_teleport.mp3  — Phase Walk / Teleport (teleport)
+//  sfx_special_confuse.mp3   — Nightmare (confuse)
+//  sfx_special_execute.mp3   — Assassination Strike (triple_dmg), Silent Kill (execute), Honor Slash (heavy_strike)
+//  sfx_special_charge.mp3    — Reckless Charge (charge)
+//  sfx_special_rage.mp3      — Rage (rage), Last Stand (last_stand), Bloodlust (bloodlust)
+//  sfx_special_defend.mp3    — Steel Resolve (defend), Iron Body (iron_body), Counter Strike (counter)
+//  sfx_special_battle_cry.mp3 — Battle Cry (battle_cry)
+//
+//  STATUS TICKS
+//  sfx_status_poison.mp3   — Poison damage tick (per turn)
+//  sfx_status_bleed.mp3    — Bleed damage tick (per turn)
+//  sfx_fire_damage.mp3     — Fire damage tick (standing in flames, per turn)
+//
+//  COMBAT EVENTS
+//  sfx_combat_miss.mp3         — Attack miss or cover deflect (ranged blocked by terrain)
+//  sfx_combat_crit.mp3         — Big hit (damage ≥ 30) floating number "crit" style
+//  sfx_combat_death_enemy.mp3  — Enemy unit defeated / killed
+//  sfx_combat_death_ally.mp3   — Ally down (doomed), ally perished permanently
+//  sfx_combat_counter.mp3      — Counter-attack triggered (triggerReaction counter/nullify/dodge)
+//
+//  TERRAIN MOVEMENT
+//  sfx_terrain_water.mp3   — Ally steps onto a water tile (≈)
+//  sfx_terrain_rubble.mp3  — Ally steps onto a rubble tile (∷)
+//  sfx_terrain_forest.mp3  — Ally steps into a forest tile (🌲)
+//
+//  OBJECTIVE / FIRE
+//  sfx_objective_fire.mp3     — Fire objective completed (torch set, fire ignited)
+//  sfx_objective_complete.mp3 — Intel copied, sabotage done, evidence planted
+//  sfx_fire_spread.mp3        — Fire expands to a new ring of tiles
+//
+//  MISSION EVENTS
+//  sfx_mission_start.mp3   — Combat mission begins (allies deployed)
+//  sfx_mission_victory.mp3 — Mission victory
+//  sfx_mission_defeat.mp3  — Mission defeat
+//  sfx_mission_escape.mp3  — Ally escapes through exit tile
+//  sfx_mission_floor.mp3   — Multi-floor advance (next floor reached)
+//
+//  UI / PROGRESSION
+//  sfx_unit_levelup.mp3    — Ally levels up
+//  sfx_loot_pickup.mp3     — Gold bag or loot item picked up
+//  sfx_recruit_join.mp3    — New ninja recruited / joins clan
+//  sfx_ui_turn_start.mp3   — Ally's turn begins (player phase)
+// ═══════════════════════════════════════════════════════
+
+const SFX = (() => {
+  let _ctx = null;
+  let _enabled = true;
+  const _cache = {};   // filename → AudioBuffer
+  const _loading = {}; // filename → Promise<AudioBuffer|null>
+
+  // Attempt to get (or lazily create) the AudioContext
+  function _getCtx() {
+    if (!_enabled) return null;
+    if (_ctx) return _ctx;
+    try {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) { _enabled = false; return null; }
+      _ctx = new Ctor();
+      return _ctx;
+    } catch (e) {
+      _enabled = false;
+      return null;
+    }
+  }
+
+  // Lazy-load and cache a single file. Returns a promise that always resolves
+  // (never rejects) — resolves to the AudioBuffer, or null on error/absence.
+  function _load(filename) {
+    if (_cache[filename]) return Promise.resolve(_cache[filename]);
+    if (_loading[filename]) return _loading[filename];
+    const ctx = _getCtx();
+    if (!ctx) return Promise.resolve(null);
+
+    const url = 'sounds/' + filename;
+    _loading[filename] = fetch(url)
+      .then(r => {
+        if (!r.ok) return null; // file absent — silent failure
+        return r.arrayBuffer();
+      })
+      .then(ab => {
+        if (!ab) return null;
+        return ctx.decodeAudioData(ab).catch(() => null);
+      })
+      .then(buf => {
+        if (buf) _cache[filename] = buf;
+        delete _loading[filename];
+        return buf || null;
+      })
+      .catch(() => { delete _loading[filename]; return null; });
+
+    return _loading[filename];
+  }
+
+  // Public: play a sound file. Silently does nothing if file missing or audio off.
+  // volume: 0.0–1.0 (default 1.0)
+  function play(filename, volume) {
+    if (!_enabled) return;
+    const ctx = _getCtx();
+    if (!ctx) return;
+    // Resume context if suspended (browser autoplay policy)
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    _load(filename).then(buf => {
+      if (!buf) return;
+      try {
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        if (volume !== undefined && volume !== 1) {
+          const gain = ctx.createGain();
+          gain.gain.value = Math.max(0, Math.min(1, volume));
+          src.connect(gain);
+          gain.connect(ctx.destination);
+        } else {
+          src.connect(ctx.destination);
+        }
+        src.start(0);
+      } catch (e) { /* swallow — never break gameplay */ }
+    });
+  }
+
+  // Pre-warm the AudioContext on first user interaction (satisfies autoplay policy)
+  function prewarm() {
+    const ctx = _getCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+  }
+
+  // Warm-up on any user gesture so subsequent calls never require resume
+  ['click','keydown','touchstart'].forEach(ev =>
+    document.addEventListener(ev, prewarm, { once: true, passive: true })
+  );
+
+  return { play, prewarm };
+})();
+
+// Convenience: map weapon type key → sfx filename
+const WEAPON_SFX = {
+  blades:  'sfx_blade_hit.mp3',
+  blunt:   'sfx_blunt_hit.mp3',
+  ranged:  'sfx_bow_shoot.mp3',
+  thrown:  'sfx_throw_whoosh.mp3',
+};
+
+// Map special-move effect → sfx filename
+const SPECIAL_SFX = {
+  chi_bolt:     'sfx_special_chi.mp3',
+  void_bolt:    'sfx_special_chi.mp3',
+  heal_ally:    'sfx_special_heal.mp3',
+  meditate:     'sfx_special_heal.mp3',
+  blind_all:    'sfx_special_smoke.mp3',
+  darkness:     'sfx_special_smoke.mp3',
+  invisible:    'sfx_special_vanish.mp3',
+  decoy:        'sfx_special_clone.mp3',
+  mirror:       'sfx_special_clone.mp3',
+  stomp:        'sfx_special_stomp.mp3',
+  spin_attack:  'sfx_special_spin.mp3',
+  aoe_thrown:   'sfx_special_throw_fan.mp3',
+  multi_thrown: 'sfx_special_throw_fan.mp3',
+  poison:       'sfx_special_poison.mp3',
+  paralyze:     'sfx_special_paralyze.mp3',
+  stun:         'sfx_special_paralyze.mp3',
+  life_drain:   'sfx_special_drain.mp3',
+  teleport:     'sfx_special_teleport.mp3',
+  phase_walk:   'sfx_special_teleport.mp3',
+  confuse:      'sfx_special_confuse.mp3',
+  triple_dmg:   'sfx_special_execute.mp3',
+  execute:      'sfx_special_execute.mp3',
+  heavy_strike: 'sfx_special_execute.mp3',
+  charge:       'sfx_special_charge.mp3',
+  rage:         'sfx_special_rage.mp3',
+  last_stand:   'sfx_special_rage.mp3',
+  bloodlust:    'sfx_special_rage.mp3',
+  defend:       'sfx_special_defend.mp3',
+  iron_body:    'sfx_special_defend.mp3',
+  counter:      'sfx_special_defend.mp3',
+  battle_cry:   'sfx_special_battle_cry.mp3',
+};
 
 let CS = {
   active: false,
@@ -3250,6 +3890,7 @@ function loadGame() {
     try {
       GS = JSON.parse(saved);
       _gameActive = true;
+      initAchievements();
       showScreen('hub');
       showHubSection('clan');
       toast('Game loaded! Welcome back, Shadow.');
@@ -3337,6 +3978,8 @@ function createCharacter() {
   GS.shopStock.weapons = generateShopWeapons();
   GS.shopStock.items = generateShopItems();
   _gameActive = true;
+  initAchievements();
+  _checkClassAchievements();
   saveGame();
   showScreen('hub');
   showHubSection('clan');
@@ -3352,7 +3995,8 @@ function renderHubSection(id) {
     clan: renderClan, missions: renderMissions, training: renderTraining,
     recruit: renderRecruitShop, jobs: renderJobShop,
     weaponShop: renderWeaponShop, itemShop: renderItemShop,
-    exchange: renderExchange, codex: renderCodex
+    exchange: renderExchange, codex: renderCodex,
+    honors: renderHonors
   };
   if (fns[id]) fns[id]();
 }
@@ -3507,6 +4151,9 @@ function hireNinja(id) {
   saveGame();
   updateGoldDisplay();
   toast(ninja.name + ' joins your clan!', 'success');
+  SFX.play('sfx_recruit_join.mp3');
+  _checkClassAchievements();
+  _checkClanSizeAchievements();
   renderRecruitShop();
   renderClan();
 }
@@ -3580,6 +4227,9 @@ function openCustomRecruitModal() {
         GS.clan.push(ninja);
         saveGame(); updateGoldDisplay(); closeModal();
         toast(name + ' joins your clan!', 'success');
+        SFX.play('sfx_recruit_join.mp3');
+        _checkClassAchievements();
+        _checkClanSizeAchievements();
         renderClan(); renderRecruitShop();
       }, cls: 'confirm' },
       { label: 'Cancel', fn: closeModal, cls: '' }
@@ -4196,26 +4846,32 @@ const FORMATIONS = {
   line:    { label: 'Line',    icon: '▮▮▮', desc: 'Stacked column. All advance together.',
              positions: (n, h) => Array.from({length: n}, (_, i) => ({
                x: 1,
-               y: Math.max(1, Math.min(h - 2, Math.floor(h/2) - Math.floor(n/2) + i))
+               y: Math.max(2, Math.min(h - 3, Math.floor(h/2) - Math.floor(n/2) + i))
              })) },
   wedge:   { label: 'Wedge',   icon: '◀▮▷', desc: 'Leader at front, flanks offset behind.',
              positions: (n, h) => {
                const mid = Math.floor(h/2);
-               const clamp = (y) => Math.max(1, Math.min(h - 2, y));
+               const clamp = (y) => Math.max(2, Math.min(h - 3, y));
                const pts = [{ x: 1, y: clamp(mid) }];
                if (n > 1) pts.push({ x: 2, y: clamp(mid - 1) });
                if (n > 2) pts.push({ x: 2, y: clamp(mid + 1) });
                return pts.slice(0, n);
              }},
   spread:  { label: 'Spread',  icon: '▮ ▮ ▮', desc: 'Wide spread across the flank.',
-             positions: (n, h) => Array.from({length: n}, (_, i) => ({
-               x: 1 + (i % 2),
-               y: Math.max(1, Math.min(h - 3, 1 + Math.floor(i * (h - 3) / Math.max(1, n - 1))))
-             })) },
+             positions: (n, h) => {
+               // Distribute evenly across the interior rows (y=2 to h-3), x alternates 1 and 2
+               // Never touches y=1 or y=h-2 (often walls in structured maps)
+               const minY = 2, maxY = h - 3;
+               const span = maxY - minY;
+               return Array.from({length: n}, (_, i) => ({
+                 x: 1 + (i % 2),
+                 y: n === 1 ? Math.floor(h / 2) : Math.max(minY, Math.min(maxY, Math.round(minY + (i / (n - 1)) * span)))
+               }));
+             }},
   stagger: { label: 'Stagger', icon: '▮▮ ▮', desc: 'Alternating depth for flanking options.',
              positions: (n, h) => Array.from({length: n}, (_, i) => ({
                x: 1 + (i % 2),
-               y: Math.max(1, Math.min(h - 2, Math.floor(h/2) - Math.floor(n/2) + i))
+               y: Math.max(2, Math.min(h - 3, Math.floor(h/2) - Math.floor(n/2) + i))
              })) },
 };
 
@@ -4546,17 +5202,26 @@ function placeObjectiveTiles(grid, objType, count) {
     candidates = buildCandidates(2, W - 2);
   }
 
-  // Shuffle and pick 'count' well-spread tiles (spacing >= 3)
+  // Shuffle and pick 'count' well-spread tiles
+  // Fire tiles need extra spacing (>= FIRE_MAX_RADIUS*2+2) so no fire consumes another's ignition square
+  const _fireSpacing = objType === 'fire' ? (FIRE_MAX_RADIUS * 2 + 2) : 3;
   candidates.sort(() => Math.random() - 0.5);
   const chosen = [];
   for (const c of candidates) {
-    const tooClose = chosen.some(t => Math.abs(t.x - c.x) + Math.abs(t.y - c.y) < 3);
+    const tooClose = chosen.some(t => Math.abs(t.x - c.x) + Math.abs(t.y - c.y) < _fireSpacing);
     if (!tooClose) {
       chosen.push(c);
       if (chosen.length >= count) break;
     }
   }
-  // If still not enough with spacing=3, relax to 1
+  // If still not enough with fire spacing, fall back to standard spacing
+  if (chosen.length < count && objType === 'fire') {
+    for (const c of candidates) {
+      const tooClose = chosen.some(t => Math.abs(t.x - c.x) + Math.abs(t.y - c.y) < 3);
+      if (!tooClose) { chosen.push(c); if (chosen.length >= count) break; }
+    }
+  }
+  // Final fallback: relax to 1
   if (chosen.length < count) {
     for (const c of candidates) {
       if (!chosen.some(t => t.x === c.x && t.y === c.y)) {
@@ -4571,10 +5236,112 @@ function placeObjectiveTiles(grid, objType, count) {
   return chosen.map((c, i) => ({ x: c.x, y: c.y, type: objType, label, icon, done: false, id: 'obj_' + i }));
 }
 
+// ═══════════════════════════════════════════════════════
+// ── FIRE SPREAD SYSTEM ──
+// Fire tiles placed by 'fire' objective actions expand slowly,
+// deal light damage each turn, and visually indicate burning squares.
+// The origin square is safe for FIRE_ORIGIN_DELAY turns after ignition
+// so the player has time to step away.
+// ═══════════════════════════════════════════════════════
+
+const FIRE_MAX_RADIUS    = 3;   // maximum Manhattan-radius fire reaches
+const FIRE_SPREAD_RATE   = 2;   // turns between each ring expansion
+const FIRE_DAMAGE        = 3;   // HP dealt per turn to any unit in fire
+const FIRE_ORIGIN_DELAY  = 2;   // turns before origin square itself burns
+
+// Returns the set of all currently-burning {x,y} positions as 'x,y' strings
+function getActiveBurnedSet() {
+  const burned = new Set();
+  if (!CS.activeFires) return burned;
+  CS.activeFires.forEach(function(fire) {
+    fire.burnedTiles.forEach(function(key) { burned.add(key); });
+  });
+  return burned;
+}
+
+// Called once per unit-turn-end (ally and enemy alike).
+// Expands each active fire and applies damage to units standing in fire.
+function tickFireSpread() {
+  if (!CS.activeFires || CS.activeFires.length === 0) return;
+
+  const isPassable = (x, y) => {
+    const k = CS.grid[y]?.[x];
+    return k && (TERRAIN_TILES[k] || TERRAIN_TILES.empty).passable;
+  };
+
+  CS.activeFires.forEach(function(fire) {
+    const age = CS.turn - fire.turnIgnited; // turns since fire was set
+
+    // ── Expand radius ──
+    // Each FIRE_SPREAD_RATE turns, grow one ring outward (max FIRE_MAX_RADIUS)
+    const targetRadius = Math.min(FIRE_MAX_RADIUS, Math.floor(age / FIRE_SPREAD_RATE));
+    if (targetRadius > fire.spreadRadius) {
+      for (let r = fire.spreadRadius + 1; r <= targetRadius; r++) {
+        // Add all passable tiles at Manhattan distance exactly r
+        for (let dx = -r; dx <= r; dx++) {
+          for (let dy = -r; dy <= r; dy++) {
+            if (Math.abs(dx) + Math.abs(dy) !== r) continue;
+            const nx = fire.ox + dx, ny = fire.oy + dy;
+            if (nx < 0 || ny < 0 || nx >= CS.gridW || ny >= CS.gridH) continue;
+            if (!isPassable(nx, ny)) continue;
+            fire.burnedTiles.add(nx + ',' + ny);
+          }
+        }
+      }
+      fire.spreadRadius = targetRadius;
+      if (targetRadius === 1) {
+        addLog('🔥 Fire spreads outward from the ignition point!', 'system');
+        SFX.play('sfx_fire_spread.mp3', 0.8);
+      } else if (targetRadius === FIRE_MAX_RADIUS) {
+        addLog('🔥 The fire has reached its full extent!', 'system');
+        SFX.play('sfx_fire_spread.mp3', 0.7);
+      }
+    }
+
+    // ── Add origin tile after delay ──
+    if (age >= FIRE_ORIGIN_DELAY) {
+      fire.burnedTiles.add(fire.ox + ',' + fire.oy);
+    }
+  });
+
+  // ── Deal fire damage to all units on burning tiles ──
+  const burnedSet = getActiveBurnedSet();
+  if (burnedSet.size === 0) return;
+
+  let _fireDmgDealt = false;
+  // Allies
+  CS.allies.forEach(function(ally) {
+    if (ally.hp <= 0 || ally.perished || ally.escaped) return;
+    if (!burnedSet.has(ally.x + ',' + ally.y)) return;
+    ally.hp = Math.max(0, ally.hp - FIRE_DAMAGE);
+    if (CS.missionStats) CS.missionStats.alliesTookDamage = true;
+    addLog('🔥 ' + ally.name + ' takes ' + FIRE_DAMAGE + ' fire damage from the flames! (' + ally.hp + '/' + ally.maxHp + ')', 'damage');
+    _fireDmgDealt = true;
+    if (ally.hp <= 0) {
+      addLog(ally.name + ' has been consumed by the fire!', 'death');
+      SFX.play('sfx_combat_death_ally.mp3');
+    }
+  });
+
+  // Enemies
+  CS.enemies.forEach(function(enemy) {
+    if (enemy.hp <= 0) return;
+    if (!burnedSet.has(enemy.x + ',' + enemy.y)) return;
+    applyDamage(enemy, FIRE_DAMAGE, 'Fire');
+    _fireDmgDealt = true;
+  });
+
+  if (_fireDmgDealt) SFX.play('sfx_fire_damage.mp3', 0.65);
+
+  renderCombat();
+  checkCombatEnd();
+}
+
 // Called after initCombat sets up grid + mission
 function initObjectiveTiles(mission, grid) {
   const objType = getMissionObjectiveType(mission);
   CS.objectiveTiles = [];
+  CS.activeFires = [];
   CS.objectiveProgress = 0;
   CS.objectiveTotal = 0;
   if (!objType) return;
@@ -4613,6 +5380,22 @@ function performObjectiveAction() {
   tile.done = true;
   CS.objectiveProgress++;
 
+  // ── Ignite spreading fire for 'fire' type objectives ──
+  if (tile.type === 'fire') {
+    if (!CS.activeFires) CS.activeFires = [];
+    CS.activeFires.push({
+      ox: tile.x,          // origin x
+      oy: tile.y,          // origin y
+      turnIgnited: CS.turn,// turn fire was set
+      spreadRadius: 0,     // current expansion ring (0 = only origin, after delay)
+      burnedTiles: new Set() // 'x,y' strings of squares currently on fire
+      // Note: origin tile is added after FIRE_ORIGIN_DELAY turns (in tickFireSpread)
+    });
+    addLog('🔥 Fire ignited at (' + tile.x + ',' + tile.y + ')! Get clear — it will spread!', 'system');
+    SFX.play('sfx_objective_fire.mp3');
+    _earnAch('fire_set');
+  }
+
   const flavour = {
     fire:           [ally.name + ' sets fire to the structure — flames catch!',
                      ally.name + ' touches a torch to the supplies. Fire spreads!',
@@ -4630,6 +5413,7 @@ function performObjectiveAction() {
   const msgs = flavour[tile.type] || ['Objective completed!'];
   addLog(tile.icon + ' ' + msgs[Math.floor(Math.random() * msgs.length)], 'special');
   toast(tile.icon + ' ' + tile.label + ' complete!', 'success');
+  if (tile.type !== 'fire') SFX.play('sfx_objective_complete.mp3');
 
   CS.unitActed = true;
   CS.savedMove = null;
@@ -4662,6 +5446,9 @@ function performObjectiveAction() {
 }
 
 function initCombat(mission, partyIds) {
+  // ── PRE-FLIGHT: validate and repair mission data before starting ──
+  _validateMission(mission);
+
   CS.active = true;
   CS.mission = mission;
   CS.turn = 0;
@@ -4686,6 +5473,7 @@ function initCombat(mission, partyIds) {
   CS.doomBags = [];
   // ── Structured objective system ──
   CS.objectiveTiles = [];      // [{x, y, type, label, done, icon}] — interactive map tiles
+  CS.activeFires = [];         // [{x, y, turnIgnited, spreadRadius, burnedTiles: Set}] — live fire spreads
   CS.objectiveProgress = 0;   // how many objective tiles have been completed
   CS.objectiveTotal = 0;      // total needed
   CS.currentFloor = 0;
@@ -4857,21 +5645,33 @@ function initCombat(mission, partyIds) {
 
   // Tag the target enemy (assassination) and carrier (theft/rescue)
   if (_floorTarget) {
-    const t = CS.enemies.find(e => e.type === _floorTarget);
-    if (t) { t.isTarget = true; t.name = '\u2605 ' + t.name; }
+    let t = CS.enemies.find(e => e.type === _floorTarget);
+    // Fallback: if target type not found, tag the highest-HP enemy
+    if (!t && CS.enemies.length > 0) {
+      t = CS.enemies.reduce((best, e) => (!best || e.maxHp > best.maxHp) ? e : best, null);
+      addLog('⚠ Target type "' + _floorTarget + '" not found — designating ' + (t?.name || 'enemy') + ' as target.', 'system');
+    }
+    if (t) { t.isTarget = true; t.name = '\u2605 ' + t.name.replace(/^[\u2605\uD83D\uDD11\uD83D\uDCE6] /, ''); }
   }
-  if (_floorCarrier && _floorLoot) {
-    // Try to find the specified carrier type; fall back to highest-HP enemy if not present
+  if (_floorCarrier) {
+    const loot = _floorLoot || { name: 'Stolen Goods', icon: '📦' }; // always have a loot item
     let c = CS.enemies.find(e => e.type === _floorCarrier);
     if (!c && CS.enemies.length > 0) {
-      // Assign carrier to the toughest non-carrier enemy available
+      // Fallback: assign carrier to the toughest non-dead enemy
       c = CS.enemies.reduce((best, e) => (!best || e.maxHp > best.maxHp) ? e : best, null);
-      if (c) addLog('\u{1F4E6} The ' + c.name + ' is holding the ' + _floorLoot.name + '.', 'system');
+      addLog('\u{1F4E6} The ' + (c?.name || 'enemy') + ' is holding the ' + loot.name + '.', 'system');
     }
     if (c) {
       c.isCarrier = true;
-      c.carriedLoot = { ..._floorLoot };
+      c.carriedLoot = { ...loot };
       c.name = '\uD83D\uDD11 ' + c.name.replace(/^[\uD83D\uDCE6\u2605\uD83D\uDD11] /, '');
+    } else {
+      addLog('⚠ No enemies available to hold carrier loot — placing on floor.', 'system');
+      // Emergency: place loot on the floor immediately near centre-right
+      const dropPos = _findSafePassablePos(CS.grid, CS.gridW, CS.gridH,
+        Math.floor(CS.gridW * 0.7), Math.floor(CS.gridH / 2), CS.enemies);
+      CS.lootOnFloor = { ...loot, x: dropPos.x, y: dropPos.y };
+      CS.exitsActive = false; // exits open when ally picks it up
     }
   }
 
@@ -4880,6 +5680,7 @@ function initCombat(mission, partyIds) {
 
   addLog(`⚔ Mission: ${mission.name}`, 'system');
   addLog(`${CS.allies.length} allies deployed. ${CS.enemies.length} enemies spotted.`, 'system');
+  SFX.play('sfx_mission_start.mp3');
 
   // Log mission-specific objective hint
   if (mission.floors && mission.floors.length > 1) {
@@ -4898,6 +5699,147 @@ function initCombat(mission, partyIds) {
 }
 
 
+
+// ═══════════════════════════════════════════════════════════════
+// ── MISSION PRE-FLIGHT VALIDATION ──
+// Checks all required components exist and repairs what it can.
+// ═══════════════════════════════════════════════════════════════
+function _validateMission(m) {
+  if (!m) return;
+  const floors = m.floors || [m]; // treat single-floor missions as 1-element array
+
+  floors.forEach((floor, fi) => {
+    const enemies = floor.enemies || m.enemies || [];
+    const target = floor.targetEnemy || (fi === 0 ? m.targetEnemy : null);
+    const carrier = floor.carrierEnemy || (fi === 0 ? m.carrierEnemy : null);
+    const loot = floor.lootItem || (fi === 0 ? m.lootItem : null);
+
+    // ── THEFT/RESCUE: ensure a carrier enemy type exists in the enemy list ──
+    if (carrier) {
+      const hasCarrierType = enemies.some(g => g.type === carrier);
+      if (!hasCarrierType) {
+        console.warn('[NINDO] Mission validation: carrier type "' + carrier + '" not in enemy list for floor ' + fi + '. Adding fallback.');
+        enemies.push({ type: carrier, count: 1 });
+        if (m.floors && m.floors[fi]) m.floors[fi].enemies = enemies;
+        else if (fi === 0) m.enemies = enemies;
+      }
+    }
+
+    // ── THEFT: ensure lootItem exists if carrierEnemy is set ──
+    if (carrier && !loot) {
+      const fallbackLoot = { name: 'Stolen Goods', icon: '📦' };
+      if (m.floors && m.floors[fi]) m.floors[fi].lootItem = fallbackLoot;
+      else m.lootItem = fallbackLoot;
+      console.warn('[NINDO] Mission validation: theft mission missing lootItem — using fallback.');
+    }
+
+    // ── ASSASSINATION: ensure target enemy type exists ──
+    if (target) {
+      const hasTargetType = enemies.some(g => g.type === target);
+      if (!hasTargetType && enemies.length > 0) {
+        // Swap the toughest non-guard enemy type to be the target type
+        const toughest = enemies.reduce((best, g) => {
+          const t1 = ENEMY_TYPES[g.type], t2 = ENEMY_TYPES[best.type];
+          return (t1?.hp || 0) > (t2?.hp || 0) ? g : best;
+        }, enemies[enemies.length - 1]);
+        const newType = toughest.type;
+        if (m.floors && m.floors[fi]) m.floors[fi].targetEnemy = newType;
+        else m.targetEnemy = newType;
+        console.warn('[NINDO] Mission validation: target "' + target + '" not in enemies. Using "' + newType + '" instead.');
+      }
+    }
+
+    // ── RESCUE with floors: ensure floor 1 has carrierEnemy set ──
+    if (m.type === 'rescue' && m.floors && fi === 0 && !m.floors[0].carrierEnemy) {
+      const hasJailer = enemies.some(g => g.type === 'jailer');
+      if (hasJailer) {
+        m.floors[0].carrierEnemy = 'jailer';
+        m.floors[0].lootItem = m.floors[0].lootItem || { name: 'Cell Key', icon: '🔑' };
+      }
+    }
+  });
+}
+
+// Fix completely enclosed interior spaces by carving a 1-tile opening.
+// A tile is "enclosed" if it's passable but all 4 cardinal neighbors are impassable.
+// Also fixes single-tile pockets where a passable tile has only 1 passable neighbor.
+function _fixEnclosedSpaces(grid, W, H) {
+  const passable = (x, y) => {
+    if (x < 0 || y < 0 || x >= W || y >= H) return false;
+    const k = grid[y]?.[x] || 'wall';
+    return (TERRAIN_TILES[k] || TERRAIN_TILES.empty).passable;
+  };
+
+  // BFS from the main open area (starting from exit side x=1, middle row)
+  // to find all tiles reachable from the spawn zone
+  const startX = 1, startY = Math.floor(H / 2);
+  const reachable = new Set();
+  const queue = [];
+
+  // Seed the BFS with all passable tiles in columns 1-4 (ally spawn zone)
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x <= 4; x++) {
+      if (passable(x, y)) {
+        const key = x + ',' + y;
+        if (!reachable.has(key)) { reachable.add(key); queue.push([x, y]); }
+      }
+    }
+  }
+
+  let qi = 0;
+  while (qi < queue.length) {
+    const [cx, cy] = queue[qi++];
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nx = cx + dx, ny = cy + dy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+      const key = nx + ',' + ny;
+      if (reachable.has(key)) continue;
+      if (passable(nx, ny)) { reachable.add(key); queue.push([nx, ny]); }
+    }
+  }
+
+  // Any passable interior tile NOT reachable from spawn zone is in an enclosed space
+  // Carve a path to it by clearing the nearest wall toward the reachable zone
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      if (!passable(x, y)) continue;
+      if (reachable.has(x + ',' + y)) continue;
+
+      // This tile is passable but isolated — find nearest reachable tile and carve toward it
+      let bestDist = Infinity, bestRx = -1, bestRy = -1;
+      for (const key of reachable) {
+        const [rx, ry] = key.split(',').map(Number);
+        const dist = Math.abs(rx - x) + Math.abs(ry - y);
+        if (dist < bestDist) { bestDist = dist; bestRx = rx; bestRy = ry; }
+      }
+      if (bestRx < 0) continue;
+
+      // Carve a straight path (horizontal first, then vertical)
+      let cx2 = x, cy2 = y;
+      const stepX = bestRx > x ? 1 : bestRx < x ? -1 : 0;
+      const stepY = bestRy > y ? 1 : bestRy < y ? -1 : 0;
+
+      // Walk horizontal
+      while (cx2 !== bestRx) {
+        cx2 += stepX;
+        if (cx2 >= 1 && cx2 < W - 1 && !passable(cx2, cy2)) {
+          grid[cy2][cx2] = 'empty';
+          reachable.add(cx2 + ',' + cy2);
+        }
+      }
+      // Walk vertical
+      while (cy2 !== bestRy) {
+        cy2 += stepY;
+        if (cy2 >= 1 && cy2 < H - 1 && !passable(cx2, cy2)) {
+          grid[cy2][cx2] = 'empty';
+          reachable.add(cx2 + ',' + cy2);
+        }
+      }
+      // Mark all now-connected tiles as reachable
+      reachable.add(x + ',' + y);
+    }
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // ── MAP REACHABILITY HELPERS ──
@@ -5129,32 +6071,36 @@ function _ensureMapReachability(grid, W, H, exitSide) {
 function generateGrid(terrainName) {
   // Try MAP_LIBRARY first — use a deterministic pick so replays feel consistent
   const libKey = TERRAIN_TO_LIBRARY[terrainName];
+  let grid;
   if (libKey && MAP_LIBRARY[libKey] && MAP_LIBRARY[libKey].length > 0) {
     const maps = MAP_LIBRARY[libKey];
     const pick = maps[Math.floor(Math.random() * maps.length)];
-    return decodeMap(pick);
-  }
-
-  const preset = TERRAIN_PRESETS[terrainName] || TERRAIN_PRESETS.village;
-  const grid = [];
-  for (let y = 0; y < CS.gridH; y++) {
-    grid.push([]);
-    for (let x = 0; x < CS.gridW; x++) {
-      grid[y].push(preset.base);
+    grid = decodeMap(pick);
+  } else {
+    const preset = TERRAIN_PRESETS[terrainName] || TERRAIN_PRESETS.village;
+    grid = [];
+    for (let y = 0; y < CS.gridH; y++) {
+      grid.push([]);
+      for (let x = 0; x < CS.gridW; x++) {
+        grid[y].push(preset.base);
+      }
+    }
+    // Add walls/borders
+    for (let x = 0; x < CS.gridW; x++) { grid[0][x] = 'wall'; grid[CS.gridH-1][x] = 'wall'; }
+    for (let y = 0; y < CS.gridH; y++) { grid[y][0] = 'wall'; grid[y][CS.gridW-1] = 'wall'; }
+    // Random features
+    const featureCount = 8 + Math.floor(Math.random() * 8);
+    for (let i = 0; i < featureCount; i++) {
+      const x = 2 + Math.floor(Math.random() * (CS.gridW - 4));
+      const y = 1 + Math.floor(Math.random() * (CS.gridH - 2));
+      const feat = preset.features[Math.floor(Math.random() * preset.features.length)];
+      grid[y][x] = feat;
     }
   }
-  // Add walls/borders
-  for (let x = 0; x < CS.gridW; x++) { grid[0][x] = 'wall'; grid[CS.gridH-1][x] = 'wall'; }
-  for (let y = 0; y < CS.gridH; y++) { grid[y][0] = 'wall'; grid[y][CS.gridW-1] = 'wall'; }
 
-  // Random features
-  const featureCount = 8 + Math.floor(Math.random() * 8);
-  for (let i = 0; i < featureCount; i++) {
-    const x = 2 + Math.floor(Math.random() * (CS.gridW - 4));
-    const y = 1 + Math.floor(Math.random() * (CS.gridH - 2));
-    const feat = preset.features[Math.floor(Math.random() * preset.features.length)];
-    grid[y][x] = feat;
-  }
+  // ── Fix any completely enclosed passable spaces on the map ──
+  _fixEnclosedSpaces(grid, CS.gridW, CS.gridH);
+
   return grid;
 }
 
@@ -5379,7 +6325,7 @@ function renderCombat() {
   updateActionButtons();
   _updateDoomVignette();
   // Kick off pulse animation for exits/loot if needed
-  if (CS.exitsActive || CS.lootOnFloor || (CS.goldPickups && CS.goldPickups.length) || (CS.objectiveTiles && CS.objectiveTiles.some(t=>!t.done)) || CS.doomBags.length || CS.allies.some(a => a.doomed) || (CS.prisoner && !CS.prisoner.escaped)) schedulePulseRedraw();
+  if (CS.exitsActive || CS.lootOnFloor || (CS.goldPickups && CS.goldPickups.length) || (CS.objectiveTiles && CS.objectiveTiles.some(t=>!t.done)) || CS.doomBags.length || CS.allies.some(a => a.doomed) || (CS.prisoner && !CS.prisoner.escaped) || (CS.activeFires && CS.activeFires.length > 0)) schedulePulseRedraw();
 }
 
 function syncMobileCombatPanels() {
@@ -5432,17 +6378,21 @@ function renderAllyList() {
   el.innerHTML = CS.allies.filter(a => !a.perished).map(a => {
     const cls = CLASSES[a.class];
     const hpPct = Math.max(0, (a.hp / a.maxHp) * 100);
+    const xpPct = Math.max(0, Math.min(100, (a.exp / a.expToNext) * 100));
     const isActive = CS.activeUnit === a.gridId;
     const isDead = a.hp <= 0 && !a.doomed;
     const hpClass = hpPct > 60 ? 'hp-high' : hpPct > 30 ? 'hp-mid' : 'hp-low';
     const moved = isActive && CS.unitMoved;
     const acted = isActive && CS.unitActed;
     const statusIcons = (moved ? '·' : '') + (acted ? '⚔' : '');
-    return `<div class="combatant-strip ${isActive ? 'selected-strip' : ''} ${a.doomed ? 'dead-strip' : ''} ${isDead ? 'dead-strip' : ''}" onclick="selectAlly('${a.gridId}')" title="${a.name}">
+    return `<div class="combatant-strip ${isActive ? 'selected-strip' : ''} ${a.doomed ? 'dead-strip' : ''} ${isDead ? 'dead-strip' : ''}" onclick="selectAlly('${a.gridId}')" title="${a.name} — Lv${a.level} · ${a.exp}/${a.expToNext} XP">
       <div class="strip-name">${cls.emoji} <span style="overflow:hidden;text-overflow:ellipsis">${a.name}</span>${statusIcons ? `<span style="color:var(--mist);margin-left:auto;font-size:0.48rem">${statusIcons}</span>` : ''}${a.doomed ? '<span style="color:#ff3333;margin-left:auto;font-size:0.5rem">💀'+a.doomCountdown+'</span>' : ''}</div>
-      <div class="strip-vals"><span style="color:#e74c3c">${a.hp}</span><span style="color:rgba(255,255,255,0.2)">/</span><span>${a.maxHp}</span></div>
+      <div class="strip-vals"><span style="color:#e74c3c">${a.hp}</span><span style="color:rgba(255,255,255,0.2)">/</span><span>${a.maxHp}</span><span style="color:rgba(255,255,255,0.2);margin-left:2px;font-size:0.45rem">Lv${a.level}</span></div>
       <div class="strip-hp-bar"><div class="strip-hp-fill ${hpClass}" style="width:${hpPct}%"></div></div>
       <div class="strip-chi">χ ${a.chi}/${a.maxChi}</div>
+      <div style="height:2px;background:rgba(255,255,255,0.05);border-radius:1px;margin-top:2px;overflow:hidden" title="${a.exp}/${a.expToNext} XP">
+        <div style="height:100%;width:${xpPct}%;background:linear-gradient(90deg,rgba(201,162,39,0.5),rgba(201,162,39,0.8));border-radius:1px;transition:width 0.4s"></div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -5683,6 +6633,79 @@ function drawCanvas() {
         ctx.textBaseline = 'middle';
         ctx.fillText(ot.label.toUpperCase(), ox + cs / 2, oy + cs * 0.82);
       }
+    });
+  }
+
+  // Draw active fire tiles
+  if (CS.activeFires && CS.activeFires.length > 0) {
+    const _now = Date.now();
+    const _burnedAll = getActiveBurnedSet();
+    // Also track which tiles are the origin and still in their grace period
+    const _originSafe = new Set();
+    CS.activeFires.forEach(function(fire) {
+      const age = CS.turn - fire.turnIgnited;
+      if (age < FIRE_ORIGIN_DELAY) _originSafe.add(fire.ox + ',' + fire.oy);
+    });
+
+    _burnedAll.forEach(function(key) {
+      const parts = key.split(',');
+      const fx = parseInt(parts[0]), fy = parseInt(parts[1]);
+      const px = fx * cs, py = fy * cs;
+
+      // Flicker: two sine waves at different speeds give an organic feel
+      const _flicker1 = 0.5 + 0.5 * Math.sin(_now / 180 + fx * 1.7 + fy * 2.3);
+      const _flicker2 = 0.5 + 0.5 * Math.sin(_now / 110 + fx * 3.1 - fy * 1.4);
+      const _flicker  = (_flicker1 + _flicker2) / 2;
+
+      // Base: deep red-orange fill
+      const _alpha = 0.45 + _flicker * 0.25;
+      ctx.fillStyle = 'rgba(220,60,0,' + _alpha.toFixed(2) + ')';
+      ctx.fillRect(px, py, cs, cs);
+
+      // Bright amber inner glow
+      const _glow = ctx.createRadialGradient(
+        px + cs * 0.5, py + cs * 0.7, 0,
+        px + cs * 0.5, py + cs * 0.5, cs * 0.55
+      );
+      _glow.addColorStop(0, 'rgba(255,200,50,' + (0.35 + _flicker * 0.30).toFixed(2) + ')');
+      _glow.addColorStop(1, 'rgba(255,80,0,0)');
+      ctx.fillStyle = _glow;
+      ctx.fillRect(px, py, cs, cs);
+
+      // Fire emoji — scaled with cell size
+      ctx.font = Math.round(cs * 0.48) + 'px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Slight vertical bob
+      const _bob = Math.sin(_now / 200 + fx * 2.1 + fy * 1.9) * cs * 0.04;
+      ctx.fillText('🔥', px + cs * 0.5, py + cs * 0.46 + _bob);
+
+      // Hot border
+      ctx.strokeStyle = 'rgba(255,140,0,' + (0.6 + _flicker * 0.4).toFixed(2) + ')';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(px + 1, py + 1, cs - 2, cs - 2);
+    });
+
+    // Draw "smouldering — about to ignite" warning on origin tiles still in grace period
+    _originSafe.forEach(function(key) {
+      if (_burnedAll.has(key)) return; // already fully on fire — skip warning
+      const parts = key.split(',');
+      const fx = parseInt(parts[0]), fy = parseInt(parts[1]);
+      const px = fx * cs, py = fy * cs;
+      const _warn = 0.4 + 0.6 * Math.abs(Math.sin(_now / 300));
+      ctx.fillStyle = 'rgba(255,120,0,' + (_warn * 0.35).toFixed(2) + ')';
+      ctx.fillRect(px, py, cs, cs);
+      ctx.strokeStyle = 'rgba(255,160,0,' + (_warn * 0.9).toFixed(2) + ')';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(px + 1, py + 1, cs - 2, cs - 2);
+      // Warning label
+      ctx.font = 'bold ' + Math.round(cs * 0.14) + 'px sans-serif';
+      ctx.fillStyle = 'rgba(255,220,80,' + (_warn * 0.95).toFixed(2) + ')';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('IGNITING', px + cs * 0.5, py + cs * 0.84);
+      ctx.font = Math.round(cs * 0.38) + 'px serif';
+      ctx.fillText('💨', px + cs * 0.5, py + cs * 0.44);
     });
   }
 
@@ -6328,6 +7351,41 @@ document.getElementById('combatCanvas').addEventListener('touchstart', function(
       </div>`;
     }
 
+    // XP bar for allies
+    if (isAlly && unit.expToNext) {
+      const xpPct = Math.max(0, Math.min(100, ((unit.exp || 0) / unit.expToNext) * 100));
+      html += `<div class="inspect-stat-row">
+        <div class="inspect-stat-label" style="color:rgba(201,162,39,0.7)">XP</div>
+        <div class="inspect-stat-bar"><div class="inspect-stat-fill" style="width:${xpPct}%;background:linear-gradient(90deg,rgba(201,162,39,0.5),var(--gold))"></div></div>
+        <div class="inspect-stat-val" style="color:rgba(201,162,39,0.7);font-size:0.5rem">${unit.exp}/${unit.expToNext}</div>
+      </div>`;
+    }
+
+    // Damage contribution breakdown for enemies (shows who's dealt the most)
+    if (!isAlly && unit._dmgLog && Object.keys(unit._dmgLog).length > 0) {
+      const totalDmgDealt = Object.values(unit._dmgLog).reduce((s, v) => s + v, 0);
+      const contribLines = Object.entries(unit._dmgLog)
+        .sort(([,a],[,b]) => b - a)
+        .slice(0, 3)
+        .map(([id, dmg]) => {
+          const a = CS.allies.find(x => x.gridId === id);
+          if (!a) return '';
+          const pct = Math.round((dmg / Math.max(unit.maxHp, totalDmgDealt)) * 100);
+          return `<div style="display:flex;align-items:center;gap:3px;margin-bottom:2px">
+            <span style="font-size:0.5rem;color:var(--mist);width:50px;overflow:hidden;text-overflow:ellipsis">${CLASSES[a.class]?.emoji} ${a.name}</span>
+            <div style="flex:1;height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:var(--crimson-bright);border-radius:2px"></div>
+            </div>
+            <span style="font-size:0.48rem;color:var(--crimson-bright);min-width:28px;text-align:right">${dmg} hp</span>
+          </div>`;
+        }).join('');
+      if (contribLines.trim()) {
+        html += '<div class="inspect-divider"></div>';
+        html += `<div style="font-size:0.48rem;color:var(--mist);font-family:'Cinzel',serif;letter-spacing:0.1em;margin-bottom:3px">DAMAGE DEALT</div>`;
+        html += contribLines;
+      }
+    }
+
     html += '<div class="inspect-divider"></div>';
 
     // Stats grid
@@ -6630,6 +7688,11 @@ function handleMove(ally, tx, ty) {
     ally.facing = dy > 0 ? 'south' : 'north';
   }
   ally.x = tx; ally.y = ty;
+  // ── SFX: terrain step sounds ──
+  const _stepTileKey = CS.grid[ty]?.[tx] || 'empty';
+  if (_stepTileKey === 'water')  SFX.play('sfx_terrain_water.mp3',  0.75);
+  else if (_stepTileKey === 'rubble') SFX.play('sfx_terrain_rubble.mp3', 0.65);
+  else if (_stepTileKey === 'forest') SFX.play('sfx_terrain_forest.mp3', 0.6);
   CS.unitMoved = true;
   CS.selectedAction = null;
   CS.highlightedTiles = [];
@@ -6670,6 +7733,8 @@ function handleMove(ally, tx, ty) {
     saveGame();
     addLog('💰 ' + ally.name + ' collects ' + goldBag.amount + 'G from the tax bag!', 'heal');
     toast('+' + goldBag.amount + 'G collected!', 'success');
+    SFX.play('sfx_loot_pickup.mp3');
+    _earnAch('loot_collected');
   }
 
   // ── RESCUE: key-holder walks onto prisoner tile to free them ──
@@ -6699,6 +7764,7 @@ function handleMove(ally, tx, ty) {
     // Activate exits — on rescue floor 1, only activate if all enemies already cleared
     const _allEnemiesDead = CS.enemies.every(e => e.hp <= 0);
     CS.exitsActive = _allEnemiesDead || !isKey;
+    SFX.play('sfx_loot_pickup.mp3');
     if (CS.exitsActive) {
       addLog(ally.name + ' picks up the ' + lootName + '! Reach the exit!', 'system');
       toast(lootName + ' secured — reach the exit!', 'success');
@@ -6723,6 +7789,7 @@ function handleMove(ally, tx, ty) {
   } else if (onExit && CS.exitsActive && !CS.alliesEscaped.includes(ally.gridId)) {
     CS.alliesEscaped.push(ally.gridId);
     ally.escaped = true;
+    SFX.play('sfx_mission_escape.mp3');
 
     // If on rescue floor, prisoner exits with this ally if freed
     if (CS.prisonerFreed && CS.prisoner && CS.prisoner.freed) {
@@ -6760,10 +7827,13 @@ function applyWeaponEffect(weapon, target) {
   const name = weapon.name;
 
   if (effect === 'bleed' && weapon.bleedDmg) {
-    // Stack bleed — store highest bleedDmg
+    // Stack bleed — store highest bleedDmg; track who inflicted it
     const existing = target.bleeds || 0;
     target.bleeds = Math.max(existing, weapon.bleedDmg);
     target.bleedTurns = 3;
+    // Record which ally inflicted bleed for kill credit
+    const _bleeder = CS.allies.find(a => a.gridId === CS.activeUnit);
+    if (_bleeder) target._bleederId = _bleeder.gridId;
     addLog(`\u{1FA78} ${target.name} is bleeding! (${target.bleeds} HP/turn)`, 'damage');
   }
 
@@ -6788,6 +7858,9 @@ function applyWeaponEffect(weapon, target) {
   if (weapon.secondEffect) {
     if (weapon.secondEffect === 'poison' && target.status !== 'poisoned') {
       target.status = 'poisoned';
+      // Record poisoner
+      const _poisonerAlly = CS.allies.find(a => a.gridId === CS.activeUnit);
+      if (_poisonerAlly) { target._poisonerId = _poisonerAlly.gridId; target._poisonedByClass = _poisonerAlly.class; }
       addLog(`☠ ${target.name} is poisoned by ${name}!`, 'special');
     }
     if (weapon.secondEffect === 'stun_chance' && Math.random() < (weapon.stunChance || 0.3)) {
@@ -6892,19 +7965,24 @@ function handleAttack(ally, tx, ty) {
     const hitLabel = unarmedMode
       ? getUnarmedProfile(ally.class).icon + ' ' + ally.name + ' (' + getUnarmedProfile(ally.class).name + ')'
       : ally.name;
+    // ── SFX: play weapon-type hit sound (or unarmed if no weapon) ──
+    const _wSfx = (!unarmedMode && ally.weapon?.type) ? (WEAPON_SFX[ally.weapon.type] || 'sfx_blade_hit.mp3') : 'sfx_unarmed_hit.mp3';
+    SFX.play(_wSfx);
+    if (dmg >= 30) SFX.play('sfx_combat_crit.mp3', 0.9);
     applyDamage(target, dmg, hitLabel);
     if (!unarmedMode) {
       applyWeaponEffect(ally.weapon, target);
       checkOnHitPoison(ally, target);
     }
+  } else {
+    SFX.play('sfx_combat_miss.mp3');
   }
   if (!unarmedMode) consumeWeaponUse(ally);
   CS.unitActed = true;
   CS.savedMove = null;
   CS.selectedAction = null;
   CS.highlightedTiles = [];
-  const wasKill = !missFromCover && target.hp <= 0;
-  giveJP(ally, wasKill ? JP_AWARDS.kill + JP_AWARDS.attack : JP_AWARDS.attack, 'attack');
+  giveJP(ally, JP_AWARDS.attack, 'attack'); // kill JP is awarded inside _awardKillCredit via applyDamage
   checkCombatEnd();
   renderCombat();
   if (CS.unitMoved && CS.unitActed) setTimeout(finishAllyTurn, 400);
@@ -6951,10 +8029,14 @@ function handleSpecial(ally, tx, ty) {
   checkCombatEnd();
   renderCombat();
   giveJP(ally, JP_AWARDS.special, 'special');
+  _earnAch('special_first');
   if (CS.unitMoved && CS.unitActed) setTimeout(finishAllyTurn, 400);
 }
 
 function executeSpecial(caster, move, target, allyTarget) {
+  // ── SFX: play special-move sound if mapped ──
+  const _sfxFile = SPECIAL_SFX[move.effect];
+  if (_sfxFile) SFX.play(_sfxFile);
   switch (move.effect) {
     case 'triple_dmg':
       if (target) { const d = calcDamage(caster, target) * 3; applyDamage(target, d, caster.name); addLog(`✦ ${move.name}: ${d} damage!`, 'special'); } break;
@@ -6980,7 +8062,7 @@ function executeSpecial(caster, move, target, allyTarget) {
       addLog('✦ ' + move.name + ': ' + hitsAoe.length + ' target' + (hitsAoe.length > 1 ? 's' : '') + ' hit!', 'special'); break;
     }
     case 'poison':
-      if (target) { target.status = 'poisoned'; target._poisonedByClass = caster.class; addLog(`✦ ${move.name}: ${target.name} poisoned!`, 'special'); } break;
+      if (target) { target.status = 'poisoned'; target._poisonedByClass = caster.class; target._poisonerId = caster.gridId; addLog(`✦ ${move.name}: ${target.name} poisoned!`, 'special'); _earnAch('first_poison'); } break;
     case 'stun':
       if (target) { target.status = 'stunned'; addLog(`✦ ${move.name}: ${target.name} stunned!`, 'special'); } break;
     case 'confuse':
@@ -7031,7 +8113,7 @@ function executeSpecial(caster, move, target, allyTarget) {
     case 'teleport':
       if (isPosEmpty(tx, ty, caster.gridId)) { caster.x = tx; caster.y = ty; addLog(`✦ ${move.name}: ${caster.name} teleports!`, 'special'); } break;
     case 'execute':
-      if (target && target.hp < target.maxHp * 0.3) { applyDamage(target, target.hp, caster.name); addLog(`✦ ${move.name}: EXECUTED!`, 'special'); } break;
+      if (target && target.hp < target.maxHp * 0.3) { applyDamage(target, target.hp, caster.name); addLog(`✦ ${move.name}: EXECUTED!`, 'special'); _earnAch('first_execute'); } break;
     case 'charge':
       if (target) { const d = calcDamage(caster, target) * 1.5; applyDamage(target, Math.floor(d), caster.name); addLog(`✦ ${move.name}: charge hit!`, 'special'); } break;
     case 'stomp':
@@ -7133,6 +8215,123 @@ function spawnReinforcements(trigger) {
   setTimeout(() => { CS.highlightedTiles = CS.highlightedTiles.filter(t => !CS.enemies.some(e => e.x === t.x && e.y === t.y && e.isReinforcement)); renderCombat(); }, 800);
 }
 
+// ─────────────────────────────────────────────────────
+// ── DAMAGE TRACKING & XP/JP AWARD SYSTEM ──
+// ─────────────────────────────────────────────────────
+
+// Resolve which ally dealt this damage based on attackerName or active unit.
+// Handles plain names ("Riku"), prefixed names ("🗡 Riku (Blade)"), "Poison", "Bleed" etc.
+// ALWAYS returns an ally or null — never an enemy.
+function _resolveAttacker(attackerName) {
+  if (!attackerName || !CS.allies) return null;
+  // These source names are not ally names — handled via target._poisonerId / _bleederId
+  const nonAlly = new Set(['Poison','Bleed','Bleeding','Doom','Time','Burn','Fall','Hazard']);
+  if (nonAlly.has(attackerName)) return null;
+  // Try active unit first — but ONLY if it's a player-phase ally turn
+  if (CS.phase === 'player' && CS.activeUnit) {
+    const active = CS.allies.find(a => a.gridId === CS.activeUnit && a.hp > 0 && !a.perished);
+    if (active) return active;
+  }
+  // Fallback: name match — strip emoji prefixes and parenthetical suffixes
+  const clean = attackerName.replace(/^[\p{Emoji}\s★⚡]+/u, '').replace(/\s*\(.*\)$/, '').trim();
+  return CS.allies.find(a => !a.perished && (a.name === clean || a.name === attackerName || attackerName.includes(a.name))) || null;
+}
+
+// Award XP and JP to the kill creditor and to all allies who dealt meaningful damage.
+// Kill credit:   full XP + JP_AWARDS.kill  → ally with most contribution OR last hit
+// Assist credit: proportional XP + JP_AWARDS.assist → any other ally who dealt ≥15% of maxHP
+function _awardKillCredit(target, killerAttackerName) {
+  const liveAllies = CS.allies.filter(a => !a.perished && a.hp > 0);
+  if (!liveAllies.length) return;
+
+  const maxHp = target.maxHp || 1;
+  const xpBase = target.exp || 0;
+  const dmgLog = target._dmgLog || {};
+
+  // Build sorted contribution list
+  const contribs = liveAllies
+    .map(a => ({ ally: a, dmg: dmgLog[a.gridId] || 0 }))
+    .filter(c => c.dmg > 0)
+    .sort((a, b) => b.dmg - a.dmg);
+
+  // Determine kill creditor:
+  // 1. Active player unit (direct killer during player phase)
+  // 2. Ally with most damage dealt
+  // 3. Last hit ally
+  let killer = null;
+  if (CS.phase === 'player' && CS.activeUnit) {
+    killer = CS.allies.find(a => a.gridId === CS.activeUnit && !a.perished);
+  }
+  if (!killer) {
+    const lastHitId = target._lastHitBy;
+    killer = contribs[0]?.ally || liveAllies.find(a => a.gridId === lastHitId) || null;
+  }
+
+  // Was this a DoT kill? (attacker name is 'Poison' or 'Bleed')
+  const isDotKill = ['Poison','Bleed','Bleeding'].includes(killerAttackerName);
+
+  // Kill credit — full XP + kill JP
+  if (killer) {
+    if (xpBase > 0) giveExp(killer, xpBase);
+    giveJP(killer, JP_AWARDS.kill, 'kill');
+    if (CS.cellSize && killer.x !== undefined && xpBase > 0) {
+      setTimeout(() => floatAtUnit(killer, '+' + xpBase + 'XP', 'special'), 200);
+    }
+  }
+
+  // DoT kill bonus — award the inflicter if different from direct killer
+  if (isDotKill) {
+    const dotInflicter = _findDotInflicter(target);
+    if (dotInflicter && (!killer || dotInflicter.gridId !== killer.gridId)) {
+      giveJP(dotInflicter, JP_AWARDS.dot_kill, 'dot_kill');
+      const dotXP = Math.floor(xpBase * 0.5);
+      if (dotXP > 0) giveExp(dotInflicter, dotXP);
+      addLog(`⚗ ${dotInflicter.name} earns kill credit (DoT). +${dotXP}XP`, 'system');
+      if (CS.cellSize && dotInflicter.x !== undefined) {
+        setTimeout(() => floatAtUnit(dotInflicter, '+' + dotXP + 'XP', 'special'), 350);
+      }
+    } else if (dotInflicter && killer && dotInflicter.gridId === killer.gridId) {
+      // Same ally — bonus JP for their own DoT kill
+      giveJP(dotInflicter, JP_AWARDS.dot_kill, 'dot_kill');
+    }
+  }
+
+  // Assist credit — any OTHER ally who dealt ≥12% of enemy maxHP (slightly lower threshold)
+  const assistThreshold = Math.max(5, maxHp * 0.12); // 12% threshold, min 5 dmg
+  const totalDmgAll = contribs.reduce((s, c) => s + c.dmg, 0) || 1;
+  const totalAssistXP = Math.floor(xpBase * 0.4);
+  let assistIdx = 0;
+  contribs.forEach(({ ally, dmg }) => {
+    if (ally.gridId === killer?.gridId) return;
+    if (dmg < assistThreshold) return;
+    const propXP = Math.max(1, Math.round((dmg / totalDmgAll) * totalAssistXP));
+    if (xpBase > 0) giveExp(ally, propXP);
+    giveJP(ally, JP_AWARDS.assist, 'assist');
+    // Stagger floats so they don't all stack on the same frame
+    const delay = 400 + assistIdx * 150;
+    if (CS.cellSize && ally.x !== undefined && propXP > 0) {
+      setTimeout(() => floatAtUnit(ally, '+' + propXP + 'XP', 'heal'), delay);
+    }
+    assistIdx++;
+    // Only log the first two assists to keep log clean
+    if (assistIdx <= 2) {
+      addLog(`⚡ ${ally.name} assist +${propXP}XP (${Math.round((dmg / totalDmgAll) * 100)}% dmg)`, 'system');
+    }
+  });
+
+  // Clean up damage log from dead enemy (prevent memory buildup on long missions)
+  delete target._dmgLog;
+  delete target._lastHitBy;
+}
+
+// Find which ally inflicted poison or bleed on the target.
+// We track _poisoner and _bleeder IDs on the enemy when effects are applied.
+function _findDotInflicter(target) {
+  const id = target._poisonerId || target._bleederId;
+  if (!id) return null;
+  return CS.allies.find(a => a.gridId === id && !a.perished);
+}
+
 function applyDamage(target, dmg, attackerName = '') {
   target.hp = Math.max(0, target.hp - dmg);
   addLog(`${attackerName ? attackerName + ' → ' : ''}${target.name}: ${dmg} damage. (${target.hp}/${target.maxHp} HP)`, 'damage');
@@ -7140,19 +8339,31 @@ function applyDamage(target, dmg, attackerName = '') {
   if (CS.cellSize && target.x !== undefined) {
     const isBig = dmg >= 30;
     floatAtUnit(target, '-' + dmg, isBig ? 'crit' : 'damage');
-    // Canvas hit flash
     if (!CS.hitFlashes) CS.hitFlashes = [];
     CS.hitFlashes.push({ x: target.x, y: target.y, color: 'rgba(255,60,60,A)', t: Date.now(), dur: isBig ? 500 : 320 });
     schedulePulseRedraw();
   }
+
+  // ── Track damage contribution for XP/JP assist system ──
+  // Find the ally who dealt this damage (by name match or active unit)
+  const _attacker = _resolveAttacker(attackerName);
+  if (_attacker && dmg > 0) {
+    if (!target._dmgLog) target._dmgLog = {};
+    const id = _attacker.gridId;
+    target._dmgLog[id] = (target._dmgLog[id] || 0) + dmg;
+    // Track who last hit (for kill credit fallback)
+    target._lastHitBy = id;
+  }
+
   if (target.hp <= 0) {
     addLog(`${target.name} is defeated!`, 'death');
+    SFX.play('sfx_combat_death_enemy.mp3');
     if (CS.cellSize && target.x !== undefined) floatAtUnit(target, '💀', 'death');
-    recordKill(target); // reputation tracking
+    recordKill(target);
     if (target.gold) { GS.gold += target.gold; updateGoldDisplay(); }
     if (target.exp) {
-      const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
-      if (ally) giveExp(ally, target.exp);
+      // Award XP and JP to kill creditor + assisters
+      _awardKillCredit(target, attackerName);
     }
     // ── ASSASSINATION: target killed → open exits ──
     if (target.isTarget) {
@@ -7332,7 +8543,15 @@ const JOB_ABILITIES = {
 };
 
 // JP per action: attack=10, special=15, kill=20, move only=3, use item=5
-const JP_AWARDS = { attack: 10, special: 15, kill: 20, move: 3, item: 5 };
+const JP_AWARDS = {
+  attack:  10,   // basic attack action
+  special: 15,   // special move used
+  kill:    20,   // killing blow or kill credit (poison/bleed)
+  assist:  8,    // dealt ≥15% of enemy's max HP without getting kill
+  move:    3,    // moved without acting
+  item:    5,    // used an item
+  dot_kill: 12,  // kill via poison/bleed (bonus on top of normal kill for the inflicter)
+};
 
 // Job level thresholds: level 1-5, unlock new ability slots at levels 2 and 4
 const JOB_LEVEL_XP = [0, 150, 400, 800, 1400, 2200];
@@ -7406,6 +8625,10 @@ function giveJP(n, amount, actionType) {
     if (gn) { if (!gn.jobs) gn.jobs = {}; gn.jobs[n.class] = { ...jd }; }
     addLog('★ ' + n.name + ' Skill Level ' + jd.level + ' (' + n.class + ')!', 'system');
     toast(n.name + ': ' + n.class + ' Skill Lv' + jd.level + '!', 'success');
+    // Float skill level-up on canvas
+    if (CS.cellSize && n.x !== undefined) {
+      setTimeout(() => floatAtUnit(n, '★ SP Lv' + jd.level, 'special'), 500);
+    }
   }
   const gn = GS.clan.find(x => x.id === n.id);
   if (gn) { if (!gn.jobs) gn.jobs = {}; gn.jobs[n.class] = { ...jd }; }
@@ -7468,6 +8691,7 @@ function triggerReaction(ally, rawDmg, attackerUnit) {
         } else {
           attackerUnit.hp = Math.max(0, attackerUnit.hp - counterDmg);
           addLog(ally.name + ' COUNTERS ' + attackerUnit.name + ' for ' + counterDmg + '!', 'special');
+          SFX.play('sfx_combat_counter.mp3');
         }
       }
       return rawDmg;
@@ -7494,6 +8718,7 @@ function triggerReaction(ally, rawDmg, attackerUnit) {
           if (isPosEmpty(ally.x + d.dx, ally.y + d.dy, ally.gridId)) {
             ally.x += d.dx; ally.y += d.dy;
             addLog(ally.name + ' redirects and dodges!', 'special');
+            SFX.play('sfx_combat_miss.mp3');
             return 0; // evaded
           }
         }
@@ -7503,6 +8728,7 @@ function triggerReaction(ally, rawDmg, attackerUnit) {
     case 'nullify_blade': {
       if (attackerUnit?.weapon?.type === 'blades' && Math.random() < ab.chance) {
         addLog(ally.name + ' grasps the blade — nullified!', 'special');
+        SFX.play('sfx_combat_counter.mp3');
         return 0;
       }
       return rawDmg;
@@ -7540,6 +8766,8 @@ function checkOnHitPoison(ally, target) {
   if (!hasSupportAbility(ally, 'on_hit_poison')) return;
   if (target && target.hp > 0 && Math.random() < 0.3) {
     target.status = 'poisoned';
+    target._poisonerId = ally.gridId;
+    target._poisonedByClass = ally.class;
     addLog(ally.name + ': Poison Touch! ' + target.name + ' poisoned!', 'special');
   }
 }
@@ -7703,6 +8931,7 @@ function equipAbilityUI(ninjaId, slot, abilityId) {
 
 
 function giveExp(ninja, exp) {
+  if (!exp || exp <= 0) return;
   ninja.exp += exp;
   if (ninja.exp >= ninja.expToNext) {
     ninja.level++;
@@ -7712,8 +8941,19 @@ function giveExp(ninja, exp) {
     ninja.maxChi = Math.min(ninja.maxChi + 1, 15);
     addLog('✦ ' + ninja.name + ' reached Level ' + ninja.level + '!', 'system');
     toast(ninja.name + ' leveled up to Level ' + ninja.level + '!', 'success');
-    const gn = GS.clan.find(x => x.id === ninja.id);
-    if (gn) { gn.level = ninja.level; gn.exp = ninja.exp; gn.expToNext = ninja.expToNext; gn.maxHp = ninja.maxHp; gn.maxChi = ninja.maxChi; }
+    SFX.play('sfx_unit_levelup.mp3');
+    if (ninja.level >= 5) _earnAch('level5');
+    // Float level-up on canvas
+    if (CS.cellSize && ninja.x !== undefined) {
+      setTimeout(() => floatAtUnit(ninja, '⭐ LVL ' + ninja.level + '!', 'special'), 300);
+    }
+  }
+  // Sync to GS roster so hub reflects combat XP gains
+  const gn = GS.clan.find(x => x.id === ninja.id);
+  if (gn) {
+    gn.level = ninja.level; gn.exp = ninja.exp;
+    gn.expToNext = ninja.expToNext;
+    gn.maxHp = ninja.maxHp; gn.maxChi = ninja.maxChi;
   }
 }
 
@@ -7794,6 +9034,7 @@ function beginUnitTurn(unit) {
     }
     // Flash phase banner
     _showPhaseBanner(unit.name + "'s Turn", '#f0c040');
+    SFX.play('sfx_ui_turn_start.mp3', 0.5);
     renderCombat();
     checkCombatEnd();
   } else {
@@ -7830,8 +9071,12 @@ function tickDoomCountdowns() {
 }
 
 function triggerPermadeath(ally) {
+  // Guard: if already perished (e.g. fire killed them same tick as doom countdown), skip
+  if (ally.perished) return;
+
   addLog(ally.name + ' has perished! Lost forever...', 'death');
   toast(ally.name + ' has died permanently!', 'error');
+  SFX.play('sfx_combat_death_ally.mp3');
 
   // If the ally died on an elevated tile, find nearest reachable ground-level
   // tile so the doom bag is always retrievable by any unit (including Berserker).
@@ -7893,8 +9138,9 @@ function triggerPermadeath(ally) {
   // Persist removal immediately so save state is correct even if combat ends abnormally
   saveGame();
 
-  // Notify and check if all dead
-  if (GS.clan.length === 0) {
+  // Notify and check if all combat allies are now gone
+  const _stillAlive = CS.allies.filter(a => !a.perished && a.hp > 0 && !a.doomed);
+  if (_stillAlive.length === 0) {
     setTimeout(() => endCombat('defeat'), 800);
   }
 }
@@ -7905,10 +9151,10 @@ function reviveAlly(ally, healAmount) {
   ally.doomed = false;
   ally.doomCountdown = 0;
   ally.hp = Math.min(ally.maxHp, Math.max(1, healAmount || 1));
-  // Re-enter ATB with partial CT
   ally.ct = 20;
   addLog(ally.name + ' revived with ' + ally.hp + ' HP!', 'heal');
   toast(ally.name + ' revived!', 'success');
+  _earnAch('first_revive');
   return true;
 }
 
@@ -7999,6 +9245,8 @@ function finishAllyTurn() {
   tickDoomCountdowns();
   // Tick buffs and status for this ally
   tickUnitStatus(ally);
+  // Tick fire spread and apply fire damage
+  tickFireSpread();
 
   CS.selectedAlly = null;
   CS.selectedAction = null;
@@ -8032,20 +9280,43 @@ function _updateDoomVignette() {
 function tickUnitStatus(unit) {
   if (unit.buffs) {
     unit.buffs = unit.buffs.map(b => {
-      // Don't tick permanent buffs
       if (b.permanent) return b;
       return { ...b, turns: b.turns - 1 };
     }).filter(b => b.permanent || b.turns > 0);
   }
-  if (unit.status === 'poisoned') applyDamage(unit, (unit._poisonedByClass==='kunoichi'?10:5), 'Poison');
+
+  // Poison tick — routes through applyDamage so contribution/kill tracking works
+  if (unit.status === 'poisoned') {
+    const poisonDmg = unit._poisonedByClass === 'kunoichi' ? 10 : 5;
+    // For enemies: use full applyDamage pipeline (tracks contribution)
+    if (!unit.gridId) {
+      applyDamage(unit, poisonDmg, 'Poison');
+    } else {
+      // For allies: simple damage (no contribution tracking needed)
+      unit.hp = Math.max(0, unit.hp - poisonDmg);
+      addLog(`☠ ${unit.name} takes ${poisonDmg} poison damage. (${unit.hp}/${unit.maxHp})`, 'damage');
+    }
+    SFX.play('sfx_status_poison.mp3', 0.6);
+  }
+
+  // Bleed tick — routes through applyDamage for enemies so kill credit works
   if (unit.bleeds && unit.bleedTurns > 0) {
-    unit.hp = Math.max(0, unit.hp - unit.bleeds);
+    const bleedDmg = unit.bleeds;
     unit.bleedTurns--;
-    addLog('\u{1FA78} ' + unit.name + ' bleeds ' + unit.bleeds + ' HP. (' + unit.hp + '/' + unit.maxHp + ')', 'damage');
+    if (!unit.gridId) {
+      // Enemy: route through applyDamage with 'Bleed' tag — kill credit via _bleederId
+      applyDamage(unit, bleedDmg, 'Bleed');
+    } else {
+      // Ally: simple damage
+      unit.hp = Math.max(0, unit.hp - bleedDmg);
+      addLog(`\u{1FA78} ${unit.name} bleeds ${bleedDmg} HP. (${unit.hp}/${unit.maxHp})`, 'damage');
+    }
+    SFX.play('sfx_status_bleed.mp3', 0.55);
     if (unit.bleedTurns <= 0) unit.bleeds = 0;
   }
+
   // Monk chi regen (passive: +2 chi per turn)
-  if (unit.gridId && unit.class === 'monk') unit.chi = Math.min(unit.maxChi, (unit.chi||0)+2);
+  if (unit.gridId && unit.class === 'monk') unit.chi = Math.min(unit.maxChi, (unit.chi || 0) + 2);
 }
 
 function finishEnemyTurn(enemy) {
@@ -8055,6 +9326,8 @@ function finishEnemyTurn(enemy) {
   }
   // Tick doom countdowns every enemy action too
   tickDoomCountdowns();
+  // Tick fire spread and apply fire damage
+  tickFireSpread();
   CS.activeUnit = null;
   checkCombatEnd();
   if (CS.active) setTimeout(advanceCT, 200);
@@ -8227,6 +9500,7 @@ function runEnemyUnitTurn(enemy) {
         const _aiFactor=Math.min(1.0,_aiDist/Math.max(1,e.attackRange));
         if (Math.random()<cover*0.08*_aiFactor) {
           addLog(e.name+' fires — cover deflects the shot!','system');
+          SFX.play('sfx_combat_miss.mp3', 0.7);
           consumeEnemyWeaponUse(e); return true;
         }
       }
@@ -8240,6 +9514,9 @@ function runEnemyUnitTurn(enemy) {
     else if (hd<=-1) dmg=Math.round(dmg*0.92);
     addLog((e.weapon?e.weapon.icon+' ':'')+e.name+' attacks '+target.name+'!','damage');
     recordDetection();
+    // ── SFX: enemy weapon-type hit sound ──
+    const _eSfx = e.weapon?.type ? (WEAPON_SFX[e.weapon.type] || 'sfx_blunt_hit.mp3') : 'sfx_blunt_hit.mp3';
+    SFX.play(_eSfx, 0.75);
     applyDamageToAlly(target,dmg,e.name);
     consumeEnemyWeaponUse(e);
     return true;
@@ -8426,6 +9703,8 @@ function runEnemyUnitTurn(enemy) {
       faceTarget(enemy, bestTarget.x, bestTarget.y);
       addLog('💀 ' + enemy.name + ' strikes from the shadows!', 'damage');
       recordDetection();
+      const _bsSfx = enemy.weapon?.type ? (WEAPON_SFX[enemy.weapon.type] || 'sfx_blade_hit.mp3') : 'sfx_blade_hit.mp3';
+      SFX.play(_bsSfx, 0.8);
       applyDamageToAlly(bestTarget, Math.round(dmg * 1.5), enemy.name);
       consumeEnemyWeaponUse(enemy);
     } else {
@@ -8553,6 +9832,7 @@ function applyDamageToAlly(ally, rawDmg, attackerName) {
     }
   }
   ally.hp = Math.max(0, ally.hp - dmg);
+  if (dmg > 0 && CS.missionStats) CS.missionStats.alliesTookDamage = true;
   addLog(attackerName + " → " + ally.name + ": " + dmg + " damage. (" + ally.hp + "/" + ally.maxHp + " HP)", 'damage');
   // Float damage number on ally tile
   if (CS.cellSize && ally.x !== undefined) {
@@ -8570,6 +9850,7 @@ function applyDamageToAlly(ally, rawDmg, attackerName) {
     ally.ct = 0; // remove from ATB queue while downed
     addLog(ally.name + ' is DOWN! Revive within 3 turns!', 'death');
     toast(ally.name + ' is dying — use a healing item to revive!', 'error');
+    SFX.play('sfx_combat_death_ally.mp3');
     // Drop any held objective loot
     if (ally.hasLoot && CS.mission?.type === 'theft') {
       ally.hasLoot = false;
@@ -8722,6 +10003,7 @@ function advanceFloor() {
   const _advFd = mission.floors[CS.currentFloor];
   addLog('=== FLOOR ' + (CS.currentFloor + 1) + ' — ' + (_advFd?.name || 'Next Floor') + ' ===', 'system');
   toast('Floor ' + (CS.currentFloor + 1) + '/' + CS.totalFloors + ': ' + (_advFd?.name || ''), 'success');
+  SFX.play('sfx_mission_floor.mp3');
 
   // Reset per-floor state
   CS.turn = 0;
@@ -8734,16 +10016,24 @@ function advanceFloor() {
   CS.goldPickups = [];
   CS.reinforcementsSpawned = false; // set true when any reinforcements arrive
   CS.objectiveTiles = [];
+  CS.activeFires = [];
   CS.objectiveProgress = 0;
   CS.objectiveTotal = 0;
-
   // Reset floor-specific turn limit
   const floorData = mission.floors[CS.currentFloor];
   CS.turnLimit = floorData?.turnLimit || 0;
 
   // Heal allies slightly between floors (25% of missing HP)
+  // Doomed allies at floor transition die — they didn't survive the floor
+  CS.allies.filter(a => a.doomed && !a.perished).forEach(a => {
+    addLog(a.name + ' did not survive to the next floor — lost forever.', 'death');
+    toast(a.name + ' perished between floors!', 'error');
+    GS.clan = GS.clan.filter(n => n.id !== a.id);
+    a.perished = true;
+    a.doomed = false;
+    saveGame();
+  });
   CS.allies.filter(a => isAllyAlive(a)).forEach(a => {
-    if (a.doomed) { a.doomed = false; a.doomCountdown = 0; a.hp = Math.max(1, Math.floor(a.maxHp * 0.1)); a.ct = 20; }
     const missing = a.maxHp - a.hp;
     a.hp = Math.min(a.maxHp, a.hp + Math.floor(missing * 0.25));
     a.ct = Math.floor(Math.random() * 30);
@@ -8795,19 +10085,30 @@ function advanceFloor() {
   });
 
   if (fd.targetEnemy) {
-    const t = CS.enemies.find(e => e.type === fd.targetEnemy);
-    if (t) { t.isTarget = true; t.name = '★ ' + t.name; }
+    let t = CS.enemies.find(e => e.type === fd.targetEnemy);
+    if (!t && CS.enemies.length > 0) {
+      t = CS.enemies.reduce((best, e) => (!best || e.maxHp > best.maxHp) ? e : best, null);
+      addLog('⚠ Target "' + fd.targetEnemy + '" not found — designating ' + (t?.name || 'enemy') + ' as target.', 'system');
+    }
+    if (t) { t.isTarget = true; t.name = '★ ' + t.name.replace(/^[\u2605\uD83D\uDD11\uD83D\uDCE6] /, ''); }
   }
-  if (fd.carrierEnemy && fd.lootItem) {
+  if (fd.carrierEnemy) {
+    const advLoot = fd.lootItem || { name: 'Stolen Goods', icon: '📦' };
     let c = CS.enemies.find(e => e.type === fd.carrierEnemy);
     if (!c && CS.enemies.length > 0) {
       c = CS.enemies.reduce((best, e) => (!best || e.maxHp > best.maxHp) ? e : best, null);
-      if (c) addLog('\u{1F4E6} The ' + c.name + ' is holding the ' + fd.lootItem.name + '.', 'system');
+      if (c) addLog('\u{1F4E6} The ' + c.name + ' is holding the ' + advLoot.name + '.', 'system');
     }
     if (c) {
       c.isCarrier = true;
-      c.carriedLoot = { ...fd.lootItem };
+      c.carriedLoot = { ...advLoot };
       c.name = '\uD83D\uDD11 ' + c.name.replace(/^[\uD83D\uDCE6\u2605\uD83D\uDD11] /, '');
+    } else if (!c) {
+      // Emergency floor drop
+      const dropPos = _findSafePassablePos(CS.grid, CS.gridW, CS.gridH,
+        Math.floor(CS.gridW * 0.7), Math.floor(CS.gridH / 2), CS.enemies);
+      CS.lootOnFloor = { ...advLoot, x: dropPos.x, y: dropPos.y };
+      addLog('⚠ No carrier available — loot placed on floor.', 'system');
     }
   }
 
@@ -8929,7 +10230,21 @@ function endCombat(result) {
 
   if (result === 'fled') {
     // Fled under smoke cover — no reward, ninja survive at 50% HP
-    CS.allies.forEach(a => {
+    SFX.play('sfx_mission_escape.mp3');
+    // First purge any allies that perished during combat
+    const _fledPeriSet = new Set(CS.allies.filter(a => a.perished).map(a => a.id));
+    if (_fledPeriSet.size) {
+      GS.clan = GS.clan.filter(n => !_fledPeriSet.has(n.id));
+      _fledPeriSet.forEach(() => addLog('A fallen ninja has been lost.', 'system'));
+    }
+    // Doomed-but-not-yet-perished allies also die when fleeing (no revive opportunity)
+    CS.allies.filter(a => a.doomed && !a.perished).forEach(a => {
+      addLog(a.name + ' did not make it out — lost forever.', 'death');
+      toast(a.name + ' perished during the retreat!', 'error');
+      GS.clan = GS.clan.filter(n => n.id !== a.id);
+      a.perished = true;
+    });
+    CS.allies.filter(a => !a.perished && !a.doomed).forEach(a => {
       const gn = GS.clan.find(x => x.id === a.id);
       if (gn) {
         gn.hp = Math.max(10, Math.floor(gn.maxHp * 0.5));
@@ -8947,9 +10262,17 @@ function endCombat(result) {
   }
 
   if (result === 'victory') {
+    SFX.play('sfx_mission_victory.mp3');
     applyMissionReputation('victory', mission);
+    // Achievement checks
+    const _achPartySize = CS.allies.filter(a => !a.perished).length;
+    achOnVictory(mission, _achPartySize, CS.turn);
     if (!mission.isDynamic) {
       GS.completedMissions.push(mission.id);
+      // Arc completion achievements (check after push so capstone is included)
+      STORY_ARCS.forEach(arc => {
+        if (GS.completedMissions.includes(arc.capstone)) _earnAch('arc' + arc.arc + '_complete');
+      });
       // Check if this mission completes a story arc
       const completedArc = STORY_ARCS.find(a => a.capstone === mission.id);
       if (completedArc) {
@@ -9015,23 +10338,32 @@ function endCombat(result) {
     });
     CS.doomBags = [];
 
-    // Final purge: remove any perished allies that weren't caught by triggerPermadeath
+    // Final purge: remove any perished allies (caught by triggerPermadeath OR missed)
+    // Also remove any allies still in doom-countdown at victory end — they didn't make it
+    CS.allies.filter(a => a.doomed && !a.perished).forEach(a => {
+      addLog(a.name + ' succumbed to wounds — lost forever.', 'death');
+      toast(a.name + ' did not survive the mission.', 'error');
+      GS.clan = GS.clan.filter(n => n.id !== a.id);
+      a.perished = true;
+      a.doomed = false;
+      saveGame();
+    });
     const periIdSet = new Set(CS.allies.filter(a => a.perished).map(a => a.id));
     if (periIdSet.size) GS.clan = GS.clan.filter(n => !periIdSet.has(n.id));
 
-    // Sync surviving ally HP changes back to clan
-    CS.allies.filter(a => !a.perished).forEach(a => {
+    // Sync surviving ally HP changes back to clan (only alive, non-perished, non-doomed)
+    CS.allies.filter(a => !a.perished && !a.doomed).forEach(a => {
       const gn = GS.clan.find(x => x.id === a.id);
       if (gn) {
-        gn.hp = a.doomed ? Math.max(1, Math.floor(gn.maxHp * 0.1)) : Math.max(10, a.hp);
+        gn.hp = Math.max(10, a.hp);
         gn.chi = a.chi;
         gn.level = a.level;
         gn.exp = a.exp;
         gn.expToNext = a.expToNext;
         gn.maxHp = a.maxHp;
         gn.maxChi = a.maxChi;
-        gn.carriedItems = a.doomed ? [] : (a.carriedItems || []);
-        gn.weapon = (!a.doomed && a.weapon) ? { ...a.weapon } : null;
+        gn.carriedItems = a.carriedItems || [];
+        gn.weapon = a.weapon ? { ...a.weapon } : null;
         if (a.jobs) gn.jobs = { ...a.jobs };
         if (a.unlockedAbilities) gn.unlockedAbilities = [...a.unlockedAbilities];
         if (a.equippedAbilities) gn.equippedAbilities = { ...a.equippedAbilities };
@@ -9091,20 +10423,26 @@ function endCombat(result) {
     });
     CS.doomBags = [];
 
-    // Final purge of perished allies from roster
+    // Doomed allies at defeat also perish permanently — they never made it out
+    CS.allies.filter(a => a.doomed && !a.perished).forEach(a => {
+      addLog(a.name + ' has perished on the battlefield.', 'death');
+      GS.clan = GS.clan.filter(n => n.id !== a.id);
+      a.perished = true;
+      a.doomed = false;
+    });
+    // Final purge of any perished allies from roster (belt-and-suspenders)
     const defPeriSet = new Set(CS.allies.filter(a => a.perished).map(a => a.id));
     if (defPeriSet.size) {
       GS.clan = GS.clan.filter(n => !defPeriSet.has(n.id));
-      defPeriSet.forEach(id => addLog('Removed perished ninja from roster.', 'system'));
     }
 
-    // Sync HP for surviving (non-perished) allies
-    CS.allies.filter(a => !a.perished).forEach(a => {
+    // Sync HP for surviving (non-perished, non-doomed) allies — beaten but alive
+    CS.allies.filter(a => !a.perished && !a.doomed).forEach(a => {
       const gn = GS.clan.find(x => x.id === a.id);
       if (gn) {
         gn.hp = Math.max(5, Math.floor(gn.maxHp * 0.1));
-        gn.carriedItems = a.doomed ? [] : (a.carriedItems || []);
-        gn.weapon = (!a.doomed && a.weapon) ? { ...a.weapon } : null;
+        gn.carriedItems = a.carriedItems || [];
+        gn.weapon = a.weapon ? { ...a.weapon } : null;
         if (a.jobs) gn.jobs = { ...a.jobs };
         if (a.unlockedAbilities) gn.unlockedAbilities = [...a.unlockedAbilities];
         if (a.equippedAbilities) gn.equippedAbilities = { ...a.equippedAbilities };
@@ -9112,6 +10450,7 @@ function endCombat(result) {
     });
     applyMissionReputation(result, mission);
     saveGame();
+    SFX.play('sfx_mission_defeat.mp3');
     showResultScreen('defeat', {
       title: result === 'timedout' ? 'Time Expired' : 'Mission Failed',
       subtitle: mission.name,
@@ -9266,7 +10605,7 @@ function executeCombatItem(gridId, itemIndex) {
     }
   } else if (item.effect === 'aoe_heal') {
     CS.allies.forEach(a => {
-      if (a.hp > 0) {
+      if (a.hp > 0 && !a.perished && !a.escaped && !a.doomed) {
         a.hp = Math.min(a.maxHp, a.hp + (item.value || 0));
         addLog(`${a.name} healed ${item.value} HP.`, 'heal');
         if (CS.cellSize && a.x !== undefined) floatAtUnit(a, '+' + item.value, 'heal');
@@ -10490,6 +11829,7 @@ function calcDamage(attacker, defender) {
   if (stealthBonus.mult > 1.0) {
     base = Math.round(base * stealthBonus.mult);
     if (stealthBonus.label) addLog(stealthBonus.label, 'special');
+    _earnAch('first_stealth_kill');
   }
 
   // ── POSITIONAL: TERRAIN DEFENSE ──
@@ -10605,20 +11945,20 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','W.rW.......W.W','E.rG.......G.W','W.WWWWWWWWWWWW','W............W','W...R..R.R...W','E............W','WGGWWWWWWWWGWW','W....W.....r.W','E....G.....r.W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','WrrW.......W.W','ErrG.......G.W','W..WWWWWWWWWWW','W............W','W...R........W','E............W','WWWWWWWWWGWWWW','W....W.......W','E..rr.......rW','W..rr.......rW','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.R.....W','E....G.R.....W','WWWWWGWWWWWWWW','W............W','W....R.R.R...W','E............W','WWWWWWWWGWWWWW','W.r.W........W','E.r.G........W','W...W........W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..WW.....WW.W','E..WW.....WW.W','WWWWWWWWWWWWWW','W...R.....R..W','W...R.....R..W','E............W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W.r..W......rW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..G......G..W','E..G......G..W','WWWWWWWWWWWWWW','W...R.....R..W','W...R.....R..W','E............W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W.r..W......rW','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.1.W.......1W','E...G.........','W.1.WWWWWWWWWW','W............W','W...R.R......W','E...R........W','WGGWWWWWWGWWWW','W....W.......W','E....G.......W','W.1..W......1W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.......W','E....W.......W','WWWWWWWWWWWWWW','W...R.R.R.R..W','W............W','E.............','WWWWGWWWWGWWWW','W....W.......W','E....G.......W','W....W...r..rW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWWWWWWWWWWW','W...R.R.R.R..W','W............W','E.............','WWWWGWWWWGWWWW','W....W.......W','E....G.......W','W....W...r..rW','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.SS.W.......W','E.SS.G.......W','WWWWWWWWWWWWWW','W..S.........W','W..S.R..R....W','E..S.........W','WGGWWWWWWWWWWW','W....W.rr....W','E....G.rr....W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....WWW.....W','E....W.W.....W','WWWWWW.W.WWWWW','W....W...W...W','W....G...G...W','E............W','WWWWWW.WWWWWWW','W....W.......W','E....G....R..W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.rW.......rWW','E.rG.......r.W','W.WWWWWWWWWWWW','W............W','W.SS.....SS..W','E............W','WWWWWWWWWWWWWW','W.r.W......r.W','E.r.G......r.W','W...W........W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWW.WWWWWWW','W....W.......W','W....W.......W','E....WWWGWWWWW','W....W.......W','W..rr.......rW','E..rr.......rW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WW....WWW','E....WW....W.W','WWWWWWWWWWWWWW','W..R.........W','W..R.R.R.....W','E............W','WGGWWWWWGWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.....WWW','E....G.....G.W','WWWWWWWWWWWWWW','W..R.........W','W..R.R.R.....W','E............W','WGGWWWWWGWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.r.WWWW.....W','E.r.W..W.....W','W...G..G.....W','W...WWWW.....W','W............W','E............W','WWWWGWWWWWWWWW','W....W......rW','E....G......rW','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W.R..........W','W.R..R.R.....W','E.R..........W','WWWWWWWWWWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...W.....W..W','E...G.....G..W','WWWWG.....GWWW','W...W.....W..W','W...........SS','E...........SS','WWWWG.....GWWW','W...W.....W..W','E...G.....G..W','W...W.....W..W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.1..W.....1.W','E....G.......W','W.1..WWWWWWWWW','W............W','W.R..R.......W','E............W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W.1..W......1W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','Wrr..W.....r.W','Err..G.....r.W','W...WWWWWWWWWW','W............W','W...R.R.R....W','E...R........W','WWWWWWWWGWWWWW','W....W.......W','E....G.......W','W..rr.......rW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WW......W','E....WW......W','WWWWWWWWWWWWWW','W.............','W.R.R........W','E.R..........W','WWWWWWWGWWWWWW','W....W.......W','E....G.r...r.W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWWWWWWWWWWW','W.............','W.R.R........W','E.R..........W','WWWWWWWGWWWWWW','W....W.......W','E....G.r...r.W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.S.W......S.W','E.S.G......S.W','W.SWWWWWWWWSWW','W.S..........W','W.S..R.R.....W','E............W','WWWWGWWWWGWWWW','W....W.......W','E....G.......W','W.1..W......1W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWGWWWW','W...........RW','W....R.......W','E............W','WWWWWWWWWWWWWW','W.rr.W.......W','E.rr.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.r.W......r.W','E.r.G......r.W','W.r.WWWWWWWWWW','W............W','W............W','E...R.R.R....W','WGGWWWWWWWWWWW','W..r.W.......W','E..r.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
@@ -10631,11 +11971,11 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','W............W','E.............','WWWWWWWWWGWWWW','W..........R.W','W.R........R.W','E..........R.W','WGGWWWWWWWGWWW','W..........12W','E..........12W','W..........12W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...W......W2W','E...G......G2W','WWWWW......W2W','W.........W22W','W..........12W','E..........12W','WWWWWGWWWWWWWW','W...W......W.W','E...G......G.W','W...W......W.W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.....3WW','E....G.....2WW','WWWWWW.....2WW','W..........2.W','W..R.......2.W','E..........2.W','WWWWGWWWWWWWWW','W....W.....2WW','E....G.....3WW','W....W.....2WW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WWWWWWWWW','E....W.......W','WWWWWG.......W','W....W.......W','W....WWWWWWW2W','E..........122W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....WWWWWW22W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....WWWWWWWWW','E....W.......W','WWWWWG.......W','W....W.......W','W....WWWWWWW2W','E..........122','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....WWWWWW22W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWGW2WW','W...........2W','W.R.........2W','E...........2W','WWWWWWWWWGW2WW','W....W......2W','E....G......2W','W....W......2W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W......1W','E....G......2W','WWWWWWWWWWWW2W','W..............','W.R.R..........','E...........W2W','WGGWWWWWWWWW2W','W....W......1W','E....G......2W','W....W......2W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.........W2.W','E.........G2.W','WWWWGWWWWWW2.W','W..........2..','W.R.R......2..','E..........2.WW','WWWWWWWWWWW2WW','W.........W2.W','E.........G2.W','W.........W2.W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWWWWWWW1WW','W.........W12W','W..........12W','E...R......12W','WGGWWWWWWWWWWW','W....W.........','E....G.........','W....W.....W.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W......1W','E....G......2W','WWWWWWWWWWWW2W','W............W','W.R.R........W','E...........W2','WGGWWWWWWWWW2W','W....W......1W','E....G......2W','W....W......2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.........W2.W','E.........G2.W','WWWWGWWWWWW2.W','W..........2..','W.R.R......2..','E..........2.W','WWWWWWWWWWW2WW','W.........W2.W','E.........G2.W','W.........W2.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWWWWWWW1WW','W.........W12W','W..........12W','E...R......12W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W.....W.W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.3.W......3WW','E.2.G......2WW','W.2.WWWWWWW2WW','W...........2W','W.R.........2W','E...........2W','WGGWWWWWWWWWWW','W.2.W......2WW','E.2.G......2WW','W.3.W......3WW','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','E.............','WWWWWWWWWWWWWW','W..R.......12W','W..R.......12W','E..........12W','WGGWWWWWWWWWWW','W..........12W','E..........12W','W..........12W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWGWWWWWWWW','W.R...........','W.R.R.....W22W','E.........W22W','WWWWGWWWWWWWWW','W.R...........','E.R.R.......2W','W...........2W','WWWWWWWWWWWWWW'],
@@ -10653,7 +11993,7 @@ const MAP_LIBRARY = {
   castle_siege: [
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W..R.........W','W..R.R...W.2.W','E........W.2.W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W.SS.........W','W.SS.....W.2.W','E........G.2.W','WWWWWWWWWW.2.W','W..2.W.......W','E..2.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WW......W','E....WW......W','WWWWWWWWWWWWWW','W.R..........W','W.R..R...W12.W','E........G12.W','WGGWWWWWWW12.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWWWWWWWWWWW','W.R..........W','W.R..R...W12.W','E........G12.W','WGGWWWWWWW12.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.S.W.......SW','E.S.G.......SW','W.SWWWWWWWWSWW','W.S..........W','W.S......W.2.W','E........G.2.W','WGGWWWWWWW.2.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W..R.........W','W..R.....WW.2W','E........WG.2W','WGGWWWWWWWW.2W','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W............W','W.R..R...W.22W','E........G.22W','WWWWWWWWWW.22W','W....W.......W','E....G.......W','W.2..W.......W','WWWWWWWWWWWWWW'],
@@ -10663,7 +12003,7 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWGWWWW','W.R..........W','W.R......W12.W','E........G12.W','WGGWWWWWWW12.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.2.W........W','E.2.G........W','W.2.WWWWWWWWWW','W............W','W..R.....W12.W','E........G12.W','WWWWGWWWWWWWWW','W............W','E....G.......W','W.2..W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W.SS.........W','W.SS.....W.2.W','E........G.2.W','WGGWWWWWWWWWWW','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WW......W','E....WG......W','WWWWWWWWWWWWWW','W..R.........W','W..R.R...W12.W','E........G12.W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W......2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....GG......W','WWWWWWWWWWWWWW','W..R.........W','W..R.R...W12.W','E........G12.W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W......2W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W.R..........W','W.R......W12.W','E........W12.W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W..2.W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWWWW2W','W..R.........W','W..R.....W.12W','E........G.12W','WGGWWWWWWWWWWW','W............W','E....G.......W','W....W......2W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.S.W.......SW','E.S.G.......SW','W.SWWWWWWWWSWW','W..S.........W','W..S.....W.2.W','E........G.2.W','WGGWWWWWWW.2.W','W....W.......W','E....G.......W','W.2..W.......W','WWWWWWWWWWWWWW'],
@@ -10676,29 +12016,29 @@ const MAP_LIBRARY = {
   // Almost no elevation (never 2 or 3). Occasional 1 for rocky outcrop.
   forest_ambush: [
     ['WWWWWWWWWWWWWW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','WFFF.....FFFFW','W............W','W.FFF...FFF..W','E............W','WFFF.....FFFFW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFF.......FFFW','EFFF.......FFFW','W.F..........FW','W.F..........FW','W.F...R.R....FW','E.F..........FW','W.F..........FW','WFFF.......FFFW','EFFF.......FFFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFF.......FFF','EFFF.......FFF','W.F..........F','W.F..........F','W.F...R.R....F','E.F..........F','W.F..........F','WFFF.......FFF','EFFF.......FFF','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.FFF.F.FFF..W','E.FFF.F.FFF..W','WFFFF.F.FFFFFW','W.....F......W','W.F...F...F..W','E.F...F...F..W','W.F...F...F..W','WFFFF.F.FFFFFW','E.FFF.F.FFF..W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.FFF....FFF.W','E.FFF....FFF.W','W.F...RR...F.W','W.F...RR...F.W','W.F..........W','E.F..........W','W.FFFFFFFFFFF.W','W.FFFFFFFFFFF.W','E............W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FFF....FFF.W','E.FFF....FFF.W','W.F...RR...F.W','W.F...RR...F.W','W.F..........W','E.F..........W','W.FFFFFFFFFFF.','W.FFFFFFFFFFF.','E............W','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W..F.......F.W','E..F.......F.W','W..FFFFF.FFFFW','W............W','W.~~~.....~~~W','E.~~~.....~~~W','W.~~~.....~~~W','W..FFFFF.FFFFW','E..F.......F.W','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','WFFF.FFF.FFF.W','EFFF.FFF.FFF.W','W............W','W.RR.RRR.RR..W','W............W','E............W','W............W','WFFF.FFF.FFF.W','EFFF.FFF.FFF.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.FFFFFFFFFFF.','E.F.........FW','W.F.FFFFFFFFFFF','W.F.F.......FW','W.F.F.......FW','E.F.F.......FW','W.F.FFFFFFFFFFF','W.F.........FW','E.FFFFFFFFFFF.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FFFFFFFFFFF.','E.F.........FW','W.F.FFFFFFFFFW','W.F.F.......FW','W.F.F.......FW','E.F.F.......FW','W.F.FFFFFFFFFW','W.F.........FW','E.FFFFFFFFFFF.','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.FF.....FF..W','E.FF.....FF..W','WFFFFWWWFFFFFW','W....W...W...W','W....G...G...W','E....WWWWWWWWW','W............W','W.FF.....FF..W','E.FF.....FF..W','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.FFFF.FFFFF.W','E.F.........FW','WFFFFF.FFFFFF.','W.F.R.R.R....W','W.F..........W','E.F..........W','WFFFFF.FFFFFF.','W.F.........FW','E.FFFF.FFFFF.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFF...FFF...W','EFFF...FFF...W','W......FFF...W','W....R.......W','W....R.......W','E....R.......W','WFFF.......FFFW','WFFF.......FFFW','EFFF.......FFFW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...F.......FW','E...F.......FW','WFFFFFFFFFFFF W','W............W','W.RR.......RR.','E.RR.......RR.','WFFFFFFFFFFFF.W','W...F.......FW','E...F.......FW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFF...FFF...W','EFFF...FFF...W','W......FFF...W','W....R.......W','W....R.......W','E....R.......W','WFFF.......FFF','WFFF.......FFF','EFFF.......FFF','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...F.......FW','E...F.......FW','WFFFFFFFFFFFF ','W............W','W.RR.......RR.','E.RR.......RR.','WFFFFFFFFFFFF.','W...F.......FW','E...F.......FW','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.FF.......FF.','E.FF.......FFW','W.FF.FFFFF.FFW','W....F...F...W','W.R..F...F...W','E.R..F...F...W','W.R..F...F...W','W.FF.FFFFF.FFW','E.FF.......FFW','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...S.S.S....W','E...S.S.S....W','WWWWWWWWWWWWWW','W.FFF........W','W.FFF....FFFW.','E.FFF....FFFW.','WWWWWWWWWWWWWW','W.S.S.S.S....W','E.S.S.S.S....W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.F.F.F.F.F..W','E.F.F.F.F.F..W','W.FFFFFFFFFFF.W','W............W','W.R..R..R....W','E............W','WFFFFFFFFFFFFF','W............W','E.F.F.F.F.F..W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...F....F...W','E...F....F...W','WFFFFWWWWFFFFFW','W....W.....W.W','W....G.....G.W','E....WWWWWWWWW','W............W','W.FF.......FFW','E.FF.......FFW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.F.F.F.F.F..W','E.F.F.F.F.F..W','W.FFFFFFFFFFF.','W............W','W.R..R..R....W','E............W','WFFFFFFFFFFFFF','W............W','E.F.F.F.F.F..W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...F....F...W','E...F....F...W','WFFFFWWWWFFFFF','W....W.....W.W','W....G.....G.W','E....WWWWWWWWW','W............W','W.FF.......FFW','E.FF.......FFW','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.FFF.FFF.FF.W','E.FFF.FFF.FF.W','W............W','W.~~.......~~W','W.~~.......~~W','E............W','WFFF.....FFFFW','WFFF.....FFFFW','EFFF.....FFFFW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.F.........FW','E.F.........FW','W.FFFFFFFFFFFF','W............W','W.RR.R.RR....W','E...R........W','WFFFFFFFFFFFF.W','W.F.........FW','E.F.........FW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WFFF.......FFFW','EFFF.......FFFW','W.F.FFFFF.F..W','W.F.F...F.F..W','W.F.F...F.F..W','E.F.F...F.F..W','W.F.FFFFF.F..W','WFFF.......FFFW','EFFF.......FFFW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.FF.......FF.W','E.FF.......FF.W','W.FFFFFFFFFFF.W','W...R.R.R....W','W............W','E............W','W.FFFFFFFFFFF.W','W.FF.......FF.W','E.FF.......FF.W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.F.........FW','E.F.........FW','W.FFFFFFFFFFFF','W............W','W.RR.R.RR....W','E...R........W','WFFFFFFFFFFFF.','W.F.........FW','E.F.........FW','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WFFF.......FFF','EFFF.......FFF','W.F.FFFFF.F..W','W.F.F...F.F..W','W.F.F...F.F..W','E.F.F...F.F..W','W.F.FFFFF.F..W','WFFF.......FFF','EFFF.......FFF','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.FF.......FF.','E.FF.......FF.','W.FFFFFFFFFFF.','W...R.R.R....W','W............W','E............W','W.FFFFFFFFFFF.','W.FF.......FF.','E.FF.......FF.','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','WFFF.....FFFFW','W.S..........W','W.S..R.......W','E.S..........W','WFFF.....FFFFW','W.FF.FFF.FF..W','E.FF.FFF.FF..W','W............W','WWWWWWWWWWWWWW'],
   ],
   temple_rooftop: [
     ['WWWWWWWWWWWWWW','W............W','E.1111111111.W','W.1222222221.W','W.1233333321.W','W.1233333321.W','E.1233333321.W','W.1233333321.W','W.1222222221.W','E.1111111111.W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.3.WW..WW.3.W','E.2.WW..WW.2.W','W.2.WW..WW.2.W','W122.......221W','W.2..........2W','E.1..........1W','W.2..........2W','W122.......221W','E.2.WW..WW.2.W','W.3.WW..WW.3.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.3.WW..WW.3.W','E.2.WW..WW.2.W','W.2.WW..WW.2.W','W122.......221','W.2..........2','E.1..........1','W.2..........2','W122.......221','E.2.WW..WW.2.W','W.3.WW..WW.3.W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W1111111111..W','E1222222221..W','W1232222321..W','W1233333321..W','W1233333321..W','E1232222321..W','W1222222221..W','W1111111111..W','E............W','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.33333333333W','E.22222222222W','W.21111111112W','W.2.........2W','W.2.........2W','E.2.........2W','W.2.........2W','W.21111111112W','E.22222222222W','W.33333333333W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.22..22..22.W','E.23..23..23.W','W.22..22..22.W','W.12..12..12.W','W............W','E............W','W.12..12..12.W','W.22..22..22.W','E.23..23..23.W','W.22..22..22.W','WWWWWWWWWWWWWW'],
@@ -10709,10 +12049,10 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','W.22222222222W','E.2.........2W','W.2.........2W','W.21.......12W','W.2.........2W','E.2.........2W','W.2.........2W','W.21.......12W','E.2.........2W','W.22222222222W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','E.1111..1111.W','W.1221..1221.W','W.1221..1221.W','W.1111..1111.W','E............W','W.1111..1111.W','W.1221..1221.W','E.1221..1221.W','W.1111..1111.W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.33333333333.','E..222222222..','W.21.......12.','W.3..1...1..3.','W...1.....1..W','E...1.....1..W','W.3..1...1..3.','W.21.......12.','E..222222222..','W.33333333333.','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W111111111111W','E1..........1W','W1..WWWWWW..1W','W1.2W....W2.1W','W1.2W....W2.1W','E1..W....W..1W','W1..WWWWWW..1W','W1..........1W','E111111111111W','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33W.....W33.W','E.22W.....W22.W','W.22W22222W22.W','W.222222222222W','W.22..........W','E.12..........W','W.22..........W','W.222222222222W','E.22W22222W22.W','W.33W.....W33.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W111111111111W','E1..........1W','W1..WWWWWW..1W','W1.2G....W2.1W','W1.2W....W2.1W','E1..W....W..1W','W1..WWWWWW..1W','W1..........1W','E111111111111W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33W.....W33.','E.22W.....W22.','W.22W22222W22.','W.222222222222','W.22..........','E.12..........','W.22..........','W.222222222222','E.22W22222W22.','W.33W.....W33.','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W222222222222W','E123222222331W','W232222222223W','W232222222223W','W233332223333W','E122222222222W','W233332223333W','W232222222223W','E123222222331W','W222222222222W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.33222222233.W','E.22222222222.W','W.22222222222.W','W.22222222222.W','W.22222222222.W','E.22222222222.W','W.22222222222.W','W.22222222222.W','E.22222222222.W','W.33222222233.W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.33222222233.','E.22222222222.','W.22222222222.','W.22222222222.','W.22222222222.','E.22222222222.','W.22222222222.','W.22222222222.','E.22222222222.','W.33222222233.','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W............W','E.1..1..1..1.W','W.1..1..1..1.W','W.1..1..1..1.W','W.1222222221.W','E.123......1.W','W.123......1.W','W.122222..21.W','E.1111111111.W','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.33333333333W','E..1.2222221.W','W.3.1.......1W','W.3.1.......1W','W...1.......1W','E...1.......1W','W.3.1.......1W','W.3.1.......1W','E.33333333333W','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.3...3...3..W','E.2...2...2..W','W.11111111111W','W............W','W.11111111111W','E.2...2...2..W','W.3...3...3..W','W............W','E.11111111111W','W.2...2...2..W','WWWWWWWWWWWWWW'],
@@ -10727,7 +12067,7 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS...........S','WS...........S','WS...........S','ES...........S','WS...........S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WS.FF.....FF.S','WS.FF.....FF.S','WS.FF.....FF.S','ES.FF.....FF.S','WS.FF.....FF.S','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','WSSS.SSSS.SSSS','ESSS.SSSS.SSSS','W....SSSS.....','W....SSSS.....','W....SSSS.....','E....SSSS.....','W....SSSS.....','WSSS.SSSS.SSSS','ESSS.SSSS.SSSS','W.............','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ES...........SW','WS.FFF...FFF.SW','WS.FFF...FFF.SW','WS...........SW','ES...........SW','WS.FFF...FFF.SW','WS.FFF...FFF.SW','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ES...........S','WS.FFF...FFF.S','WS.FFF...FFF.S','WS...........S','ES...........S','WS.FFF...FFF.S','WS.FFF...FFF.S','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','WSSS.......SSS','WSSS.......SSS','WSSS.......SSS','ESSS.......SSS','WSSS.......SSS','WSSSSSSSSSSSSS','ESSSSSSSSSSSSS','W.............','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','WSSSSSSSSSSSSW','ESSSSSSSSSSSSW','W.S.........SW','W.S.........SW','W.S.........SW','E.S.........SW','W.S.........SW','WSSSSSSSSSSSSW','ESSSSSSSSSSSSW','W.............','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...SS...SS...','E...SS...SS...','WSSS......SSSS','WSSS......SSSS','WSSS......SSSS','ESSS......SSSS','WSSS......SSSS','W...SS...SS...','E...SS...SS...','W.............','WWWWWWWWWWWWWW'],
