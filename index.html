@@ -134,26 +134,26 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 
 .hub-nav {
   background: var(--ink2); border-bottom: 1px solid rgba(201,162,39,0.15);
-  display: flex; align-items: center; padding: 0 1.5rem; height: 56px; gap: 1rem;
-  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; padding: 0 0.8rem; height: 44px; gap: 0.25rem;
+  position: sticky; top: 0; z-index: 100; flex-wrap: nowrap; overflow-x: auto;
 }
 .hub-logo {
-  font-family: 'Cinzel Decorative', serif; font-size: 1.3rem;
-  color: var(--gold); letter-spacing: 0.1em; margin-right: auto;
+  font-family: 'Cinzel Decorative', serif; font-size: 1.1rem;
+  color: var(--gold); letter-spacing: 0.08em; margin-right: 0.5rem; white-space: nowrap;
 }
 .hub-logo span { color: var(--crimson); }
 .nav-btn {
   background: transparent; border: 1px solid transparent;
-  color: var(--mist); font-family: 'Cinzel', serif; font-size: 0.7rem;
-  letter-spacing: 0.15em; padding: 0.4rem 0.9rem; cursor: pointer;
-  transition: all 0.2s; text-transform: uppercase;
-  clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  color: var(--mist); font-family: 'Cinzel', serif; font-size: 0.6rem;
+  letter-spacing: 0.08em; padding: 0.2rem 0.45rem; cursor: pointer;
+  transition: all 0.2s; text-transform: uppercase; white-space: nowrap;
+  clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
 }
 .nav-btn:hover { border-color: rgba(201,162,39,0.4); color: var(--gold); }
 .gold-display {
-  font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--gold);
+  font-family: 'Cinzel', serif; font-size: 0.7rem; color: var(--gold);
   background: rgba(201,162,39,0.1); border: 1px solid rgba(201,162,39,0.3);
-  padding: 0.3rem 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.18rem 0.5rem; display: flex; align-items: center; gap: 0.3rem; white-space: nowrap;
 }
 
 .hub-content { flex: 1; padding: 1.5rem; }
@@ -179,9 +179,10 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .ninja-card.training { opacity: 0.6; }
 .ninja-card-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
 .ninja-avatar {
-  width: 52px; height: 52px; border-radius: 50%;
+  width: 56px; height: 56px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.6rem; flex-shrink: 0; border: 2px solid transparent;
+  font-size: 2.1rem; line-height: 1; flex-shrink: 0; border: 2px solid transparent;
+  overflow: hidden;
 }
 .ninja-info { flex: 1; }
 .ninja-name { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--white); }
@@ -705,10 +706,10 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .ninja-card.training { opacity: 0.65; }
 .ninja-card-header { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 0.8rem; }
 .ninja-avatar {
-  width: 52px; height: 52px; border-radius: 50%;
+  width: 56px; height: 56px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.6rem; flex-shrink: 0; border: 2px solid transparent;
-  position: relative;
+  font-size: 2.1rem; line-height: 1; flex-shrink: 0; border: 2px solid transparent;
+  position: relative; overflow: hidden;
 }
 .ninja-xp-ring {
   position: absolute; inset: -3px; border-radius: 50%;
@@ -728,7 +729,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .ninja-xp-label { font-size: 0.48rem; color: rgba(201,162,39,0.5); font-family: 'Cinzel', serif; margin-top: 1px; }
 
 /* ===== HUB NAV ACTIVE TAB INDICATOR ===== */
-.nav-btn { position: relative; overflow: hidden; }
+.nav-btn { position: relative; overflow: visible; }
 .nav-btn.active {
   border-color: rgba(201,162,39,0.5) !important;
   color: var(--gold) !important;
@@ -737,6 +738,45 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .nav-btn.active::after {
   content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
   background: var(--gold);
+}
+/* Notification dot on nav buttons */
+.nav-btn .nav-dot {
+  position: absolute; top: -3px; right: -3px; width: 8px; height: 8px;
+  background: var(--crimson); border-radius: 50%; border: 1px solid var(--ink);
+  animation: navDotPulse 1.8s ease-in-out infinite;
+}
+.nav-btn .nav-dot.gold { background: var(--gold); }
+@keyframes navDotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
+/* Ready training badge in training list */
+.training-ready-btn {
+  background: linear-gradient(135deg,rgba(61,170,125,0.3),rgba(61,170,125,0.1));
+  border: 1px solid var(--jade-bright); color: var(--jade-bright);
+  font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.1em;
+  padding:0.25rem 0.7rem; cursor:pointer; transition:all 0.15s; margin-top:0.5rem;
+}
+.training-ready-btn:hover { background:rgba(61,170,125,0.25); }
+/* Clan readiness bar */
+.readiness-bar { display:flex; gap:0.5rem; flex-wrap:wrap; margin:0.6rem 0 1rem; padding:0.6rem 0.8rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:4px; }
+.readiness-stat { font-family:'Cinzel',serif; font-size:0.6rem; color:var(--mist); display:flex; align-items:center; gap:0.3rem; }
+.readiness-stat .val { color:var(--gold); }
+.readiness-stat .val.warn { color:var(--crimson); }
+/* Heal all button */
+.heal-all-btn {
+  background:rgba(61,170,125,0.12); border:1px solid rgba(61,170,125,0.3);
+  color:var(--jade-bright); font-family:'Cinzel',serif; font-size:0.6rem;
+  letter-spacing:0.1em; padding:0.3rem 0.9rem; cursor:pointer; transition:all 0.15s;
+}
+.heal-all-btn:hover { background:rgba(61,170,125,0.22); }
+/* Mission turn limit badge */
+.mission-turn-badge {
+  font-size:0.55rem; font-family:'Cinzel',serif; color:var(--crimson);
+  border:1px solid rgba(139,26,26,0.4); padding:0.1rem 0.3rem; margin-left:0.3rem;
+}
+/* Locked mission requirement hint */
+.mission-lock-hint {
+  font-size:0.6rem; color:rgba(255,255,255,0.3); font-style:italic;
+  margin-top:0.3rem; padding:0.3rem 0.5rem;
+  border-left:2px solid rgba(255,255,255,0.08);
 }
 
 /* ===== MINI TURN ORDER (CT queue) improvements ===== */
@@ -887,18 +927,31 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.85);
   display: none; align-items: center; justify-content: center; z-index: 1000;
+  padding: 0.5rem;
 }
 .modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
 .modal {
   background: var(--ink2); border: 1px solid rgba(201,162,39,0.2);
-  padding: 2rem; max-width: 500px; width: 90%;
+  padding: 1.5rem 1.5rem 1.2rem;
+  max-width: 560px; width: 100%;
+  max-height: calc(100dvh - 1rem);
+  display: flex; flex-direction: column;
   clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
   animation: slideUp 0.3s ease;
 }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.modal-title { font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold); margin-bottom: 1rem; }
-.modal-body { font-size: 0.85rem; color: var(--mist); line-height: 1.7; margin-bottom: 1.5rem; }
-.modal-actions { display: flex; gap: 0.8rem; justify-content: flex-end; }
+.modal-title { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--gold); margin-bottom: 0.8rem; flex-shrink: 0; }
+.modal-body {
+  font-size: 0.85rem; color: var(--mist); line-height: 1.7;
+  margin-bottom: 1rem;
+  overflow-y: auto; flex: 1;
+  /* nice scrollbar */
+  scrollbar-width: thin; scrollbar-color: rgba(201,162,39,0.3) transparent;
+}
+.modal-body::-webkit-scrollbar { width: 4px; }
+.modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-body::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.3); border-radius: 2px; }
+.modal-actions { display: flex; gap: 0.8rem; justify-content: flex-end; flex-shrink: 0; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); }
 .modal-btn {
   background: transparent; border: 1px solid rgba(255,255,255,0.15);
   color: var(--white); font-family: 'Cinzel', serif; font-size: 0.7rem;
@@ -923,35 +976,46 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 
 
 /* ===== LOADOUT MODAL ===== */
-.loadout-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-top: 0.8rem; }
-.loadout-section-title { font-family: "Cinzel", serif; font-size: 0.65rem; letter-spacing: 0.2em; color: var(--gold); text-transform: uppercase; margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; }
-.weapon-choice-list { display: flex; flex-direction: column; gap: 0.3rem; max-height: 200px; overflow-y: auto; }
-.weapon-choice-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.6rem; border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.2); cursor: pointer; transition: all 0.15s; font-size: 0.72rem; }
+.loadout-panel { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 0.5rem; }
+.loadout-section-title { font-family: "Cinzel", serif; font-size: 0.6rem; letter-spacing: 0.16em; color: var(--gold); text-transform: uppercase; margin-bottom: 0.35rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(201,162,39,0.12); padding-bottom: 0.2rem; }
+.weapon-choice-list { display: flex; flex-direction: column; gap: 0.22rem; max-height: 150px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(201,162,39,0.25) transparent; }
+.weapon-choice-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.32rem 0.5rem; border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.2); cursor: pointer; transition: all 0.15s; font-size: 0.7rem; }
 .weapon-choice-item:hover { border-color: rgba(201,162,39,0.35); background: rgba(201,162,39,0.05); }
 .weapon-choice-item.equipped-now { border-color: rgba(201,162,39,0.6); background: rgba(201,162,39,0.08); }
 .weapon-choice-item.unequip-slot { border-color: rgba(255,255,255,0.06); color: var(--mist); }
 .wci-tier { width: 3px; border-radius: 2px; align-self: stretch; flex-shrink: 0; }
-.wci-info { flex: 1; }
-.wci-name { font-family: "Cinzel", serif; font-size: 0.72rem; }
-.wci-stats { font-size: 0.6rem; color: var(--mist); }
-.carry-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; margin-bottom: 0.6rem; }
+.wci-info { flex: 1; min-width: 0; }
+.wci-name { font-family: "Cinzel", serif; font-size: 0.68rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wci-stats { font-size: 0.58rem; color: var(--mist); }
+/* Armor — compact horizontal strip, no large square */
+.armor-slot-strip { display: flex; align-items: center; gap: 0.6rem; padding: 0.35rem 0.5rem; border: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2); cursor: pointer; transition: all 0.15s; }
+.armor-slot-strip:hover { border-color: rgba(201,162,39,0.4); }
+.armor-slot-strip.filled { border-color: rgba(201,162,39,0.35); background: rgba(201,162,39,0.04); }
+.armor-slot-strip .aslot-img { width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.armor-slot-strip .aslot-info { flex: 1; min-width: 0; }
+.armor-slot-strip .aslot-name { font-family: "Cinzel", serif; font-size: 0.66rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.armor-slot-strip .aslot-dur { font-size: 0.56rem; margin-top: 1px; }
+.armor-slot-strip .aslot-unequip { font-size: 0.55rem; color: var(--crimson); margin-left: auto; flex-shrink: 0; padding-left: 0.4rem; }
+/* Field kit — compact 4 squares */
+.carry-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.3rem; margin-bottom: 0.35rem; }
 .carry-slot { aspect-ratio: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1px; cursor: pointer; position: relative; transition: all 0.15s; border-radius: 2px; }
 .carry-slot:hover { border-color: rgba(192,57,43,0.4); }
 .carry-slot.filled { border-color: rgba(201,162,39,0.25); }
-.carry-slot-icon { font-size: 1.3rem; line-height: 1; }
-.carry-slot-label { font-size: 0.48rem; color: var(--mist); text-align: center; line-height: 1.2; font-family: "Cinzel", serif; padding: 0 2px; }
-.carry-slot-remove { position: absolute; top: 1px; right: 2px; font-size: 0.55rem; color: var(--crimson); display: none; }
+.carry-slot-icon { font-size: 1.1rem; line-height: 1; }
+.carry-slot-label { font-size: 0.42rem; color: var(--mist); text-align: center; line-height: 1.1; font-family: "Cinzel", serif; padding: 0 1px; }
+.carry-slot-remove { position: absolute; top: 1px; right: 2px; font-size: 0.5rem; color: var(--crimson); display: none; }
 .carry-slot:hover .carry-slot-remove { display: block; }
-.carry-empty { font-size: 1.4rem; opacity: 0.2; }
-.stash-item-list { display: flex; flex-direction: column; gap: 0.3rem; max-height: 180px; overflow-y: auto; }
-.stash-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.6rem; border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.2); cursor: pointer; transition: all 0.15s; font-size: 0.72rem; }
+.carry-empty { font-size: 1.2rem; opacity: 0.2; }
+/* Stash items */
+.stash-item-list { display: flex; flex-direction: column; gap: 0.22rem; max-height: 130px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+.stash-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.28rem 0.5rem; border: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.2); cursor: pointer; transition: all 0.15s; }
 .stash-item:hover { border-color: rgba(61,170,125,0.4); background: rgba(61,170,125,0.04); }
 .stash-item.full { opacity: 0.35; cursor: not-allowed; }
-.stash-item-icon { font-size: 1.2rem; }
-.stash-item-info { flex: 1; }
-.stash-item-name { font-family: "Cinzel", serif; font-size: 0.7rem; }
-.stash-item-desc { font-size: 0.6rem; color: var(--mist); }
-.stash-item-owned { font-size: 0.6rem; color: var(--steel); margin-left: auto; }
+.stash-item-icon { font-size: 1rem; flex-shrink: 0; }
+.stash-item-info { flex: 1; min-width: 0; }
+.stash-item-name { font-family: "Cinzel", serif; font-size: 0.63rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stash-item-desc { font-size: 0.55rem; color: var(--mist); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stash-item-owned { font-size: 0.57rem; color: var(--steel); margin-left: auto; flex-shrink: 0; white-space: nowrap; padding-left: 0.3rem; }
 .use-item-list { display: flex; flex-direction: column; gap: 0.4rem; }
 .use-item-btn { display: flex; align-items: center; gap: 0.7rem; padding: 0.5rem 0.8rem; border: 1px solid rgba(61,170,125,0.25); background: rgba(61,170,125,0.05); cursor: pointer; transition: all 0.15s; }
 .use-item-btn:hover { border-color: rgba(61,170,125,0.55); background: rgba(61,170,125,0.1); }
@@ -1054,8 +1118,8 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 
 @media (max-width: 900px) {
   /* Hub nav — hide text labels, keep icons via data attrs */
-  .hub-nav { padding: 0 0.8rem; gap: 0.3rem; height: 48px; }
-  .hub-nav .nav-btn { font-size: 0.58rem; padding: 0.35rem 0.5rem; letter-spacing: 0.08em; }
+  .hub-nav { padding: 0 0.4rem; gap: 0.15rem; height: 40px; }
+  .hub-nav .nav-btn { font-size: 0.52rem; padding: 0.18rem 0.35rem; letter-spacing: 0.05em; }
   .hub-logo { font-size: 1rem; }
   .gold-display { font-size: 0.7rem; padding: 0.25rem 0.5rem; }
   .hub-content { padding: 1rem 0.8rem; }
@@ -1140,7 +1204,14 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
   .exchange-card { padding: 1rem; }
 
   /* Modal - full screen on mobile */
-  .modal-overlay { align-items: flex-end; }
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal {
+    max-width: 100%; width: 100%; border-radius: 0;
+    max-height: 90dvh;
+    clip-path: none;
+    padding: 1.2rem 1rem 1rem;
+    border-bottom: none;
+  }
   .modal {
     max-width: 100%; width: 100%; max-height: 92dvh; overflow-y: auto;
     border-radius: 0; clip-path: none;
@@ -1231,6 +1302,57 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .badge-card:hover .badge-tooltip { display: block; }
 .badge-card.earned .badge-tooltip { color: #ddd; }
 @media (max-width: 600px) { .badge-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 0.5rem; } .badge-canvas { width: 52px; height: 52px; } }
+/* ── Item/weapon PNG images ── */
+/* Generic fill rule: every img or span inside an image-host div fills it */
+.item-emoji,
+.carry-slot-icon,
+.stash-item-icon,
+.aslot-img,
+.wci-icon,
+.ninja-avatar {
+  overflow: hidden;
+}
+
+.item-emoji { display:flex; align-items:center; justify-content:center; }
+.item-emoji img,
+.item-emoji span[data-iimg] { width:100%; height:100%; object-fit:contain; display:block; }
+
+.shop-item .item-emoji { width:52px; height:52px; flex-shrink:0; }
+
+.carry-slot-icon {
+  display:flex; align-items:center; justify-content:center;
+  width:100%; flex:1; min-height:0;
+}
+.carry-slot-icon img,
+.carry-slot-icon span[data-iimg] { width:100%; height:100%; object-fit:contain; display:block; }
+
+.stash-item-icon {
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; width:36px; height:36px;
+}
+.stash-item-icon img,
+.stash-item-icon span[data-iimg] { width:36px; height:36px; object-fit:contain; display:block; }
+
+.aslot-img {
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; width:36px; height:36px;
+}
+.aslot-img img,
+.aslot-img span[data-iimg] { width:36px; height:36px; object-fit:contain; display:block; }
+
+/* Character avatar — emoji or PNG fills the full circle */
+.ninja-avatar {
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+}
+.ninja-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+.ninja-avatar span[data-iimg],
+.ninja-avatar > span:not(.ninja-xp-ring) { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:inherit; }
+
+.weapon-badge img,
+.wpn-badge-img { vertical-align:middle; width:18px; height:18px; object-fit:contain; }
+.wci-img { vertical-align:middle; width:22px; height:22px; object-fit:contain; }
+[data-iimg] { display:inline-flex !important; align-items:center; justify-content:center; }
 </style>
 </head>
 <body>
@@ -1282,7 +1404,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
       <button class="nav-btn" onclick="showHubSection('weaponShop')" id="nav-weaponShop">Armory</button>
       <button class="nav-btn" onclick="showHubSection('itemShop')" id="nav-itemShop">Supplies</button>
       <button class="nav-btn" onclick="showHubSection('exchange')" id="nav-exchange">Exchange</button>
-      <button class="nav-btn" onclick="showHubSection('honors')" id="nav-honors">🏅 Honors</button>
+      <button class="nav-btn" onclick="showHubSection('honors')" id="nav-honors">Honors</button>
       <button class="nav-btn" onclick="openCodex()" id="nav-codex">Codex</button>
       <button onclick="saveGame(false)" title="Save game" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--mist);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;padding:0.25rem 0.7rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(201,162,39,0.4)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='var(--mist)'">&#128190; Save</button>
       <div class="gold-display">⚜ <span id="goldDisplay">0</span> Gold</div>
@@ -1703,7 +1825,7 @@ const ITEMS = {
     { id: 'elixir', name: 'Restoration Elixir', icon: '✨', price: 220, desc: 'Restores 100 HP and clears poison.', effect: 'full_heal', value: 100 },
     { id: 'clan_elixir', name: 'Clan Elixir', icon: '🌟', price: 600, desc: 'Restores 60 HP to ALL allies.', effect: 'aoe_heal', value: 60 }
   ],
-  costume: [
+  armor: [
     { id: 'shadow_wrap',   name: 'Shadow Wrappings', icon: '🖤', price: 120, tier: 'common',    isArmor: true, desc: '+10% dodge. 5 durability.',            effect: 'dodge',        value: 10 },
     { id: 'stealth_suit',  name: 'Stealth Suit',      icon: '🥷', price: 350, tier: 'uncommon', isArmor: true, desc: '+20% dodge + stealth. 10 durability.', effect: 'stealth',      value: 20 },
     { id: 'iron_vestment', name: 'Iron Vestment',      icon: '🛡️', price: 280, tier: 'rare',     isArmor: true, desc: '-15% damage. 20 durability.',           effect: 'armor',        value: 15 },
@@ -1715,6 +1837,80 @@ const ITEMS = {
     { id: 'smoke_bomb_l', name: 'Inferno Smoke Bomb', icon: '🔥', price: 400, desc: 'Blinding smoke laced with pepper. Blinds in 4-tile radius for 4 turns and poisons all caught inside.', effect: 'smoke_bomb', radius: 4, blindTurns: 4, secondEffect: 'poison' }
   ]
 };
+
+// ═══════════════════════════════════════════════════════════════
+// ── ITEM / WEAPON IMAGE SYSTEM ──
+// PNG files live in an "items/" folder next to the HTML.
+// If a file is absent the emoji icon is shown as fallback.
+// File name = item.id + ".png"  e.g.  items/kunai.png
+// ═══════════════════════════════════════════════════════════════
+
+// Tracks confirmed-existing image ids
+const _ITEM_IMG_CACHE = {};  // id → true | false | null(pending)
+
+function _checkItemImg(id) {
+  if (id in _ITEM_IMG_CACHE) return;
+  _ITEM_IMG_CACHE[id] = null;
+  const _p = new Image();
+  _p.onload  = () => { _ITEM_IMG_CACHE[id] = true;  _itemImgSwapAll(id); };
+  _p.onerror = () => { _ITEM_IMG_CACHE[id] = false; };
+  _p.src = 'items/' + id + '.png';
+}
+
+// Upgrade all matching emoji spans in the live DOM once their image has loaded
+function _itemImgSwapAll(id) {
+  document.querySelectorAll('[data-iimg="' + id + '"]').forEach(function(el) {
+    const size  = el.dataset.isize  || '28px';
+    const extra = el.dataset.iextra || '';
+    const img   = document.createElement('img');
+    img.src = 'items/' + id + '.png';
+    img.alt = el.title || ''; img.title = el.title || '';
+    img.draggable = false; img.className = el.className;
+    img.style.cssText = 'width:' + size + ';height:' + size
+      + ';object-fit:contain;display:block;image-rendering:auto;' + extra;
+    el.replaceWith(img);
+  });
+}
+
+function _prewarmItemImages() {
+  const ids = new Set();
+  Object.values(WEAPONS).forEach(function(cat) { (cat.items||[]).forEach(function(w){ ids.add(w.id); }); });
+  (ITEMS.healing||[]).concat(ITEMS.armor||[]).concat(ITEMS.tactical||[]).forEach(function(i){ ids.add(i.id); });
+  ids.forEach(_checkItemImg);
+}
+
+// Synchronous: returns <img> if confirmed, else a self-upgrading tagged emoji span
+function itemImg(item, size, extraStyle) {
+  if (!item) return '';
+  size = size || '28px'; extraStyle = extraStyle || '';
+  if (_ITEM_IMG_CACHE[item.id] === true) {
+    return '<img src="items/' + item.id + '.png" alt="' + item.name + '" title="' + item.name
+      + '" draggable="false" style="width:' + size + ';height:' + size
+      + ';object-fit:contain;display:block;image-rendering:auto;' + extraStyle + '">';
+  }
+  _checkItemImg(item.id);
+  return '<span data-iimg="' + item.id + '" data-isize="' + size + '" data-iextra="' + extraStyle
+    + '" title="' + item.name + '" style="display:inline-flex;align-items:center;justify-content:center;'
+    + 'width:' + size + ';height:' + size + ';font-size:calc(' + size + ' * 0.85);line-height:1;' + extraStyle + '">'
+    + item.icon + '</span>';
+}
+
+// Alias with optional extra class — same self-upgrade behaviour
+function itemImgAsync(item, size, extraStyle, cls) {
+  if (!item) return '';
+  size = size || '28px'; extraStyle = extraStyle || ''; cls = cls || '';
+  if (_ITEM_IMG_CACHE[item.id] === true) {
+    return '<img src="items/' + item.id + '.png" alt="' + item.name + '" title="' + item.name
+      + '" class="' + cls + '" draggable="false" style="width:' + size + ';height:' + size
+      + ';object-fit:contain;display:block;image-rendering:auto;' + extraStyle + '">';
+  }
+  _checkItemImg(item.id);
+  return '<span data-iimg="' + item.id + '" data-isize="' + size + '" data-iextra="' + extraStyle
+    + '" class="' + cls + '" title="' + item.name
+    + '" style="display:inline-flex;align-items:center;justify-content:center;width:' + size
+    + ';height:' + size + ';font-size:calc(' + size + ' * 0.85);line-height:1;' + extraStyle + '">'
+    + item.icon + '</span>';
+}
 
 const MISSIONS = [
 
@@ -1802,11 +1998,17 @@ const MISSIONS = [
 },
 {
   id: 'm9', name: 'The Shadow Kunoichi', type: 'rescue',
-  desc: 'Track down the legendary Kunoichi who works alone. Impress her in battle.',
+  desc: 'Track down the legendary Kunoichi who works alone. Prove yourself in battle and earn her trust.',
   difficulty: 3, reward: 350, recruitReward: { class: 'kunoichi', name: 'Yuki' }, requiredLevel: 1,
-  enemies: [{ type: 'bounty_hunter', count: 3 }, { type: 'kunoichi_boss', count: 1 }],
   terrain: 'forest', tags: ['rescue', 'recruit'],
-  intro: 'Yuki roams the deep forest, hunted by bounty hunters. Help her survive.'
+  intro: 'Yuki roams the deep forest, hunted by bounty hunters. Defeat her pursuers — she will judge you by how you fight.',
+  floors: [
+    { enemies: [{ type: 'bounty_hunter', count: 2 }, { type: 'captain', count: 1 }, { type: 'kunoichi_boss', count: 1 }],
+      terrain: 'forest', name: 'Forest Ambush',
+      carrierEnemy: 'captain', lootItem: { name: 'Bounty Seal', icon: '📜' } },
+    { enemies: [{ type: 'bounty_hunter', count: 2 }], terrain: 'forest', name: 'Forest Escape',
+      isRescueFloor: true }
+  ]
 },
 {
   id: 'm10', name: 'The Iron Garrison — Siege', type: 'assassination',
@@ -2640,12 +2842,12 @@ function _earnAch(id) {
   const def = ACHIEVEMENTS.find(a => a.id === id);
   if (!def) return;
   GS.achievements.push(id);
-  // Toast notification with badge colours
   const earned = GS.achievements.length;
   const total  = ACHIEVEMENTS.length;
   toast(`🏅 Achievement: ${def.name}  (${earned}/${total})`, 'success');
   addLog(`🏅 Achievement unlocked: ${def.name} — ${def.desc}`, 'special');
-  saveGame();
+  _saveGameDebounced(); // batched — may fire multiple achievements per turn
+  _updateNavDots();
 }
 
 function _checkClassAchievements() {
@@ -2864,7 +3066,17 @@ function _drawOctBadge(ctx, cx, cy, R, col, earned) {
 function _drawScrollBadge(ctx, cx, cy, R, col, earned) {
   const rw = R * 0.8, rh = R * 0.9;
   ctx.beginPath();
-  ctx.roundRect(cx - rw, cy - rh, rw * 2, rh * 2, R * 0.18);
+  // roundRect polyfill for older browsers
+  const x0 = cx - rw, y0 = cy - rh, w = rw * 2, h = rh * 2, r = R * 0.18;
+  if (ctx.roundRect) {
+    ctx.roundRect(x0, y0, w, h, r);
+  } else {
+    ctx.moveTo(x0 + r, y0); ctx.lineTo(x0 + w - r, y0);
+    ctx.arcTo(x0+w, y0, x0+w, y0+r, r); ctx.lineTo(x0+w, y0+h-r);
+    ctx.arcTo(x0+w, y0+h, x0+w-r, y0+h, r); ctx.lineTo(x0+r, y0+h);
+    ctx.arcTo(x0, y0+h, x0, y0+h-r, r); ctx.lineTo(x0, y0+r);
+    ctx.arcTo(x0, y0, x0+r, y0, r); ctx.closePath();
+  }
   ctx.fillStyle = earned ? col + '22' : '#22222a'; ctx.fill();
   ctx.strokeStyle = earned ? col : '#444455'; ctx.lineWidth = 2.5; ctx.stroke();
   // Scroll curl lines
@@ -2878,6 +3090,9 @@ function _drawScrollBadge(ctx, cx, cy, R, col, earned) {
 // ── HONORS HALL RENDERER ──
 function renderHonors() {
   if (!GS.achievements) initAchievements();
+  // Mark as viewed — clears the nav dot
+  window._lastViewedHonorCount = (GS.achievements || []).length;
+  _updateNavDots();
   const el = document.getElementById('section-honors');
   if (!el) return;
 
@@ -3172,7 +3387,7 @@ function generateMissionPool() {
 function checkMissionRefresh() {
   const now = Date.now();
   if (!GS.missionNextRefresh || now >= GS.missionNextRefresh) {
-    GS.activeMissions = generateMissionPool();
+    GS.activeMissions = generateMissionPool(); _invalidateMissionsCache();
     GS.missionNextRefresh = Math.ceil(now / MISSION_REFRESH_INTERVAL) * MISSION_REFRESH_INTERVAL;
     saveGame();
   }
@@ -3188,7 +3403,7 @@ function manualRefreshMissions() {
     [
       { label: `G Spend ${MISSION_MANUAL_REFRESH_COST} Gold`, fn: () => {
         GS.gold -= MISSION_MANUAL_REFRESH_COST;
-        GS.activeMissions = generateMissionPool();
+        GS.activeMissions = generateMissionPool(); _invalidateMissionsCache();
         // Push next auto-refresh time forward
         GS.missionNextRefresh = Date.now() + MISSION_REFRESH_INTERVAL;
         selectedMissionId = null;
@@ -3213,9 +3428,17 @@ function getMissionTimeLeft() {
   return `${mins}m ${secs}s`;
 }
 
+let _allMissionsCache = null;
+let _allMissionsDirty = true;
+
 function getAllMissions() {
-  return [...MISSIONS, ...GS.activeMissions];
+  if (!_allMissionsDirty && _allMissionsCache) return _allMissionsCache;
+  _allMissionsCache = [...MISSIONS, ...(GS.activeMissions || [])];
+  _allMissionsDirty = false;
+  return _allMissionsCache;
 }
+
+function _invalidateMissionsCache() { _allMissionsDirty = true; }
 
 const ENEMY_TYPES = {
   guard: { name: 'Guard', emoji: '💂', hp: 35, dmg: [5,10], moveRange: 2, attackRange: 1, gold: 15, exp: 10, ai: 'aggressive', spd: 5, },
@@ -3362,9 +3585,9 @@ let GS = {
   gold: 1000,
   completedMissions: [],
   day: 1,
-  inventory: { healing: [], costume: [], tactical: [] },
+  inventory: { healing: [], armor: [], tactical: [] },
   weaponStash: [],
-  equippedCostume: null,
+  equippedArmor: null,
   shopStock: { weapons: [], items: [] },
   activeMissions: [],
   missionNextRefresh: 0,
@@ -3697,8 +3920,10 @@ const SPECIAL_SFX = {
 
 let CS = {
   active: false,
+  _endingCombat: false, // re-entrancy guard for checkCombatEnd — reset on each new combat
   mission: null,
-  turn: 1,          // player-facing round counter (increments each ally turn)
+  turn: 1,
+  smokeClouds: [],      // [{cx,cy,radius,turnsLeft,type}] — active smoke/darkness overlays          // player-facing round counter (increments each ally turn)
   phase: 'player',  // 'player' (ally acting) | 'enemy_acting' | 'result'
   allies: [],
   enemies: [],
@@ -3762,6 +3987,9 @@ function showHubSection(id) {
   if (s) { s.classList.add('active'); renderHubSection(id); }
   if (b) b.classList.add('active');
   if (mb) mb.classList.add('active');
+  // Check training completion and update notification dots
+  GS.clan.forEach(n => { checkAndFinishTraining(n); });
+  _updateNavDots();
   // Close all drawers (including sidebar) when switching sections
   closeMobileDrawers(true);
 }
@@ -3879,6 +4107,99 @@ function startGame() {
   showScreen('create');
 }
 
+// Update notification dots on hub nav buttons
+function _updateNavDots() {
+  // Training: show dot if any ninja has completed training
+  const trainingDone = GS.clan.some(n => n.training && Date.now() >= n.training.endTime);
+  const trainingBtn = document.getElementById('nav-training');
+  const mobTrainingBtn = document.getElementById('mob-training');
+  [trainingBtn, mobTrainingBtn].forEach(btn => {
+    if (!btn) return;
+    let dot = btn.querySelector('.nav-dot');
+    if (trainingDone) {
+      if (!dot) { dot = document.createElement('span'); dot.className = 'nav-dot gold'; btn.appendChild(dot); }
+    } else {
+      if (dot) dot.remove();
+    }
+  });
+
+  // Honors: show dot if there are un-viewed newly earned achievements
+  // (we just show a dot if earned any - simple awareness signal)
+  const honorCount = (GS.achievements || []).length;
+  const lastViewedHonors = window._lastViewedHonorCount || 0;
+  const honorsBtn = document.getElementById('nav-honors');
+  const mobHonorsBtn = document.getElementById('mob-honors');
+  [honorsBtn, mobHonorsBtn].forEach(btn => {
+    if (!btn) return;
+    let dot = btn.querySelector('.nav-dot');
+    if (honorCount > lastViewedHonors) {
+      if (!dot) { dot = document.createElement('span'); dot.className = 'nav-dot'; btn.appendChild(dot); }
+    } else {
+      if (dot) dot.remove();
+    }
+  });
+}
+
+// Repair missing fields on saves created before new features were added
+function _repairSaveData() {
+  if (!GS) return;
+  if (!GS.achievements)      GS.achievements = [];
+  if (!GS.achievementStats)  GS.achievementStats = {};
+  if (!GS.completedMissions) GS.completedMissions = [];
+  if (!GS.inventory)         GS.inventory = { healing: [], armor: [], tactical: [] };
+  if (!GS.inventory.healing) GS.inventory.healing = [];
+  // Migrate old 'costume' inventory key to 'armor'
+  if (GS.inventory.costume && !GS.inventory.armor) { GS.inventory.armor = GS.inventory.costume; delete GS.inventory.costume; }
+  if (!GS.inventory.armor)   GS.inventory.armor   = [];
+  if (!GS.inventory.armor)   GS.inventory.armor   = [];
+  if (!GS.inventory.tactical)GS.inventory.tactical = [];
+  if (!GS.weaponStash)       GS.weaponStash = [];
+  if (!GS.activeMissions)    GS.activeMissions = [];
+  if (!GS.reputation)        GS.reputation = { stealth: 0, honor: 0 };
+  if (!GS.recruitRoster)     GS.recruitRoster = [];
+  // Repair each ninja's fields
+  (GS.clan || []).forEach(n => {
+    const cls = CLASSES[n.class];
+    if (!cls) return;
+    if (!n.maxHp)       n.maxHp       = n.hp       || cls.baseStats.hp;
+    if (!n.maxChi)      n.maxChi      = n.chi      || cls.baseStats.chi;
+    if (!n.maxStamina)  n.maxStamina  = n.stamina  || cls.baseStats.stamina;
+    if (n.stamina  === undefined) n.stamina  = n.maxStamina;
+    if (n.chi      === undefined) n.chi      = n.maxChi;
+    if (!n.level)       n.level       = 1;
+    if (!n.exp)         n.exp         = 0;
+    if (!n.expToNext)   n.expToNext   = 100;
+    if (!n.buffs)       n.buffs       = [];
+    if (!n.carriedItems)n.carriedItems= [];
+    if (!n.jobs)        n.jobs        = {};
+    if (!n.unlockedAbilities)  n.unlockedAbilities  = [];
+    if (!n.equippedAbilities)  n.equippedAbilities  = { reaction: null, support: null, movement: null };
+    // Migrate armor from carriedItems into dedicated equippedArmor slot
+    if (n.equippedArmor === undefined) n.equippedArmor = null;
+    if (!n.equippedArmor) {
+      const armorIdx = (n.carriedItems || []).findIndex(x => x.isArmor);
+      if (armorIdx !== -1) {
+        n.equippedArmor = n.carriedItems.splice(armorIdx, 1)[0];
+      }
+    }
+    if (!n.specialMove && cls.specialMoves) n.specialMove = cls.specialMoves[0];
+    // Repair weapon fields
+    if (n.weapon) migrateWeapon(n.weapon);
+  });
+}
+
+// ── saveGame debounce ──
+// Many actions call saveGame() in quick succession (e.g. kills during AoE).
+// Batch them so at most one write happens per 500ms during active gameplay.
+let _saveDebounceTimer = null;
+const _saveGameDebounced = () => {
+  if (_saveDebounceTimer) return; // already queued
+  _saveDebounceTimer = setTimeout(() => {
+    _saveDebounceTimer = null;
+    if (_gameActive && GS.clan.length > 0) saveGame();
+  }, 500);
+};
+
 function loadGame() {
   let saved = null;
   try { saved = localStorage.getItem('nindo_save'); }
@@ -3889,6 +4210,7 @@ function loadGame() {
   if (saved) {
     try {
       GS = JSON.parse(saved);
+      _repairSaveData(); // patch any fields added after save was created
       _gameActive = true;
       initAchievements();
       showScreen('hub');
@@ -3972,6 +4294,23 @@ function createCharacter() {
     jobs: {}, unlockedAbilities: [],
     equippedAbilities: { reaction: null, support: null, movement: null }
   };
+
+  // Full GS reset — ensures no carry-over from any previous save or partially loaded state
+  GS.clan              = [];
+  GS.completedMissions = [];
+  GS.activeMissions    = [];
+  GS.missionNextRefresh= 0;
+  GS.day               = 1;
+  GS.inventory         = { healing: [], armor: [], tactical: [] };
+  GS.weaponStash       = [];
+  GS.equippedArmor     = null;
+  GS.shopStock         = { weapons: [], items: [] };
+  GS.reputation        = { stealth: 0, honor: 0 };
+  GS.recruitRoster     = [];
+  GS.recruitNextRefresh= 0;
+  GS.achievements      = [];
+  GS.achievementStats  = {};
+  _invalidateMissionsCache();
 
   GS.clan.push(ninja);
   GS.gold = 1000;
@@ -4116,7 +4455,7 @@ function generateHireableNinja(targetLevel) {
     proficiency: { ...cls.proficiency },
     specialMove: special,
     weapon, carriedItems: [],
-    training: null, isPlayer: false,
+    training: null, isPlayer: false, equippedArmor: null,
     jobs: {}, unlockedAbilities: [],
     equippedAbilities: { reaction: null, support: null, movement: null },
     hireCost: cost,
@@ -4219,7 +4558,7 @@ function openCustomRecruitModal() {
           chi: cls.baseStats.chi, maxChi: cls.baseStats.chi,
           proficiency: { ...cls.proficiency },
           specialMove: special, weapon: null, carriedItems: [],
-          training: null, isPlayer: false,
+          training: null, isPlayer: false, equippedArmor: null,
           jobs: {}, unlockedAbilities: [],
           equippedAbilities: { reaction: null, support: null, movement: null }
         };
@@ -4333,12 +4672,50 @@ function _quickDeployNinja(ninjaId) {
   showHubSection('missions');
 }
 
+function healAllClan() {
+  const toHeal = GS.clan.filter(n => !n.training && n.hp < n.maxHp);
+  if (!toHeal.length) { toast('All ninja are already at full HP.', 'error'); return; }
+  const cost = toHeal.reduce((sum, n) => sum + Math.max(5, Math.floor((n.maxHp - n.hp) * 0.2)), 0);
+  if (GS.gold < cost) { toast(`Not enough gold! Need G${cost} to heal all.`, 'error'); return; }
+  GS.gold -= cost;
+  toHeal.forEach(n => { n.hp = n.maxHp; });
+  updateGoldDisplay();
+  saveGame();
+  toast(`✚ All ninja healed to full HP (G${cost} spent).`, 'success');
+  renderClan();
+}
+
 function renderClan() {
   const el = document.getElementById('section-clan');
   const clanCards = GS.clan.map(n => ninjaCard(n)).join('');
+
+  // Readiness summary
+  const total = GS.clan.length;
+  const ready = GS.clan.filter(n => !n.training && n.hp >= n.maxHp * 0.5).length;
+  const injured = GS.clan.filter(n => !n.training && n.hp < n.maxHp * 0.5).length;
+  const training = GS.clan.filter(n => n.training).length;
+  const unarmed = GS.clan.filter(n => !n.weapon && !n.training).length;
+  const unarmored = GS.clan.filter(n => !n.equippedArmor && !n.training).length;
+  const healCost = GS.clan.filter(n => !n.training && n.hp < n.maxHp).reduce((sum, n) => {
+    const missing = n.maxHp - n.hp;
+    return sum + Math.max(5, Math.floor(missing * 0.2));
+  }, 0);
+  const anyInjured = GS.clan.some(n => !n.training && n.hp < n.maxHp);
+  const avgLevel = total ? (GS.clan.reduce((s, n) => s + (n.level || 1), 0) / total).toFixed(1) : '—';
+
   el.innerHTML = `
-    <div class="section-title">Clan Roster · ${GS.clan.length} Shadow${GS.clan.length !== 1 ? 's' : ''}</div>
+    <div class="section-title">Clan Roster · ${total} Shadow${total !== 1 ? 's' : ''}</div>
     ${renderRepWidget()}
+    <div class="readiness-bar">
+      <div class="readiness-stat">⚔ <span class="val">${total}</span> ninja</div>
+      <div class="readiness-stat">✓ <span class="val ${ready < total - training ? 'warn' : ''}">${ready}</span> ready</div>
+      ${injured ? `<div class="readiness-stat">🩸 <span class="val warn">${injured}</span> injured</div>` : ''}
+      ${training ? `<div class="readiness-stat">⌛ <span class="val">${training}</span> training</div>` : ''}
+      ${unarmed ? `<div class="readiness-stat">⚠ <span class="val warn">${unarmed}</span> unarmed</div>` : ''}
+      ${unarmored ? `<div class="readiness-stat">🛡 <span class="val warn">${unarmored}</span> unarmored</div>` : ''}
+      <div class="readiness-stat" style="margin-left:auto">★ Avg Lv <span class="val">${avgLevel}</span></div>
+      ${anyInjured ? `<button class="heal-all-btn" onclick="healAllClan()" style="margin-left:0.5rem" title="Spend gold to heal all injured ninja to full HP (G${healCost})">✚ Heal All · G${healCost}</button>` : ''}
+    </div>
     <div class="clan-grid">
       ${clanCards}
       <div class="add-ninja-card" onclick="showHubSection('recruit')">
@@ -4358,8 +4735,11 @@ function ninjaCard(n) {
   const jobData = getNinjaJobData(n);
   const trainingInfo = n.training ? `<div style="margin-top:0.5rem"><span class="training-badge">⌛ ${n.training.type} · ${getTrainingTimeLeft(n)}</span></div>` : '';
   const wpnBadge = n.weapon
-    ? `<span class="weapon-badge" style="border-color:${tierColor(n.weapon.tier)};color:${tierColor(n.weapon.tier)}">${n.weapon.icon} ${n.weapon.name}</span>`
+    ? `<span class="weapon-badge" style="border-color:${tierColor(n.weapon.tier)};color:${tierColor(n.weapon.tier)}">${itemImgAsync(n.weapon,"16px","vertical-align:middle","wpn-badge-img")} ${n.weapon.name}</span>`
     : `<span class="weapon-badge" style="border-color:rgba(255,255,255,0.1);color:var(--mist)">✕ Unarmed</span>`;
+  const armorBadge = n.equippedArmor
+    ? `<span class="weapon-badge" style="border-color:${tierColor(n.equippedArmor.tier)};color:${tierColor(n.equippedArmor.tier)}">${n.equippedArmor.icon} ${n.equippedArmor.name}</span>`
+    : `<span class="weapon-badge" style="border-color:rgba(255,255,255,0.05);color:rgba(255,255,255,0.25)">🛡 No Armor</span>`;
   const hpColor = hpPct > 60 ? '#e74c3c' : hpPct > 30 ? '#ddaa00' : '#cc2222';
   const accentColor = cls.color;
 
@@ -4388,8 +4768,10 @@ function ninjaCard(n) {
         <div class="stat-row"><span class="stat-label">STM</span><div class="stat-bar"><div class="stat-fill stamina" style="width:${stmPct}%"></div></div><span class="stat-val">${n.stamina}/${n.maxStamina}</span></div>
         <div class="stat-row"><span class="stat-label">CHI</span><div class="stat-bar"><div class="stat-fill chi" style="width:${chiPct}%"></div></div><span class="stat-val">${n.chi}/${n.maxChi}</span></div>
       </div>
-      <div class="ninja-card-footer" style="margin-top:0.7rem;justify-content:space-between">${wpnBadge}${trainingInfo}
-        ${!n.training ? `<button onclick="event.stopPropagation();_quickDeployNinja('${n.id}')" style="background:transparent;border:1px solid rgba(139,26,26,0.4);color:var(--crimson);font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.1em;padding:0.2rem 0.5rem;cursor:pointer;margin-left:auto;transition:all 0.15s" onmouseover="this.style.background='rgba(139,26,26,0.15)'" onmouseout="this.style.background='transparent'" title="Jump to Missions with this ninja selected">⚔ Deploy</button>` : ''}
+      <div class="ninja-card-footer" style="margin-top:0.7rem;flex-direction:column;gap:0.3rem">
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap">${wpnBadge}${armorBadge}</div>
+        ${trainingInfo}
+        ${!n.training ? `<button onclick="event.stopPropagation();_quickDeployNinja('${n.id}')" style="background:transparent;border:1px solid rgba(139,26,26,0.4);color:var(--crimson);font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.1em;padding:0.2rem 0.5rem;cursor:pointer;align-self:flex-end;transition:all 0.15s" onmouseover="this.style.background='rgba(139,26,26,0.15)'" onmouseout="this.style.background='transparent'" title="Jump to Missions with this ninja selected">⚔ Deploy</button>` : ''}
       </div>
       <div class="special-move-info" style="margin-top:0.6rem">
         <div class="special-move-name">✦ ${n.specialMove.name} <span style="color:rgba(136,170,255,0.6);font-size:0.6rem">χ${n.specialMove.chi}</span></div>
@@ -4455,9 +4837,6 @@ function renderLoadoutModal(id) {
         ${weaponList}
       </div>
       <div>
-        <div class="loadout-section-title">
-          \u{1F392} Field Kit <span style="color:var(--mist);font-size:0.6rem">${n.carriedItems.length}/${MAX_CARRY} slots</span>
-        </div>
         ${carryHTML}
         <div class="loadout-section-title" style="margin-top:0.8rem">From Stash</div>
         ${stashHTML}
@@ -4499,8 +4878,9 @@ function buildWeaponChoiceHTML(n) {
       : '';
     html += `<div class="weapon-choice-item equipped-now">
       <div class="wci-tier" style="background:${tierColor(ew.tier)}"></div>
+      <div class="wci-icon" style="width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center">${itemImgAsync(ew,'28px','object-fit:contain;display:block')}</div>
       <div class="wci-info">
-        <div class="wci-name">${ew.icon} ${ew.name} ✓${eBroken ? ' <span style="color:var(--crimson);font-size:0.55rem">DEPLETED</span>' : ''}</div>
+        <div class="wci-name">${ew.name} ✓${eBroken ? ' <span style="color:var(--crimson);font-size:0.55rem">DEPLETED</span>' : ''}</div>
         <div class="wci-stats">DMG ${ew.dmg[0]}-${ew.dmg[1]}${ew.range ? ' · Range '+ew.range : ''} · ${ew.tier.toUpperCase()}<br><span${eWarning}>${eStatus}</span></div>
         ${discardBtn}
       </div>
@@ -4525,8 +4905,9 @@ function buildWeaponChoiceHTML(n) {
     const sClickable = !sBroken && sCanUse;
     html += `<div class="weapon-choice-item" style="opacity:${sRestricted ? '0.45' : '1'}" ${sClickable ? `onclick="ninjaEquipWeapon('${n.id}', ${i})"` : ''}>
       <div class="wci-tier" style="background:${tierColor(w.tier)}"></div>
+      <div class="wci-icon" style="width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center">${itemImgAsync(w,'28px','object-fit:contain;display:block')}</div>
       <div class="wci-info">
-        <div class="wci-name">${w.icon} ${w.name}${sBroken ? ' <span style="color:var(--crimson);font-size:0.55rem">DEPLETED</span>' : ''}${sRestricted ? ' <span style="color:var(--mist);font-size:0.5rem">🔒 Class locked</span>' : ''}</div>
+        <div class="wci-name">${w.name}${sBroken ? ' <span style="color:var(--crimson);font-size:0.55rem">DEPLETED</span>' : ''}${sRestricted ? ' <span style="color:var(--mist);font-size:0.5rem">🔒 Class locked</span>' : ''}</div>
         <div class="wci-stats">DMG ${w.dmg[0]}-${w.dmg[1]}${w.range ? ' · Range '+w.range : ''} · ${w.tier.toUpperCase()} · ${WEAPONS[w.type]?.label || w.type}<br><span style="color:var(--mist)">${sStatus}</span></div>
         ${sDiscardBtn}${sSellBtn}
       </div>
@@ -4540,60 +4921,93 @@ function buildWeaponChoiceHTML(n) {
 }
 
 function buildCarryGridHTML(n) {
-  let html = '<div class="carry-grid">';
+  // \u2500\u2500 Armor slot \u2014 compact horizontal strip \u2500\u2500
+  let html = '<div class="loadout-section-title">\u{1F6E1} Body Armor</div>';
+  if (n.equippedArmor) {
+    const a = n.equippedArmor;
+    const dur = a.durability !== undefined ? a.durability : (ARMOR_DURABILITY[a.tier] || 5);
+    const maxDur = a.maxDurability || ARMOR_DURABILITY[a.tier] || 5;
+    const durCol = dur <= 2 ? 'var(--crimson-bright)' : dur <= Math.ceil(maxDur / 2) ? '#ddaa00' : 'var(--jade-bright)';
+    html += '<div class="armor-slot-strip filled" onclick="unequipArmor(\'' + n.id + '\')" title="' + a.name + ' \u2014 click to unequip" style="border-color:' + tierColor(a.tier) + '44">'
+      + '<div class="aslot-img">' + itemImgAsync(a, '28px') + '</div>'
+      + '<div class="aslot-info">'
+      + '<div class="aslot-name" style="color:' + tierColor(a.tier) + '">' + a.name + '</div>'
+      + '<div class="aslot-dur" style="color:' + durCol + '">' + dur + '/' + maxDur + ' \u{1F6E1} durability</div>'
+      + '</div>'
+      + '<div class="aslot-unequip">\u2715 unequip</div></div>';
+  } else {
+    html += '<div class="armor-slot-strip" style="opacity:0.45;cursor:default">'
+      + '<div class="aslot-img" style="opacity:0.3">\u{1F6E1}</div>'
+      + '<div class="aslot-info"><div class="aslot-name" style="color:var(--mist)">No armor equipped</div>'
+      + '<div class="aslot-dur" style="color:var(--mist)">Equip from stash below</div></div></div>';
+  }
+  // \u2500\u2500 Field kit \u2500\u2500
+  html += '<div class="loadout-section-title" style="margin-top:0.7rem">\u{1F392} Field Kit <span style="color:var(--mist);font-size:0.58rem;font-family:sans-serif;font-weight:normal">' + n.carriedItems.length + '/' + MAX_CARRY + '</span></div>';
+  html += '<div class="carry-grid">';
   for (let i = 0; i < MAX_CARRY; i++) {
     const item = n.carriedItems[i];
     if (item) {
-      const durLabel = (item.isArmor && item.durability !== undefined)
-        ? `<div style="font-size:0.44rem;color:${item.durability <= 2 ? 'var(--crimson-bright)' : 'var(--jade-bright)'}">${item.durability}/${item.maxDurability||ARMOR_DURABILITY[item.tier]||5}\u{1F6E1}</div>` : '';
-      html += `<div class="carry-slot filled" title="${item.name}" onclick="removeItemFromCarry('${n.id}', ${i})">
-        <div class="carry-slot-icon">${item.icon}</div>
-        <div class="carry-slot-label">${item.name.split(' ')[0]}</div>
-        ${durLabel}
-        <div class="carry-slot-remove">✕</div>
-      </div>`;
+      html += '<div class="carry-slot filled" title="' + item.name + ' \u2014 click to remove" onclick="removeItemFromCarry(\'' + n.id + '\', ' + i + ')">'
+        + '<div class="carry-slot-icon">' + itemImgAsync(item, '26px') + '</div>'
+        + '<div class="carry-slot-label">' + item.name.split(' ')[0] + '</div>'
+        + '<div class="carry-slot-remove">\u2715</div></div>';
     } else {
-      html += `<div class="carry-slot"><div class="carry-empty">+</div></div>`;
+      html += '<div class="carry-slot"><div class="carry-empty">+</div></div>';
     }
   }
-  html += '</div>';
-  html += '<div class="text-xs text-mist">Click item to remove · Max ' + MAX_CARRY + ' items</div>';
+  html += '</div><div style="font-size:0.52rem;color:var(--mist);margin-top:0.2rem">Click to remove &middot; max ' + MAX_CARRY + ' consumables</div>';
   return html;
 }
 
 function buildStashItemsHTML(n) {
-  const allItems = [...ITEMS.healing, ...ITEMS.costume, ...ITEMS.tactical];
   const isFull = n.carriedItems.length >= MAX_CARRY;
-  const hasArmor = n.carriedItems.some(x => x.isArmor);
   let html = '<div class="stash-item-list">';
   let hasAny = false;
 
-  allItems.forEach(item => {
+  // ── Armor items (go to armor slot) ──
+  const armorItems = ITEMS.armor;
+  const armorBlocked = !!n.equippedArmor;
+  armorItems.forEach(item => {
+    const owned = (GS.inventory['armor'] || []).filter(x => x.id === item.id).length;
+    if (owned === 0) return;
+    hasAny = true;
+    const blocked = armorBlocked;
+    const durInfo = ' \u00b7 \ud83d\udee1' + (ARMOR_DURABILITY[item.tier] || 5) + ' dur';
+    const clickAttr = blocked ? '' : ('addItemToCarry(\'' + n.id + '\',\'armor\',\'' + item.id + '\')');
+    const titleAttr = blocked ? 'Unequip current armor first' : 'Equip to armor slot';
+    html += '<div class="stash-item ' + (blocked ? 'full' : '') + '"'
+          + ' onclick="' + clickAttr + '"'
+          + ' title="' + titleAttr + '">'
+          + '<div class="stash-item-icon">' + itemImgAsync(item, '32px') + '</div>'
+          + '<div class="stash-item-info">'
+          + '<div class="stash-item-name">' + item.name
+          + ' <span style="color:rgba(201,162,39,0.6);font-size:0.55rem">' + item.tier.toUpperCase() + '</span></div>'
+          + '<div class="stash-item-desc">' + item.desc + durInfo + '</div>'
+          + '</div>'
+          + '<div class="stash-item-owned">' + owned + ' owned</div>'
+          + '</div>';
+  });
+
+  // ── Consumable items (go to field kit) ──
+  const consumables = [...ITEMS.healing, ...ITEMS.tactical];
+  consumables.forEach(item => {
     const cat = getCategoryForItem(item);
     const owned = (GS.inventory[cat] || []).filter(x => x.id === item.id).length;
     if (owned === 0) return;
     hasAny = true;
-    // Items are removed from inventory when carried, so owned IS the available count
-    const armorBlocked = item.isArmor && hasArmor && !n.carriedItems.some(x => x.id === item.id);
-    const available = owned;
-    if (available <= 0) return;
-    const stashBlocked = isFull || armorBlocked;
-    const durInfo = item.isArmor ? (' \u00b7 \ud83d\udee1' + (ARMOR_DURABILITY[item.tier] || 5) + ' dur') : '';
-    const clickAttr = stashBlocked ? '' : ('addItemToCarry(\'' + n.id + '\',\'' + cat + '\',\'' + item.id + '\')');
-    const titleAttr = armorBlocked ? 'Only one armor per kit' : '';
-    html += '<div class="stash-item ' + (stashBlocked ? 'full' : '') + '"'
-          + ' onclick="' + clickAttr + '"'
-          + ' title="' + titleAttr + '">'
-          + '<div class="stash-item-icon">' + item.icon + '</div>'
+    const blocked = isFull;
+    const clickAttr = blocked ? '' : ('addItemToCarry(\'' + n.id + '\',\'' + cat + '\',\'' + item.id + '\')');
+    html += '<div class="stash-item ' + (blocked ? 'full' : '') + '"'
+          + ' onclick="' + clickAttr + '">'
+          + '<div class="stash-item-icon">' + itemImgAsync(item, '32px') + '</div>'
           + '<div class="stash-item-info">'
-          + '<div class="stash-item-name">' + item.name
-          + (item.isArmor ? ' <span style="color:rgba(201,162,39,0.6);font-size:0.55rem">ARMOR</span>' : '')
+          + '<div class="stash-item-name">' + item.name + '</div>'
+          + '<div class="stash-item-desc">' + item.desc + '</div>'
           + '</div>'
-          + '<div class="stash-item-desc">' + item.desc + durInfo + '</div>'
-          + '</div>'
-          + '<div class="stash-item-owned">' + available + ' avail</div>'
+          + '<div class="stash-item-owned">' + owned + ' avail</div>'
           + '</div>';
   });
+
   if (!hasAny) html += '<div class="text-xs text-mist">Stash empty. Visit Supplies.</div>';
   html += '</div>';
   return html;
@@ -4610,7 +5024,7 @@ function buildUseItemsHTML(n) {
   n.carriedItems.forEach((item, i) => {
     if (item.effect !== 'heal' && item.effect !== 'full_heal') return;
     html += `<div class="use-item-btn" onclick="useItemOutsideMission('${n.id}', ${i})">
-      <span style="font-size:1.2rem">${item.icon}</span>
+      <span style="font-size:1.2rem">${itemImgAsync(item, '1.2rem')}</span>
       <div><div class="stash-item-name">${item.name}</div><div class="stash-item-desc">+${item.value} HP · Current: ${n.hp}/${n.maxHp}</div></div>
     </div>`;
   });
@@ -4670,7 +5084,7 @@ function ninjaDiscardWeapon(ninjaId) {
   const n = GS.clan.find(x => x.id === ninjaId);
   if (!n || !n.weapon) return;
   openModal('Discard Weapon?',
-    '<b style="color:var(--crimson-bright)">' + n.weapon.icon + ' ' + n.weapon.name + '</b> is depleted. Discard permanently?',
+    '<b style="color:var(--crimson-bright)">' + itemImg(n.weapon,'18px','vertical-align:middle') + ' ' + n.weapon.name + '</b> is depleted. Discard permanently?',
     [
       { label: 'Discard', fn: () => { n.weapon = null; saveGame(); closeModal(); renderLoadoutModal(ninjaId); }, cls: 'danger' },
       { label: 'Cancel', fn: closeModal }
@@ -4691,7 +5105,7 @@ function stashSellWeapon(stashIdx) {
   const finalPrice = broken ? Math.floor(sellPrice * 0.5) : sellPrice;
   openModal(
     'Sell Weapon?',
-    '<div style="font-size:1.2rem;margin-bottom:0.4rem">' + w.icon + ' ' + w.name + '</div>' +
+    '<div style="font-size:1.2rem;margin-bottom:0.4rem">' + itemImgAsync(w,'1.2rem') + ' ' + w.name + '</div>' +
     '<div style="font-size:0.75rem;color:var(--mist);margin-bottom:0.7rem">' + (w.tier||'common').toUpperCase() + ' · DMG ' + w.dmg[0] + '-' + w.dmg[1] + '</div>' +
     (broken ? '<div style="font-size:0.65rem;color:var(--crimson-bright);margin-bottom:0.5rem">Weapon is depleted — selling at 50% value</div>' : '') +
     'Sell for <b style="color:var(--gold)">' + finalPrice + ' Gold</b>?',
@@ -4721,7 +5135,7 @@ function stashDiscardWeapon(stashIdx) {
   const w = stash[stashIdx];
   if (!w) return;
   openModal('Discard Weapon?',
-    '<b style="color:var(--crimson-bright)">' + w.icon + ' ' + w.name + '</b> is depleted. Discard permanently?',
+    '<b style="color:var(--crimson-bright)">' + itemImg(w,'18px','vertical-align:middle') + ' ' + w.name + '</b> is depleted. Discard permanently?',
     [
       { label: 'Discard', fn: () => {
           GS.weaponStash.splice(stashIdx, 1); saveGame(); closeModal();
@@ -4735,19 +5149,37 @@ function addItemToCarry(ninjaId, category, itemId) {
   const n = GS.clan.find(x => x.id === ninjaId);
   if (!n) return;
   if (!n.carriedItems) n.carriedItems = [];
-  if (n.carriedItems.length >= MAX_CARRY) { toast('Field kit full!', 'error'); return; }
   const inv = GS.inventory[category] || [];
   const idx = inv.findIndex(x => x.id === itemId);
   if (idx === -1) { toast('Item not in stash.', 'error'); return; }
   const item = inv[idx];
-  // Enforce one armor per kit
+  // Armor goes to the dedicated armor slot, not the field kit
   if (item.isArmor) {
-    const alreadyHasArmor = n.carriedItems.some(x => x.isArmor);
-    if (alreadyHasArmor) { toast('Only one armor item per mission kit.', 'error'); return; }
+    if (n.equippedArmor) { toast('Unequip your current armor first.', 'error'); return; }
+    const prepared = initArmorItem(item);
+    n.equippedArmor = prepared;
+    inv.splice(idx, 1);
+    renderLoadoutModal(ninjaId);
+    _refreshMissionsIfActive();
+    return;
   }
-  const prepared = item.isArmor ? initArmorItem(item) : { ...item };
+  // Normal items go to field kit
+  if (n.carriedItems.length >= MAX_CARRY) { toast('Field kit full!', 'error'); return; }
+  const prepared = { ...item };
   n.carriedItems.push(prepared);
   inv.splice(idx, 1);
+  renderLoadoutModal(ninjaId);
+  _refreshMissionsIfActive();
+}
+
+function unequipArmor(ninjaId) {
+  const n = GS.clan.find(x => x.id === ninjaId);
+  if (!n || !n.equippedArmor) return;
+  const cat = 'armor';
+  if (!GS.inventory[cat]) GS.inventory[cat] = [];
+  GS.inventory[cat].push({ ...n.equippedArmor });
+  n.equippedArmor = null;
+  toast('Armor returned to stash.', 'success');
   renderLoadoutModal(ninjaId);
   _refreshMissionsIfActive();
 }
@@ -4782,14 +5214,21 @@ function useItemOutsideMission(ninjaId, carryIndex) {
 
 function getTrainingTimeLeft(n) {
   if (!n.training) return '';
-  const now = Date.now();
-  const end = n.training.endTime;
-  const left = Math.max(0, Math.ceil((end - now) / 3600000));
-  if (left <= 0) {
-    finishTraining(n);
-    return 'Complete!';
-  }
-  return `${left}h left`;
+  const left = Math.max(0, n.training.endTime - Date.now());
+  if (left <= 0) return '⚡ Ready!';
+  const hrs  = Math.floor(left / 3600000);
+  const mins = Math.floor((left % 3600000) / 60000);
+  if (hrs > 0) return `${hrs}h ${mins}m left`;
+  const secs = Math.floor((left % 60000) / 1000);
+  return mins > 0 ? `${mins}m ${secs}s left` : `${secs}s left`;
+}
+
+// Safe wrapper — call from timers/polling, never from render path
+function checkAndFinishTraining(n) {
+  if (!n.training) return false;
+  if (Date.now() < n.training.endTime) return false;
+  finishTraining(n);
+  return true;
 }
 
 function finishTraining(n) {
@@ -4892,8 +5331,26 @@ function renderMissions() {
     const pips = Array.from({length: 5}, (_, i) => `<span class="pip ${i < m.difficulty ? 'active' : ''}"></span>`).join('');
     const dynamicBadge = m.isDynamic ? `<span style="font-size:0.55rem;font-family:'Cinzel',serif;color:var(--mist);border:1px solid rgba(255,255,255,0.08);padding:0.1rem 0.3rem;margin-left:0.3rem">CONTRACT</span>` : '';
     const floorBadge = m.floors ? `<span style="font-size:0.55rem;font-family:'Cinzel',serif;color:var(--gold);border:1px solid rgba(201,162,39,0.3);padding:0.1rem 0.3rem;margin-left:0.3rem">${m.floors.length}F</span>` : '';
+    const turnLimitBadge = m.turnLimit ? `<span class="mission-turn-badge">⏱ ${m.turnLimit}T</span>` : '';
     const isClickable = !locked && !completed;
     const completedBadge = completed ? `<span style="font-size:0.55rem;font-family:'Cinzel',serif;color:var(--jade-bright);border:1px solid rgba(61,170,125,0.3);padding:0.1rem 0.3rem;margin-left:0.3rem">✓ DONE</span>` : '';
+
+    // Build locked prerequisite hint
+    let lockHint = '';
+    if (locked && m.requiresMissions && m.requiresMissions.length) {
+      const done = new Set(GS.completedMissions);
+      const missing = m.requiresMissions.filter(id => !done.has(id));
+      const missingNames = missing.slice(0, 3).map(id => {
+        const ref = getAllMissions().find(x => x.id === id);
+        return ref ? ref.name : id;
+      });
+      lockHint = `<div class="mission-lock-hint">Requires: ${missingNames.join(', ')}${missing.length > 3 ? ' +' + (missing.length - 3) + ' more' : ''}</div>`;
+    } else if (locked && m.requiredLevel) {
+      const maxLv = GS.clan.length ? Math.max(...GS.clan.map(n => n.level)) : 1;
+      if (m.requiredLevel > maxLv) {
+        lockHint = `<div class="mission-lock-hint">Requires Level ${m.requiredLevel} ninja (you have Lv ${maxLv})</div>`;
+      }
+    }
 
     // Expanded detail panel when this card is selected
     let detailPanel = '';
@@ -4917,6 +5374,8 @@ function renderMissions() {
             <div class="mission-detail-stat"><span class="label">TERRAIN</span><span class="val">${terrainLabel}</span></div>
             <div class="mission-detail-stat"><span class="label">DIFFICULTY</span><span class="val">${'◆'.repeat(m.difficulty)}${'◇'.repeat(5-m.difficulty)}</span></div>
             <div class="mission-detail-stat"><span class="label">REWARD</span><span class="val">${rewardExtras}</span></div>
+            ${m.turnLimit ? `<div class="mission-detail-stat"><span class="label">TURN LIMIT</span><span class="val" style="color:var(--crimson)">⏱ ${m.turnLimit} turns</span></div>` : ''}
+            ${m.requiredLevel ? `<div class="mission-detail-stat"><span class="label">MIN LEVEL</span><span class="val">Lv ${m.requiredLevel}</span></div>` : ''}
             ${floorText ? `<div class="mission-detail-stat" style="grid-column:1/-1"><span class="label">FLOORS</span><span class="val" style="font-size:0.6rem">${floorText}</span></div>` : ''}
             ${reqLabel ? `<div class="mission-detail-stat" style="grid-column:1/-1"><span class="label">PREREQ</span><span class="val" style="color:var(--mist);font-size:0.62rem">${reqLabel}</span></div>` : ''}
           </div>
@@ -4928,13 +5387,14 @@ function renderMissions() {
       <div class="mission-card ${locked ? 'locked' : ''} ${completed ? 'completed' : ''} ${isSelected ? 'mission-card-selected' : ''}" onclick="${isClickable ? `selectMission('${m.id}')` : ''}" style="${completed ? 'opacity:0.45;cursor:default;' : ''}${isSelected ? 'border-color:var(--gold);background:rgba(201,162,39,0.04);' : ''}">
         <div class="mission-type-icon">${typeMap[m.type] || '❓'}</div>
         <div class="mission-details" style="flex:1">
-          <div class="mission-name">${m.name}${dynamicBadge}${floorBadge}${completedBadge} ${locked ? '\u{1F512}' : ''}${isSelected ? ' <span style="color:rgba(201,162,39,0.5);font-size:0.6rem">▼</span>' : ''}</div>
+          <div class="mission-name">${m.name}${dynamicBadge}${floorBadge}${turnLimitBadge}${completedBadge} ${locked ? '\u{1F512}' : ''}${isSelected ? ' <span style="color:rgba(201,162,39,0.5);font-size:0.6rem">▼</span>' : ''}</div>
           <div class="mission-desc">${m.desc}</div>
           <div class="mission-meta">
             ${tagHtml}
             <span class="difficulty-pip">${pips}</span>
             <span class="mission-reward">G ${m.reward} gold${m.recruitReward ? ' + Recruit' : ''}</span>
           </div>
+          ${lockHint}
           ${detailPanel}
         </div>
       </div>`;
@@ -4960,6 +5420,9 @@ function renderMissions() {
     const weaponPip = n.weapon
       ? `<span class="loadout-pip weapon">${n.weapon.icon} ${n.weapon.name}</span>`
       : `<span class="loadout-pip" style="color:var(--crimson);border-color:rgba(192,57,43,0.3)">No Weapon</span>`;
+    const armorPip = n.equippedArmor
+      ? `<span class="loadout-pip" style="color:${tierColor(n.equippedArmor.tier)};border-color:${tierColor(n.equippedArmor.tier)}44">${n.equippedArmor.icon} ${n.equippedArmor.name}</span>`
+      : `<span class="loadout-pip" style="opacity:0.35">🛡 No Armor</span>`;
     const itemPips = n.carriedItems.map(i => `<span class="loadout-pip">${i.icon}</span>`).join('');
     const emptySlots = MAX_CARRY - n.carriedItems.length;
     const emptyPips = Array.from({length: emptySlots}, () => `<span class="loadout-pip" style="opacity:0.3">·</span>`).join('');
@@ -4968,7 +5431,7 @@ function renderMissions() {
       <div class="party-slot-info">
         <div class="party-slot-name">${n.name} ${inParty ? '<span style="color:var(--gold)">✓</span>' : ''}</div>
         <div class="party-slot-class">${cls.name} · Lv${n.level}</div>
-        <div class="party-loadout-bar">${weaponPip}${itemPips}${emptyPips}</div>
+        <div class="party-loadout-bar">${weaponPip}${armorPip}${itemPips}${emptyPips}</div>
       </div>
       <button class="configure-btn" onclick="event.stopPropagation();openNinjaDetail('${n.id}')">⚙ Kit</button>
     </div>`;
@@ -5261,6 +5724,16 @@ function getActiveBurnedSet() {
 
 // Called once per unit-turn-end (ally and enemy alike).
 // Expands each active fire and applies damage to units standing in fire.
+function tickSmokeClouds() {
+  if (!CS.smokeClouds || CS.smokeClouds.length === 0) return;
+  CS.smokeClouds = CS.smokeClouds
+    .map(c => ({ ...c, turnsLeft: c.turnsLeft - 1 }))
+    .filter(c => c.turnsLeft > 0);
+  if (CS.smokeClouds.length === 0) {
+    addLog('💨 The smoke has cleared.', 'system');
+  }
+}
+
 function tickFireSpread() {
   if (!CS.activeFires || CS.activeFires.length === 0) return;
 
@@ -5334,7 +5807,9 @@ function tickFireSpread() {
   if (_fireDmgDealt) SFX.play('sfx_fire_damage.mp3', 0.65);
 
   renderCombat();
-  checkCombatEnd();
+  // Note: checkCombatEnd is called inside applyDamage for each enemy hit above.
+  // For ally fire deaths we call it once here to cover that case.
+  if (_fireDmgDealt) checkCombatEnd();
 }
 
 // Called after initCombat sets up grid + mission
@@ -5450,6 +5925,8 @@ function initCombat(mission, partyIds) {
   _validateMission(mission);
 
   CS.active = true;
+  CS._endingCombat = false;
+  CS.smokeClouds = [];
   CS.mission = mission;
   CS.turn = 0;
   CS.phase = 'enemy_acting';
@@ -5485,14 +5962,21 @@ function initCombat(mission, partyIds) {
   // Build grid
   CS.grid = generateGrid(mission.terrain);
 
-  // ── REACHABILITY FIX: ensure every exit and every spawn column can be reached
-  // by a unit with jump=1 (max height climb of 1 per step). Carves corridors as needed.
-  _ensureMapReachability(CS.grid, CS.gridW, CS.gridH, 'left');
+  // Exits: right side for multi-floor missions (players advance toward enemies),
+  //        left side for single-floor missions (escape the way you came)
+  const isMultiFloorMission = !!(mission.floors && mission.floors.length > 1);
+  const exitCol = isMultiFloorMission ? CS.gridW - 1 : 0;
+  const exitSide = isMultiFloorMission ? 'right' : 'left';
 
-  // Carve exit openings on the left wall (always present, activate later)
+  // ── REACHABILITY FIX: ensure every exit and every spawn column can be reached
+  _ensureMapReachability(CS.grid, CS.gridW, CS.gridH, exitSide);
+
+  // Carve exit openings (activate later when conditions met)
   const exitYs = [2, Math.floor(CS.gridH / 2), CS.gridH - 3];
-  CS.exitTiles = exitYs.map(y => ({ x: 0, y }));
-  CS.exitTiles.forEach(t => { CS.grid[t.y][t.x] = 'exit'; });
+  CS.exitTiles = exitYs.map(y => ({ x: exitCol, y }));
+  CS.exitTiles.forEach(t => {
+    if (CS.grid[t.y]) CS.grid[t.y][t.x] = 'exit';
+  });
 
   // Place objective tiles (agitation/espionage missions)
   initObjectiveTiles(mission, CS.grid);
@@ -5528,7 +6012,7 @@ function initCombat(mission, partyIds) {
         }
       }
     }
-    // Last resort: pick any passable tile anywhere
+    // Last resort: any passable tile anywhere on map
     for (let x = 1; x < CS.gridW - 1; x++) {
       for (let y = 1; y < CS.gridH - 1; y++) {
         if (_tilePassable(x, y) && !_allyPlacedPositions.has(posKey(x, y))) {
@@ -5537,7 +6021,13 @@ function initCombat(mission, partyIds) {
         }
       }
     }
-    return { x: 1, y: Math.floor(CS.gridH / 2) };
+    // Absolute last resort: find ANY passable tile (ignoring occupied)
+    for (let x = 1; x < CS.gridW - 1; x++) {
+      for (let y = 1; y < CS.gridH - 1; y++) {
+        if (_tilePassable(x, y)) return { x, y };
+      }
+    }
+    return { x: 2, y: 2 }; // should never reach here on a valid map
   }
 
   CS.allies = partyIds.map((id, i) => {
@@ -5563,13 +6053,12 @@ function initCombat(mission, partyIds) {
     };
     // Migrate weapon runtime fields
     if (ally.weapon) migrateWeapon(ally.weapon);
-    // Find and apply armor from carriedItems
-    const armorIdx = ally.carriedItems.findIndex(x => x.isArmor);
-    if (armorIdx !== -1) {
-      const armor = ally.carriedItems[armorIdx];
+    // Apply armor from the dedicated equippedArmor slot (not carriedItems)
+    const armorSrc = n.equippedArmor || ally.carriedItems.find(x => x.isArmor); // fallback for old saves
+    if (armorSrc) {
+      const armor = JSON.parse(JSON.stringify(armorSrc));
       if (armor.durability === undefined) initArmorItem(armor);
-      ally.armorItem = armor; // reference (same object in carriedItems)
-      // Apply passive buff so calcDamage can see it
+      ally.armorItem = armor;
       ally.buffs.push({ type: 'armor_passive', effect: armor.effect, value: armor.value, permanent: true });
     }
     return ally;
@@ -5997,11 +6486,10 @@ function _ensureMapReachability(grid, W, H, exitSide) {
     if (ey < H - 2 && !tilePassable(exitColInner, ey + 1)) grid[ey + 1][exitColInner] = 'empty';
   });
 
-  // Step 2: BFS from the spawn zone columns (jump=1 means can climb ≤1 height per step)
-  const spawnXs = exitSide === 'left'
-    ? [1, 2, 3, 4]
-    : [W - 2, W - 3, W - 4, W - 5];
-  const exitXs = exitSide === 'left' ? [1] : [W - 2]; // inner column of exits
+  // Step 2: BFS from the ally SPAWN zone (always left cols 1-4), verify path to exit side
+  // Exits may be on either side, but allies always spawn on the left.
+  const spawnXs = [1, 2, 3, 4];
+  const exitXs  = exitSide === 'left' ? [1] : [W - 2]; // inner column of exits
 
   // Find a good spawn seed — first passable tile in spawn zone
   let seedX = spawnXs[0], seedY = Math.floor(H / 2);
@@ -6432,7 +6920,7 @@ function renderSelectedInfo() {
     </div>
     ${ally.weapon
       ? `<div class="text-xs mt-1" style="color:${weaponUsable(ally)?'var(--gold)':'var(--crimson)'}">
-           ${ally.weapon.icon} ${ally.weapon.name} &mdash; ${weaponStatusLabel(ally.weapon)}
+           ${itemImgAsync(ally.weapon,"16px","vertical-align:middle")} ${ally.weapon.name} &mdash; ${weaponStatusLabel(ally.weapon)}
            ${!weaponUsable(ally)?'<span style="color:var(--crimson-bright);font-size:0.55rem"> &#x2715; BROKEN/EMPTY</span>':''}
          </div>`
       : `<div class="text-xs mt-1" style="color:var(--jade-bright)">
@@ -6538,11 +7026,31 @@ function updateActionButtons() {
 // ==========================================
 
 let _pulseRAF = null;
+// Debounced renderCombat — coalesces multiple calls in the same synchronous block
+// into a single rAF draw, preventing canvas thrashing during multi-step operations.
+let _renderPending = false;
+const _renderCombatDeferred = () => {
+  if (_renderPending) return;
+  _renderPending = true;
+  requestAnimationFrame(() => { _renderPending = false; renderCombat(); });
+};
+
 function schedulePulseRedraw() {
   if (_pulseRAF) return;
   _pulseRAF = requestAnimationFrame(() => {
     _pulseRAF = null;
-    if (CS.active && (CS.exitsActive || CS.lootOnFloor || (CS.goldPickups && CS.goldPickups.length) || (CS.objectiveTiles && CS.objectiveTiles.some(t=>!t.done)) || CS.doomBags.length || CS.allies.some(a => a.doomed) || (CS.prisoner && !CS.prisoner.escaped))) {
+    const _needsPulse = CS.active && (
+      CS.exitsActive ||
+      CS.lootOnFloor ||
+      (CS.goldPickups && CS.goldPickups.length > 0) ||
+      (CS.objectiveTiles && CS.objectiveTiles.some(t => !t.done)) ||
+      CS.doomBags.length > 0 ||
+      CS.allies.some(a => a.doomed) ||
+      (CS.prisoner && !CS.prisoner.escaped) ||
+      (CS.activeFires && CS.activeFires.length > 0) ||
+      (CS.smokeClouds && CS.smokeClouds.length > 0)
+    );
+    if (_needsPulse) {
       drawCanvas();
       schedulePulseRedraw();
     }
@@ -6561,7 +7069,7 @@ function drawCanvas() {
   // Draw grid
   for (let y = 0; y < CS.gridH; y++) {
     for (let x = 0; x < CS.gridW; x++) {
-      const tileKey = CS.grid[y][x] || 'empty';
+      const tileKey = CS.grid[y]?.[x] || 'empty';
       const tile = TERRAIN_TILES[tileKey];
       // Skip exit tiles here — drawn later with glow
       if (tileKey === 'exit') continue;
@@ -6744,8 +7252,75 @@ function drawCanvas() {
     }
   }
 
+  // ── SMOKE / DARKNESS CLOUD OVERLAYS ──
+  if (CS.smokeClouds && CS.smokeClouds.length > 0) {
+    const _now2 = Date.now();
+    CS.smokeClouds.forEach(cloud => {
+      const isDarkness = cloud.type === 'darkness';
+      // Draw tiles within radius
+      for (let dy2 = -cloud.radius; dy2 <= cloud.radius; dy2++) {
+        for (let dx2 = -cloud.radius; dx2 <= cloud.radius; dx2++) {
+          const dist = Math.abs(dx2) + Math.abs(dy2);
+          if (dist > cloud.radius) continue;
+          const tx2 = cloud.cx + dx2, ty2 = cloud.cy + dy2;
+          if (tx2 < 0 || ty2 < 0 || tx2 >= CS.gridW || ty2 >= CS.gridH) continue;
+          const px2 = tx2 * cs, py2 = ty2 * cs;
+          // Fade toward edges of cloud
+          const edgeFade = 1 - (dist / (cloud.radius + 0.5));
+          // Flicker
+          const flick = 0.5 + 0.5 * Math.sin(_now2 / 220 + tx2 * 1.3 + ty2 * 2.1);
+          const baseAlpha = isDarkness ? 0.52 : 0.42;
+          const alpha = (baseAlpha + flick * 0.18) * edgeFade;
+          // Base colour: dark charcoal for smoke, deep indigo for darkness
+          const r = isDarkness ? 20 : 40, g = isDarkness ? 10 : 40, b = isDarkness ? 45 : 45;
+          ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
+          ctx.fillRect(px2, py2, cs, cs);
+          // Wispy inner detail
+          const wispAlpha = (0.12 + flick * 0.1) * edgeFade;
+          const wispGrad = ctx.createRadialGradient(
+            px2 + cs * 0.5, py2 + cs * 0.5, 0,
+            px2 + cs * 0.5, py2 + cs * 0.5, cs * 0.6
+          );
+          const wisp1 = isDarkness ? `rgba(80,40,120,${wispAlpha.toFixed(2)})` : `rgba(160,160,160,${wispAlpha.toFixed(2)})`;
+          wispGrad.addColorStop(0, wisp1);
+          wispGrad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = wispGrad;
+          ctx.fillRect(px2, py2, cs, cs);
+          // Emoji every 3rd tile for texture
+          if ((tx2 + ty2) % 3 === 0) {
+            ctx.font = Math.round(cs * 0.4) + 'px serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.globalAlpha = wispAlpha * 2.5;
+            ctx.fillStyle = isDarkness ? '#220033' : '#777';
+            ctx.fillText(isDarkness ? '🌑' : '💨', px2 + cs * 0.5, py2 + cs * 0.5);
+            ctx.globalAlpha = 1;
+          }
+          // Border
+          ctx.strokeStyle = isDarkness ? `rgba(60,20,80,${(edgeFade * 0.4).toFixed(2)})` : `rgba(100,100,100,${(edgeFade * 0.35).toFixed(2)})`;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(px2 + 1, py2 + 1, cs - 2, cs - 2);
+        }
+      }
+      // Turns remaining label at cloud centre
+      const labelX = cloud.cx * cs + cs * 0.5;
+      const labelY = cloud.cy * cs + cs * 0.18;
+      ctx.font = 'bold ' + Math.round(cs * 0.16) + 'px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = isDarkness ? 'rgba(180,120,255,0.75)' : 'rgba(220,220,220,0.75)';
+      ctx.fillText((isDarkness ? '🌑 ' : '💨 ') + cloud.turnsLeft + 't', labelX, labelY);
+    });
+  }
+
   // Draw enemies
   CS.enemies.filter(e => e.hp > 0).forEach(e => {
+    const _ent = Date.now();
+    const isBlinded = e.status === 'blinded' || e.status === 'confused';
+    // Blinded enemies pulse with a grey overlay
+    if (isBlinded) {
+      const bp = 0.5 + 0.5 * Math.sin(_ent / 250);
+      ctx.fillStyle = `rgba(120,120,120,${(0.18 + bp * 0.12).toFixed(2)})`;
+      ctx.fillRect(e.x * cs, e.y * cs, cs, cs);
+    }
     drawUnit(ctx, e, '#8b1a1a', '#ff4444', false);
     // Target marker
     if (e.isTarget) {
@@ -6892,37 +7467,98 @@ function drawCanvas() {
     }
   });
 
-  // Draw allies (doomed flash red; escaped ghost; normal otherwise)
+  // Draw allies (doomed flash red; escaped ghost; invisible shimmer; normal otherwise)
   CS.allies.filter(a => !a.perished).forEach(a => {
     const cls = CLASSES[a.class];
     const selected = CS.selectedAlly === a.gridId;
+    const isInvisible = a.buffs?.some(b => b.type === 'invisible');
+    const isRaging    = a.buffs?.some(b => b.type === 'rage' || b.type === 'bloodlust');
+    const isDefending = a.buffs?.some(b => b.type === 'defend' || b.type === 'iron_body');
+    const isDecoy     = a.buffs?.some(b => b.type === 'decoy');
+    const hasMirror   = a.buffs?.some(b => b.type === 'mirror');
+    const apx = a.x * cs, apy = a.y * cs;
+    const acx = apx + cs / 2, acy = apy + cs / 2;
+    const _nt = Date.now();
+
+    // Pre-unit auras (drawn under the unit)
+    if (isRaging) {
+      const ragePulse = 0.5 + 0.5 * Math.sin(_nt / 160);
+      ctx.fillStyle = `rgba(200,30,0,${(0.15 + ragePulse * 0.12).toFixed(2)})`;
+      ctx.fillRect(apx, apy, cs, cs);
+      // Red border shimmer
+      ctx.strokeStyle = `rgba(255,80,0,${(0.5 + ragePulse * 0.5).toFixed(2)})`;
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(apx + 1, apy + 1, cs - 2, cs - 2);
+    }
+    if (isDefending) {
+      const defPulse = 0.5 + 0.5 * Math.sin(_nt / 350);
+      ctx.fillStyle = `rgba(30,80,200,${(0.12 + defPulse * 0.08).toFixed(2)})`;
+      ctx.fillRect(apx, apy, cs, cs);
+      ctx.strokeStyle = `rgba(80,160,255,${(0.45 + defPulse * 0.45).toFixed(2)})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(apx + 1, apy + 1, cs - 2, cs - 2);
+    }
+    if (hasMirror) {
+      const mirPulse = 0.5 + 0.5 * Math.sin(_nt / 280);
+      ctx.strokeStyle = `rgba(200,200,255,${(0.3 + mirPulse * 0.4).toFixed(2)})`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.arc(acx, acy, cs * 0.44, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     if (a.escaped) {
       ctx.globalAlpha = 0.3;
-      drawUnit(ctx, a, cls.color, "#88ffcc", true, false);
+      drawUnit(ctx, a, cls.color, '#88ffcc', true, false);
       ctx.globalAlpha = 1;
     } else if (a.doomed) {
-      const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 200);
+      const pulse = 0.5 + 0.5 * Math.sin(_nt / 200);
       ctx.globalAlpha = 0.35 + pulse * 0.35;
-      drawUnit(ctx, a, "#aa2222", "#ff4444", true, false);
+      drawUnit(ctx, a, '#aa2222', '#ff4444', true, false);
       ctx.globalAlpha = 1;
-      // Countdown circle
-      const dcx = a.x * cs + cs / 2, dcy = a.y * cs + cs / 2;
-      ctx.fillStyle = "rgba(0,0,0,0.65)";
-      ctx.beginPath(); ctx.arc(dcx, dcy, cs * 0.3, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#ff3333";
-      ctx.font = "bold " + (cs * 0.36) + "px sans-serif";
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(String(a.doomCountdown), dcx, dcy);
-      ctx.font = (cs * 0.24) + "px serif";
-      ctx.fillText("💀", dcx, a.y * cs + cs * 0.12);
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.beginPath(); ctx.arc(acx, acy, cs * 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff3333';
+      ctx.font = 'bold ' + (cs * 0.36) + 'px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(a.doomCountdown), acx, acy);
+      ctx.font = (cs * 0.24) + 'px serif';
+      ctx.fillText('💀', acx, a.y * cs + cs * 0.12);
+    } else if (isInvisible) {
+      // Invisible: drawn at low alpha with a blue-grey shimmer ring
+      const invPulse = 0.5 + 0.5 * Math.sin(_nt / 240);
+      ctx.globalAlpha = 0.22 + invPulse * 0.12;
+      drawUnit(ctx, a, cls.color, '#aaccff', true, selected);
+      ctx.globalAlpha = 1;
+      // Shimmer ring
+      ctx.strokeStyle = `rgba(140,200,255,${(0.35 + invPulse * 0.45).toFixed(2)})`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.arc(acx, acy, cs * 0.42, _nt / 600, _nt / 600 + Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      // Small eye-slash icon
+      ctx.font = Math.round(cs * 0.26) + 'px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.globalAlpha = 0.55 + invPulse * 0.3;
+      ctx.fillText('👁', acx, apy + cs * 0.3);
+      ctx.globalAlpha = 1;
     } else {
-      drawUnit(ctx, a, cls.color, selected ? "#f0c040" : "#aabbcc", true, selected);
+      drawUnit(ctx, a, cls.color, selected ? '#f0c040' : '#aabbcc', true, selected);
     }
+
     if (a.hasLoot) {
-      ctx.font = (cs * 0.28) + "px serif";
-      ctx.textAlign = "center"; ctx.textBaseline = "top";
-      ctx.fillText("📦", a.x * cs + cs * 0.75, a.y * cs + 2);
+      ctx.font = (cs * 0.28) + 'px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('📦', a.x * cs + cs * 0.75, a.y * cs + 2);
     }
+
+    // Decoy marker
+    if (isDecoy) {
+      ctx.font = Math.round(cs * 0.22) + 'px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('🪆', apx + cs * 0.2, apy + cs * 0.02);
+    }
+
   });
 
   // ── Hit flash overlays (damage/heal pulses on tiles) ──
@@ -7044,20 +7680,34 @@ function drawUnit(ctx, unit, fillColor, textColor, isAlly, selected = false) {
     ctx.restore();
   }
 
-  // ── Status badge ──
+  // ── Status badges — top-right corner, all active effects simultaneously ──
   const badges = [];
-  if (unit.status === 'poisoned') badges.push('☠');
-  else if (unit.status === 'stunned') badges.push('💫');
-  else if (unit.status === 'confused') badges.push('❓');
-  else if (unit.status === 'blinded') badges.push('🌫');
-  if (unit.bleeds > 0) badges.push('🩸');
-  if (unit.invisible) badges.push('👁');
-  if (unit.buffs?.some(b => b.type === 'iron_body' || b.type === 'armor')) badges.push('🛡');
-  if (unit.buffs?.some(b => b.type === 'rage')) badges.push('🔥');
+  if (unit.status === 'poisoned')  badges.push({ icon: '☠', col: 'rgba(60,200,60,0.95)' });
+  if (unit.status === 'stunned')   badges.push({ icon: '💫', col: 'rgba(240,220,40,0.95)' });
+  if (unit.status === 'confused')  badges.push({ icon: '❓', col: 'rgba(200,80,240,0.95)' });
+  if (unit.status === 'blinded')   badges.push({ icon: '🌫', col: 'rgba(160,160,160,0.95)' });
+  if (unit.bleeds > 0 && unit.bleedTurns > 0) badges.push({ icon: '🩸', col: 'rgba(220,40,40,0.95)' });
+  if (unit.invisible || unit.buffs?.some(b => b.type === 'invisible')) badges.push({ icon: '👁', col: 'rgba(140,200,255,0.95)' });
+  if (unit.buffs?.some(b => b.type === 'iron_body' || b.type === 'armor')) badges.push({ icon: '🛡', col: 'rgba(80,160,255,0.95)' });
+  if (unit.buffs?.some(b => b.type === 'rage' || b.type === 'bloodlust')) badges.push({ icon: '🔥', col: 'rgba(255,80,20,0.95)' });
+  if (unit.buffs?.some(b => b.type === 'defend')) badges.push({ icon: '🔵', col: 'rgba(80,160,255,0.95)' });
+  if (unit.buffs?.some(b => b.type === 'decoy'))  badges.push({ icon: '🪆', col: 'rgba(200,160,80,0.95)' });
+  if (unit.buffs?.some(b => b.type === 'mirror')) badges.push({ icon: '🪞', col: 'rgba(200,220,255,0.95)' });
   if (badges.length) {
-    ctx.font = `${cs * 0.22}px serif`;
-    ctx.textAlign = 'right'; ctx.textBaseline = 'top';
-    ctx.fillText(badges.join(''), px + cs - 2, py + 2);
+    const iconSz = Math.round(cs * 0.22);
+    const pad = 2;
+    ctx.font = `${iconSz}px serif`;
+    ctx.textBaseline = 'top';
+    // Row across top-right, wrapping down if needed (max 4 per row)
+    const perRow = 4;
+    badges.forEach((b, i) => {
+      const col = i % perRow;
+      const row = Math.floor(i / perRow);
+      const bx = px + cs - pad - (col + 1) * (iconSz + 1);
+      const by = py + pad + row * (iconSz + 2);
+      ctx.textAlign = 'left';
+      ctx.fillText(b.icon, bx, by);
+    });
   }
 }
 
@@ -7291,6 +7941,18 @@ document.getElementById('combatCanvas').addEventListener('click', function(e) {
     handleAttack(ally, gx, gy);
   } else if (CS.selectedAction === 'special') {
     handleSpecial(ally, gx, gy);
+  } else if (CS.selectedAction === 'shadow_step') {
+    // Shadow Step — teleport to highlighted shadow tile
+    const reachable = CS.highlightedTiles.find(t => t.x === gx && t.y === gy);
+    if (!reachable) { toast('Cannot shadow-step there.', 'error'); return; }
+    ally.x = gx; ally.y = gy;
+    ally.facing = 'south';
+    CS.unitMoved = true;
+    CS.selectedAction = null;
+    CS.highlightedTiles = [];
+    addLog(ally.name + ' shadow-steps into the darkness!', 'special');
+    STEALTH.processStealthChecks();
+    renderCombat();
   }
 });
 
@@ -7402,7 +8064,7 @@ document.getElementById('combatCanvas').addEventListener('touchstart', function(
       const usable = isAlly ? weaponUsable(unit) : !w.quiverEmpty;
       const ammoStr = w.ammo !== undefined ? ` (${w.ammo})` : w.usesLeft !== undefined ? ` ×${w.usesLeft}` : '';
       html += '<div class="inspect-divider"></div>';
-      html += `<div class="inspect-row"><span class="inspect-row-label">${w.icon} Wpn</span><span class="inspect-row-val" style="color:${usable ? 'var(--gold)' : 'var(--crimson-bright)'}">${w.name}${ammoStr}</span></div>`;
+      html += `<div class="inspect-row"><span class="inspect-row-label">${itemImgAsync(w,"16px","vertical-align:middle")} Wpn</span><span class="inspect-row-val" style="color:${usable ? 'var(--gold)' : 'var(--crimson-bright)'}">${w.name}${ammoStr}</span></div>`;
       if (w.dmg) html += `<div class="inspect-row"><span class="inspect-row-label">Damage</span><span class="inspect-row-val">${w.dmg[0]}–${w.dmg[1]}</span></div>`;
     } else if (isAlly) {
       const up = getUnarmedProfile(unit.class);
@@ -7627,7 +8289,7 @@ function spawnFloatNumber(canvasX, canvasY, text, type = 'damage') {
 
 // Helper: spawn a float at a unit's tile position
 function floatAtUnit(unit, text, type = 'damage') {
-  if (!CS.cellSize) return;
+  if (!CS.cellSize || unit.x === undefined || unit.y === undefined) return;
   const cs = CS.cellSize;
   spawnFloatNumber(unit.x * cs + cs / 2, unit.y * cs, text, type);
 }
@@ -7810,8 +8472,14 @@ function handleMove(ally, tx, ty) {
     const _isLastFloor = !_isMulti || CS.currentFloor >= CS.totalFloors - 1;
     if (_isMulti && !_isLastFloor) {
       const _remaining = CS.allies.filter(a => isAllyAlive(a) && !a.escaped);
-      if (_remaining.length === 0) setTimeout(advanceFloor, 600);
+      if (_remaining.length === 0) { CS._endingCombat = true; setTimeout(advanceFloor, 600); }
     } else {
+      // For objective missions: mark done when all objectives met AND last ally just escaped
+      if (CS.objectiveTiles && CS.objectiveTiles.length > 0
+          && CS.objectiveProgress >= CS.objectiveTotal) {
+        const _stillHere = CS.allies.filter(a => isAllyAlive(a) && !a.escaped && !a.doomed);
+        if (_stillHere.length === 0) CS.objectivePhase = 'done';
+      }
       checkCombatEnd();
     }
   }
@@ -7966,10 +8634,13 @@ function handleAttack(ally, tx, ty) {
       ? getUnarmedProfile(ally.class).icon + ' ' + ally.name + ' (' + getUnarmedProfile(ally.class).name + ')'
       : ally.name;
     // ── SFX: play weapon-type hit sound (or unarmed if no weapon) ──
-    const _wSfx = (!unarmedMode && ally.weapon?.type) ? (WEAPON_SFX[ally.weapon.type] || 'sfx_blade_hit.mp3') : 'sfx_unarmed_hit.mp3';
+    const _wType = (!unarmedMode && ally.weapon?.type) || null;
+    const _wSfx = _wType ? (WEAPON_SFX[_wType] || 'sfx_blade_hit.mp3') : 'sfx_unarmed_hit.mp3';
     SFX.play(_wSfx);
     if (dmg >= 30) SFX.play('sfx_combat_crit.mp3', 0.9);
-    applyDamage(target, dmg, hitLabel);
+    // Ranged/thrown: delay the damage float so audio starts before the number appears
+    const _atkDelay = (_wType === 'ranged' || _wType === 'thrown') ? 120 : 0;
+    applyDamage(target, dmg, hitLabel, _atkDelay);
     if (!unarmedMode) {
       applyWeaponEffect(ally.weapon, target);
       checkOnHitPoison(ally, target);
@@ -8050,82 +8721,147 @@ function executeSpecial(caster, move, target, allyTarget) {
       });
       addLog(`✦ ${move.name}: hits all nearby enemies!`, 'special'); break;
     case 'aoe_thrown': {
-      // Level-scaled base damage — works with or without a thrown weapon equipped
+      const _aoeThrownRange = (caster.weapon && caster.weapon.range) || 3;
       const _aoeBaseDmg = 8 + (caster.level || 1) * 3;
-      const hitsAoe = CS.enemies.filter(e => e.hp > 0 && Math.abs(e.x - caster.x) <= 2 && Math.abs(e.y - caster.y) <= 2);
-      if (hitsAoe.length === 0) { addLog('✦ ' + move.name + ': no enemies in range!', 'system'); break; }
+      const hitsAoe = CS.enemies.filter(e =>
+        e.hp > 0 &&
+        Math.abs(e.x - caster.x) + Math.abs(e.y - caster.y) <= _aoeThrownRange &&
+        hasLineOfSight(caster.x, caster.y, e.x, e.y)
+      );
+      if (hitsAoe.length === 0) { addLog('\u2746 ' + move.name + ': no enemies in range!', 'system'); break; }
       hitsAoe.forEach(e => {
         const d = Math.floor((caster.weapon && weaponUsable(caster) ? calcDamage(caster, e) : _aoeBaseDmg) * 0.5);
         applyDamage(e, Math.max(1, d), caster.name);
       });
       if (caster.weapon && weaponUsable(caster)) consumeWeaponUse(caster, hitsAoe.length);
-      addLog('✦ ' + move.name + ': ' + hitsAoe.length + ' target' + (hitsAoe.length > 1 ? 's' : '') + ' hit!', 'special'); break;
+      addLog('\u2746 ' + move.name + ': ' + hitsAoe.length + ' target' + (hitsAoe.length > 1 ? 's' : '') + ' hit!', 'special'); break;
     }
     case 'poison':
-      if (target) { target.status = 'poisoned'; target._poisonedByClass = caster.class; target._poisonerId = caster.gridId; addLog(`✦ ${move.name}: ${target.name} poisoned!`, 'special'); _earnAch('first_poison'); } break;
+      if (target) { target.status = 'poisoned'; target._poisonedByClass = caster.class; target._poisonerId = caster.gridId; addLog(`\u2746 ${move.name}: ${target.name} poisoned!`, 'special'); _earnAch('first_poison'); } break;
     case 'stun':
-      if (target) { target.status = 'stunned'; addLog(`✦ ${move.name}: ${target.name} stunned!`, 'special'); } break;
+      if (target) { target.status = 'stunned'; target.ct = 0; addLog(`\u2746 ${move.name}: ${target.name} stunned!`, 'special'); } break;
     case 'confuse':
-      if (target) { target.status = 'confused'; addLog(`✦ ${move.name}: ${target.name} confused!`, 'special'); } break;
+      if (target) { target.status = 'confused'; addLog(`\u2746 ${move.name}: ${target.name} confused!`, 'special'); } break;
     case 'paralyze':
-      if (target) { target.status = 'stunned'; addLog(`✦ ${move.name}: ${target.name} paralyzed!`, 'special'); } break;
+      if (target) { target.status = 'stunned'; target.ct = 0; addLog(`\u2746 ${move.name}: ${target.name} paralyzed!`, 'special'); } break;
     case 'heal_ally': {
       const healTarget = allyTarget || caster;
+      const _healAmt = 25 + (caster.level || 1) * 5;
       if (healTarget.doomed) {
-        reviveAlly(healTarget, 30);
-        addLog('✦ ' + move.name + ': ' + healTarget.name + ' revived!', 'heal');
+        reviveAlly(healTarget, _healAmt);
+        addLog('\u2746 ' + move.name + ': ' + healTarget.name + ' revived!', 'heal');
       } else {
-        const h = 30; healTarget.hp = Math.min(healTarget.maxHp, healTarget.hp + h);
-        addLog('✦ ' + move.name + ': ' + healTarget.name + ' healed ' + h + ' HP.', 'heal');
+        healTarget.hp = Math.min(healTarget.maxHp, healTarget.hp + _healAmt);
+        addLog('\u2746 ' + move.name + ': ' + healTarget.name + ' healed ' + _healAmt + ' HP.', 'heal');
+        if (CS.cellSize) floatAtUnit(healTarget, '+' + _healAmt, 'heal');
       }
       break; }
     case 'chi_bolt':
     case 'void_bolt':
-      if (target) { const d = 25 + Math.floor(Math.random() * 15); applyDamage(target, d, caster.name); addLog(`✦ ${move.name}: ${d} chi damage!`, 'special'); } break;
+      if (target) {
+        const _chiDmg = 20 + (caster.level || 1) * 5 + Math.floor(Math.random() * 15);
+        applyDamage(target, _chiDmg, caster.name);
+        addLog(`\u2746 ${move.name}: ${_chiDmg} chi damage!`, 'special');
+      } break;
     case 'life_drain':
-      if (target) { const d = 20; applyDamage(target, d, caster.name); caster.hp = Math.min(caster.maxHp, caster.hp + d); addLog(`✦ ${move.name}: drained ${d} HP!`, 'special'); } break;
+      if (target) {
+        const _drainAmt = 15 + (caster.level || 1) * 3;
+        applyDamage(target, _drainAmt, caster.name);
+        caster.hp = Math.min(caster.maxHp, caster.hp + _drainAmt);
+        if (CS.cellSize) floatAtUnit(caster, '+' + _drainAmt, 'heal');
+        addLog(`\u2746 ${move.name}: drained ${_drainAmt} HP!`, 'special');
+      } break;
     case 'multi_thrown': {
       const _multiBaseDmg = 10 + (caster.level || 1) * 4;
-      const _multiTargets = CS.enemies.filter(e => e.hp > 0);
-      if (!_multiTargets.length) { addLog('✦ ' + move.name + ': no enemies!', 'system'); break; }
+      const _throwRange = (caster.weapon && caster.weapon.range) || 5;
+      const _visibleEnemies = CS.enemies.filter(e =>
+        e.hp > 0 &&
+        Math.abs(e.x - caster.x) + Math.abs(e.y - caster.y) <= _throwRange &&
+        hasLineOfSight(caster.x, caster.y, e.x, e.y)
+      );
+      if (!_visibleEnemies.length) {
+        addLog('\u2746 ' + move.name + ': no enemies in line of sight!', 'system'); break;
+      }
       let hits = 0;
       for (let i = 0; i < 5; i++) {
-        const _alive = CS.enemies.filter(e => e.hp > 0);
-        if (!_alive.length) break;
-        const e = _alive[Math.floor(Math.random() * _alive.length)];
+        const _pool = _visibleEnemies.filter(e => e.hp > 0);
+        if (!_pool.length) break;
+        const e = _pool[Math.floor(Math.random() * _pool.length)];
         const d = Math.floor((caster.weapon && weaponUsable(caster) ? calcDamage(caster, e) : _multiBaseDmg) * 0.65);
         applyDamage(e, Math.max(1, d), caster.name); hits++;
       }
       if (hits && caster.weapon && weaponUsable(caster)) consumeWeaponUse(caster, hits);
-      addLog('✦ ' + move.name + ': ' + hits + ' shurikens fly!', 'special'); break;
+      addLog('\u2746 ' + move.name + ': ' + hits + ' shurikens fly!', 'special'); break;
     }
     case 'rage':
-      caster.buffs.push({ type: 'rage', turns: 2 }); addLog(`✦ ${move.name}: ${caster.name} enters RAGE!`, 'special'); break;
+      caster.buffs.push({ type: 'rage', turns: 2 }); addLog(`\u2746 ${move.name}: ${caster.name} enters RAGE!`, 'special'); break;
     case 'defend':
-      caster.buffs.push({ type: 'defend', turns: 2 }); addLog(`✦ ${move.name}: ${caster.name} hardens!`, 'special'); break;
+      caster.buffs.push({ type: 'defend', turns: 2 }); addLog(`\u2746 ${move.name}: ${caster.name} hardens!`, 'special'); break;
     case 'iron_body':
-      caster.buffs.push({ type: 'iron_body', turns: 2 }); addLog(`✦ ${move.name}: ${caster.name} becomes iron!`, 'special'); break;
+      caster.buffs.push({ type: 'iron_body', turns: 2 }); addLog(`\u2746 ${move.name}: ${caster.name} becomes iron!`, 'special'); break;
     case 'battle_cry':
-      CS.allies.forEach(a => { if (a.hp > 0) a.buffs.push({ type: 'damage_up', turns: 2 }); });
-      addLog(`✦ ${move.name}: all allies empowered!`, 'special'); break;
+      CS.allies.forEach(a => { if (a.hp > 0 && !a.doomed && !a.perished) a.buffs.push({ type: 'damage_up', turns: 2 }); });
+      addLog(`\u2746 ${move.name}: all allies empowered!`, 'special'); break;
     case 'meditate':
-      caster.chi = Math.min(caster.maxChi, caster.chi + 5); addLog(`✦ ${move.name}: ${caster.name} restores 5 Chi!`, 'special'); break;
-    case 'teleport':
-      if (isPosEmpty(tx, ty, caster.gridId)) { caster.x = tx; caster.y = ty; addLog(`✦ ${move.name}: ${caster.name} teleports!`, 'special'); } break;
+      caster.chi = Math.min(caster.maxChi, caster.chi + 5);
+      caster.hp  = Math.min(caster.maxHp,  caster.hp  + 5);
+      addLog(`\u2746 ${move.name}: ${caster.name} restores 5 Chi and 5 HP!`, 'special'); break;
+    case 'teleport': {
+      const _tgtX = (target && target.x !== undefined) ? target.x : tx;
+      const _tgtY = (target && target.y !== undefined) ? target.y : ty;
+      if (_tgtX !== undefined && _tgtY !== undefined && isPosEmpty(_tgtX, _tgtY, caster.gridId)) {
+        caster.x = _tgtX; caster.y = _tgtY;
+        addLog(`\u2746 ${move.name}: ${caster.name} teleports!`, 'special');
+      } else {
+        addLog(`\u2746 ${move.name}: target occupied — cancelled.`, 'system');
+      }
+      break; }
     case 'execute':
-      if (target && target.hp < target.maxHp * 0.3) { applyDamage(target, target.hp, caster.name); addLog(`✦ ${move.name}: EXECUTED!`, 'special'); _earnAch('first_execute'); } break;
+      if (target && target.hp < target.maxHp * 0.3) {
+        applyDamage(target, target.maxHp, caster.name); // ensure kill
+        addLog(`\u2746 ${move.name}: EXECUTED!`, 'special');
+        _earnAch('first_execute');
+      } else if (target) {
+        addLog(`\u2746 ${move.name}: target above 30% HP — not ready.`, 'system');
+      } break;
     case 'charge':
-      if (target) { const d = calcDamage(caster, target) * 1.5; applyDamage(target, Math.floor(d), caster.name); addLog(`✦ ${move.name}: charge hit!`, 'special'); } break;
+      if (target) {
+        const d = Math.floor(calcDamage(caster, target) * 1.5);
+        applyDamage(target, d, caster.name);
+        const recoil = Math.max(1, Math.floor(d * 0.05));
+        caster.hp = Math.max(1, caster.hp - recoil);
+        addLog(`\u2746 ${move.name}: charge hit for ${d}! (${recoil} recoil)`, 'special');
+      } break;
     case 'stomp':
       CS.enemies.filter(e => e.hp > 0).forEach(e => {
         if (Math.abs(e.x - caster.x) <= 1 && Math.abs(e.y - caster.y) <= 1) {
-          e.stamina = Math.max(0, (e.moveRange || 2) - 2); addLog(`${e.name} stumbles!`, 'damage');
+          e.status = 'stunned'; e.ct = Math.max(0, (e.ct || 0) - 30);
+          addLog(`${e.name} is staggered!`, 'damage');
         }
       });
-      addLog(`✦ ${move.name}: ground shakes!`, 'special'); break;
+      addLog(`\u2746 ${move.name}: ground shakes!`, 'special'); break;
     case 'bloodlust':
-      caster.buffs.push({ type: 'bloodlust', turns: 2 }); addLog(`✦ ${move.name}: bloodlust!`, 'special'); break;
-    case 'decoy': case 'invisible': case 'blind_all': case 'mirror': case 'darkness': case 'phase_walk': case 'counter': case 'last_stand': case 'rage':
+      caster.buffs.push({ type: 'bloodlust', turns: 2 }); addLog(`\u2746 ${move.name}: bloodlust!`, 'special'); break;
+    case 'blind_all':
+      // Smoke screen — blind all enemies and register a visual smoke cloud
+      CS.enemies.filter(e => e.hp > 0).forEach(e => { e.status = 'blinded'; e.blindTurns = 2; });
+      if (!CS.smokeClouds) CS.smokeClouds = [];
+      CS.smokeClouds.push({ cx: caster.x, cy: caster.y, radius: 3, turnsLeft: 2, type: 'smoke' });
+      addLog(`✦ ${move.name}: smoke blankets the area — all enemies blinded!`, 'special');
+      schedulePulseRedraw();
+      break;
+    case 'darkness':
+      // Dark shroud — wider, longer-lasting darkness cloud
+      CS.enemies.filter(e => e.hp > 0).forEach(e => { e.status = 'blinded'; e.blindTurns = 3; });
+      if (!CS.smokeClouds) CS.smokeClouds = [];
+      CS.smokeClouds.push({ cx: caster.x, cy: caster.y, radius: 4, turnsLeft: 3, type: 'darkness' });
+      addLog(`✦ ${move.name}: darkness falls — enemies have -50% accuracy!`, 'special');
+      schedulePulseRedraw();
+      break;
+    case 'invisible':
+      addLog(`✦ ${move.name}: ${caster.name} fades from sight for 2 turns!`, 'special');
+      break;
+    case 'decoy': case 'mirror': case 'phase_walk': case 'counter': case 'last_stand': case 'rage':
       addLog(`✦ ${move.name} activated! Effect applied.`, 'special'); break;
     default:
       addLog(`✦ ${move.name} — effect activates!`, 'special');
@@ -8332,17 +9068,19 @@ function _findDotInflicter(target) {
   return CS.allies.find(a => a.gridId === id && !a.perished);
 }
 
-function applyDamage(target, dmg, attackerName = '') {
+function applyDamage(target, dmg, attackerName = '', _sfxDelay = 0) {
   target.hp = Math.max(0, target.hp - dmg);
   addLog(`${attackerName ? attackerName + ' → ' : ''}${target.name}: ${dmg} damage. (${target.hp}/${target.maxHp} HP)`, 'damage');
-  // Floating damage number
-  if (CS.cellSize && target.x !== undefined) {
+  // Floating damage number — delayed for ranged so SFX fires before the visual number appears
+  const _showFloat = () => {
+    if (!CS.cellSize || target.x === undefined) return;
     const isBig = dmg >= 30;
     floatAtUnit(target, '-' + dmg, isBig ? 'crit' : 'damage');
     if (!CS.hitFlashes) CS.hitFlashes = [];
     CS.hitFlashes.push({ x: target.x, y: target.y, color: 'rgba(255,60,60,A)', t: Date.now(), dur: isBig ? 500 : 320 });
     schedulePulseRedraw();
-  }
+  };
+  if (_sfxDelay > 0) { setTimeout(_showFloat, _sfxDelay); } else { _showFloat(); }
 
   // ── Track damage contribution for XP/JP assist system ──
   // Find the ally who dealt this damage (by name match or active unit)
@@ -8401,8 +9139,9 @@ function applyDamage(target, dmg, attackerName = '') {
         }
       }
       CS.lootOnFloor = { x: dropX, y: dropY, ...target.carriedLoot };
+      const _lootName = target.carriedLoot.name || 'Loot';
       target.carriedLoot = null;
-      addLog('\u{1F4E6} ' + (target.carriedLoot?.name || 'Loot') + ' dropped at (' + dropX + ',' + dropY + ')! Pick it up.', 'system');
+      addLog('\u{1F4E6} ' + _lootName + ' dropped at (' + dropX + ',' + dropY + ')! Pick it up.', 'system');
       toast('Loot dropped — pick it up!', 'success');
       setTimeout(() => spawnReinforcements('loot_dropped'), 400);
     }
@@ -9247,6 +9986,7 @@ function finishAllyTurn() {
   tickUnitStatus(ally);
   // Tick fire spread and apply fire damage
   tickFireSpread();
+  tickSmokeClouds();
 
   CS.selectedAlly = null;
   CS.selectedAction = null;
@@ -9328,6 +10068,7 @@ function finishEnemyTurn(enemy) {
   tickDoomCountdowns();
   // Tick fire spread and apply fire damage
   tickFireSpread();
+  tickSmokeClouds();
   CS.activeUnit = null;
   checkCombatEnd();
   if (CS.active) setTimeout(advanceCT, 200);
@@ -9517,7 +10258,13 @@ function runEnemyUnitTurn(enemy) {
     // ── SFX: enemy weapon-type hit sound ──
     const _eSfx = e.weapon?.type ? (WEAPON_SFX[e.weapon.type] || 'sfx_blunt_hit.mp3') : 'sfx_blunt_hit.mp3';
     SFX.play(_eSfx, 0.75);
-    applyDamageToAlly(target,dmg,e.name);
+    // Delay float for ranged/thrown so audio starts before the number appears
+    const _eDelay = (e.weapon?.type === 'ranged' || e.weapon?.type === 'thrown') ? 120 : 0;
+    if (_eDelay > 0) {
+      setTimeout(() => applyDamageToAlly(target, dmg, e.name), _eDelay);
+    } else {
+      applyDamageToAlly(target, dmg, e.name);
+    }
     consumeEnemyWeaponUse(e);
     return true;
   }
@@ -9781,7 +10528,7 @@ function applyDamageToAlly(ally, rawDmg, attackerName) {
   if (ally.buffs?.some(b => b.type === 'decoy')) {
     ally.buffs = ally.buffs.filter(b => b.type !== 'decoy');
     addLog(ally.name + "'s decoy takes the hit!", 'special');
-    renderCombat(); return;
+    _renderCombatDeferred(); return;
   }
   // Mirror image: 67% miss chance per charge
   if (ally.buffs?.some(b => b.type === 'mirror')) {
@@ -9789,19 +10536,19 @@ function applyDamageToAlly(ally, rawDmg, attackerName) {
       const mb = ally.buffs.find(b => b.type === 'mirror');
       if (mb) { mb.charges = (mb.charges||1)-1; if (mb.charges<=0) ally.buffs = ally.buffs.filter(b=>b.type!=='mirror'); }
       addLog(attackerName + ' strikes a mirror image — miss!', 'special');
-      renderCombat(); return;
+      _renderCombatDeferred(); return;
     }
   }
   // Invisible: 60% miss, breaks on hit
   if (ally.buffs?.some(b => b.type === 'invisible')) {
-    if (Math.random() < 0.6) { addLog(attackerName + ' cannot see ' + ally.name + '!', 'special'); renderCombat(); return; }
+    if (Math.random() < 0.6) { addLog(attackerName + ' cannot see ' + ally.name + '!', 'special'); _renderCombatDeferred(); return; }
     ally.buffs = ally.buffs.filter(b => b.type !== 'invisible');
     addLog(ally.name + "'s invisibility broken!", 'special');
   }
   // Reaction ability check (before armor)
   const attackerUnit = CS.enemies.find(e => e.name === attackerName || (e.name && attackerName && e.name.includes(attackerName)));
   let dmg = triggerReaction(ally, rawDmg, attackerUnit);
-  if (dmg <= 0) { renderCombat(); return; } // evaded
+  if (dmg <= 0) { _renderCombatDeferred(); return; } // evaded
 
   // Directional damage multiplier (front=1×, side=1.25×, rear=1.5×)
   if (attackerUnit) {
@@ -9863,141 +10610,159 @@ function applyDamageToAlly(ally, rawDmg, attackerName) {
 }
 
 function checkCombatEnd() {
-  if (!CS.active) return;
-  const aliveEnemies = CS.enemies.filter(e => e.hp > 0);
-  const aliveAllies = CS.allies.filter(a => isAllyAlive(a));
-  const mission = CS.mission;
-  const isMultiFloor = !!(mission.floors && mission.floors.length > 1);
-  const floorData = isMultiFloor ? mission.floors[CS.currentFloor] : null;
-  const isLastFloor = !isMultiFloor || CS.currentFloor >= CS.totalFloors - 1;
+  if (!CS.active || CS._endingCombat) return;
 
-  // ── Always check: defeat and time-out ──
-  if (aliveAllies.length === 0) { setTimeout(() => endCombat('defeat'), 800); return; }
+  const aliveEnemies  = CS.enemies.filter(e => e.hp > 0);
+  const aliveAllies   = CS.allies.filter(a => isAllyAlive(a));
+  const mission       = CS.mission;
+  const isMultiFloor  = !!(mission.floors && mission.floors.length > 1);
+  const floorData     = isMultiFloor ? mission.floors[CS.currentFloor] : null;
+  const isLastFloor   = !isMultiFloor || CS.currentFloor >= CS.totalFloors - 1;
+
+  // Helper: schedule victory/defeat and prevent further checks
+  const _win  = (delay) => { CS._endingCombat = true; setTimeout(() => endCombat('victory'), delay || 800); };
+  const _lose = (delay) => { CS._endingCombat = true; setTimeout(() => endCombat('defeat'),  delay || 800); };
+  const _adv  = (delay) => { CS._endingCombat = true; setTimeout(advanceFloor, delay || 600); };
+
+  // ── Defeat / timeout (always checked) ──
+  if (aliveAllies.length === 0) { _lose(); return; }
   if (CS.turnLimit > 0 && CS.turn > CS.turnLimit) {
     addLog('Time is up! Mission failed.', 'system');
-    setTimeout(() => endCombat('timedout'), 800); return;
+    _lose(); return;
   }
 
   // Which target (if any) must die on this floor?
   const floorTarget = floorData ? floorData.targetEnemy : mission.targetEnemy;
-  const targetDead = !floorTarget || !CS.enemies.find(e => e.isTarget && e.hp > 0);
+  const targetDead  = !floorTarget || !CS.enemies.find(e => e.isTarget && e.hp > 0);
+  const allEnemiesDead = aliveEnemies.length === 0;
 
-  // ── RESCUE last floor: prisoner must escape ──
+  // ── RESCUE last floor: prisoner must escape with all allies ──
   if (isMultiFloor && isLastFloor && floorData?.isRescueFloor) {
-    if (CS.prisonerFreed && CS.prisoner?.escaped && aliveAllies.filter(a => !a.escaped).length === 0) {
-      setTimeout(() => endCombat('victory'), 800);
+    // Prisoner may be auto-freed (no key) or manually freed with key
+    const prisonerOut = !CS.prisoner || CS.prisonerFreed;
+    const prisonerEscaped = !CS.prisoner || CS.prisoner.escaped;
+    if (prisonerOut && prisonerEscaped) {
+      const stillOnMap = aliveAllies.filter(a => !a.escaped);
+      if (stillOnMap.length === 0) { _win(); return; }
     }
+    return; // rescue floor never auto-wins any other way
+  }
+
+  // ── THEFT: won when loot is extracted (objectivePhase === 'done') ──
+  if (mission?.type === 'theft') {
+    if (CS.objectivePhase === 'done') { _win(); return; }
+    // Block any other win path for theft missions — must carry loot to exit
     return;
   }
 
-  // ── THEFT: loot extracted (objectivePhase === 'done') ──
-  // Handles both single-floor and multi-floor last floor
-  if ((mission?.type === 'theft' || (isLastFloor && floorData?.carrierEnemy)) && !mission?.floors?.every(f => f.isRescueFloor)) {
-    if (CS.objectivePhase === 'done') { setTimeout(() => endCombat('victory'), 800); return; }
-    if (!isMultiFloor) return; // single-floor theft: only wins via objectivePhase
-  }
-
-  // ── OBJECTIVE MISSIONS (espionage/agitation): per-floor or last-floor win ──
+  // ── OBJECTIVE MISSIONS (espionage / agitation / plant_evidence / sabotage) ──
   if (CS.objectiveTiles && CS.objectiveTiles.length > 0) {
-    if (CS.objectiveProgress >= CS.objectiveTotal && CS.exitsActive) {
+    const allDone = CS.objectiveProgress >= CS.objectiveTotal;
+
+    // If all objectives complete, ensure exits are open
+    if (allDone && !CS.exitsActive) {
+      CS.exitsActive = true;
+      CS.objectivePhase = 'extract';
+      addLog('✔ All objectives complete — reach the exit!', 'system');
+      toast('Objectives done — escape now!', 'success');
+      renderCombat();
+    }
+
+    if (allDone && CS.exitsActive) {
       const notEscaped = aliveAllies.filter(a => !a.escaped && !a.doomed);
       if (notEscaped.length === 0) {
-        if (!isMultiFloor || isLastFloor) {
-          // Final floor of objectives mission — full victory
-          setTimeout(() => endCombat('victory'), 800); return;
-        }
-        // Intermediate objective floor: all escaped → advance
-        setTimeout(advanceFloor, 600); return;
+        if (!isMultiFloor || isLastFloor) { _win(); return; }
+        _adv(); return;
       }
     }
-    if (!isMultiFloor) return; // single-floor objective mission
-    // Multi-floor objective: also allow advancement when all enemies dead (no objectives left this floor)
-    // Fall through to generic handler for floor advancement
+    if (!isMultiFloor) return; // single-floor objective: only win via escape
+    // Multi-floor with objectives: fall through for floor-advance when enemies cleared
   }
 
-  // ── ASSASSINATION (single or multi last floor): target dead + escaped ──
-  const isAssassination = (mission?.type === 'assassination') && !!(mission.targetEnemy || floorTarget);
-  if (isAssassination && (!isMultiFloor || isLastFloor)) {
-    if (targetDead) {
-      // Ensure exits are open so allies can escape
-      if (!CS.exitsActive) {
-        CS.exitsActive = true;
-        CS.objectivePhase = 'extract';
-        addLog('🎯 Target eliminated — reach the exit!', 'system');
-        toast('Target down — escape now!', 'success');
-        renderCombat();
-        return;
-      }
-      // Exits open: check if all alive allies have escaped
+  // ── ASSASSINATION: target dead → open exits; all alive allies escaped → victory ──
+  if (mission?.type === 'assassination' && (!isMultiFloor || isLastFloor)) {
+    if (!targetDead) return; // still hunting the target
+    // Target is dead — open exits if not already open
+    if (!CS.exitsActive) {
+      CS.exitsActive = true;
+      CS.objectivePhase = 'extract';
+      addLog('🎯 Target eliminated — reach the exit!', 'system');
+      toast('Target down — escape now!', 'success');
+      renderCombat();
+    }
+    // If all remaining enemies are also dead, auto-win (no need to walk to exit)
+    if (allEnemiesDead) {
       const notEscaped = aliveAllies.filter(a => !a.escaped && !a.doomed);
-      if (notEscaped.length === 0) {
-        setTimeout(() => endCombat('victory'), 800);
-      }
+      if (notEscaped.length === 0 || allEnemiesDead) { _win(); return; }
+    } else {
+      // Enemies still alive — must reach exit to win
+      const notEscaped = aliveAllies.filter(a => !a.escaped && !a.doomed);
+      if (notEscaped.length === 0) { _win(); return; }
     }
     return;
   }
 
-  // ── GENERIC: all enemies cleared (intermediate floors + non-assassination last floor) ──
-  if (aliveEnemies.length === 0 && targetDead) {
+  // ── GENERIC all-enemies-cleared handler ──
+  if (!allEnemiesDead || !targetDead) return;
 
-    // ── REINFORCEMENT missions: require escape ──
-    if (!isMultiFloor && CS.reinforcementsSpawned) {
-      if (!CS.exitsActive) {
-        CS.exitsActive = true;
-        CS.objectivePhase = 'extract';
-        addLog('All enemies defeated! Reach the exit to complete the mission.', 'system');
-        toast('Enemies cleared — escape now!', 'success');
-        renderCombat();
-      } else {
-        const _notEsc = aliveAllies.filter(a => !a.escaped && !a.doomed);
-        if (_notEsc.length === 0) setTimeout(() => endCombat('victory'), 800);
-      }
-      return;
-    }
-
-    if (isMultiFloor && !isLastFloor) {
-      // ── INTERMEDIATE FLOOR: open exit or handle rescue key floor ──
-      if (!CS.exitsActive) {
-        const _floorDef = mission.floors[CS.currentFloor];
-        const _isRescueKeyFloor = !!(_floorDef && _floorDef.carrierEnemy && _floorDef.lootItem && !_floorDef.isRescueFloor);
-        if (_isRescueKeyFloor && !CS.allyWithLoot) {
-          if (!CS.lootOnFloor) {
-            addLog('⚠ Defeat all enemies and pick up the cell key to advance!', 'system');
-          } else {
-            addLog('⚠ Pick up the cell key to unlock the exit!', 'system');
-            toast('Pick up the key to unlock the exit!', 'success');
-          }
-        } else {
-          CS.exitsActive = true;
-          CS.objectivePhase = 'extract';
-          addLog('Floor ' + (CS.currentFloor + 1) + ' cleared! Reach the exit to advance.', 'system');
-          toast('Floor cleared! Find the exit!', 'success');
-          renderCombat();
-        }
-      }
-      // Allies escape is handled in handleMove → advanceFloor
-
-    } else if (isMultiFloor && isLastFloor) {
-      // ── LAST FLOOR (non-assassination, non-rescue, non-theft): open exits then check escape ──
-      if (!CS.exitsActive) {
-        CS.exitsActive = true;
-        CS.objectivePhase = 'extract';
-        addLog('All enemies defeated! Reach the exit to complete the mission.', 'system');
-        toast('Enemies cleared — escape now!', 'success');
-        renderCombat();
-      } else {
-        const _notEsc = aliveAllies.filter(a => !a.escaped && !a.doomed);
-        if (_notEsc.length === 0) setTimeout(() => endCombat('victory'), 800);
-      }
-
+  // Reinforcement missions: require escape even on single floor
+  if (!isMultiFloor && CS.reinforcementsSpawned) {
+    if (!CS.exitsActive) {
+      CS.exitsActive = true;
+      CS.objectivePhase = 'extract';
+      addLog('All enemies defeated! Reach the exit to complete the mission.', 'system');
+      toast('Enemies cleared — escape now!', 'success');
+      renderCombat();
     } else {
-      // ── SINGLE FLOOR, no target required, no reinforcements ──
-      setTimeout(() => endCombat('victory'), 800);
+      const _notEsc = aliveAllies.filter(a => !a.escaped && !a.doomed);
+      if (_notEsc.length === 0) { _win(); }
     }
+    return;
+  }
+
+  if (isMultiFloor && !isLastFloor) {
+    // Intermediate floor: open exits (or wait for key on rescue-key floors)
+    if (!CS.exitsActive) {
+      const _fd = mission.floors[CS.currentFloor];
+      const _needsKey = !!(_fd?.carrierEnemy && _fd?.lootItem && !_fd?.isRescueFloor);
+      if (_needsKey && !CS.allyWithLoot) {
+        if (CS.lootOnFloor) {
+          addLog('⚠ Pick up the cell key to unlock the exit!', 'system');
+          toast('Pick up the key to unlock the exit!', 'success');
+        } else {
+          addLog('⚠ Defeat all enemies and pick up the cell key to advance!', 'system');
+        }
+      } else {
+        CS.exitsActive = true;
+        CS.objectivePhase = 'extract';
+        addLog('Floor ' + (CS.currentFloor + 1) + ' cleared! Reach the exit to advance.', 'system');
+        toast('Floor cleared! Find the exit!', 'success');
+        renderCombat();
+      }
+    }
+    // Actual floor advance triggered in handleMove when ally steps on exit
+
+  } else if (isMultiFloor && isLastFloor) {
+    // Last floor of multi-floor: open exits, then win when all escape
+    if (!CS.exitsActive) {
+      CS.exitsActive = true;
+      CS.objectivePhase = 'extract';
+      addLog('All enemies defeated! Reach the exit to complete the mission.', 'system');
+      toast('Enemies cleared — escape now!', 'success');
+      renderCombat();
+    } else {
+      const _notEsc = aliveAllies.filter(a => !a.escaped && !a.doomed);
+      if (_notEsc.length === 0) { _win(); }
+    }
+
+  } else {
+    // Single floor, no special conditions — instant victory
+    _win();
   }
 }
 
 function advanceFloor() {
+  CS._endingCombat = false; // floor advance — combat continues, re-enable checkCombatEnd
   const mission = CS.mission;
   CS.currentFloor++;
   const _advFd = mission.floors[CS.currentFloor];
@@ -10031,13 +10796,19 @@ function advanceFloor() {
     GS.clan = GS.clan.filter(n => n.id !== a.id);
     a.perished = true;
     a.doomed = false;
-    saveGame();
+    _saveGameDebounced();
   });
   CS.allies.filter(a => isAllyAlive(a)).forEach(a => {
     const missing = a.maxHp - a.hp;
     a.hp = Math.min(a.maxHp, a.hp + Math.floor(missing * 0.25));
     a.ct = Math.floor(Math.random() * 30);
     a.escaped = false;
+    // Sync armor durability back to GS clan ninja across floors
+    const gn = GS.clan.find(n => n.id === a.id);
+    if (gn) {
+      gn.equippedArmor = a.armorItem ? { ...a.armorItem } : null;
+      gn.carriedItems = a.carriedItems || [];
+    }
   });
 
   // Re-generate enemies from this floor's spec
@@ -10165,13 +10936,23 @@ function advanceFloor() {
   CS.prisonerFreed = false;
   const _rescFd = mission.floors[CS.currentFloor];
   if (_rescFd && _rescFd.isRescueFloor) {
-    // Preferred position: centre-right of map behind guards
     const _pPrefX = Math.floor(CS.gridW * 0.65);
     const _pPrefY = Math.floor(CS.gridH / 2);
     const _pPos = _findSafePassablePos(CS.grid, CS.gridW, CS.gridH, _pPrefX, _pPrefY, CS.enemies);
     CS.prisoner = { x: _pPos.x, y: _pPos.y, emoji: '⛓️', freed: false };
-    addLog('⛓ The prisoner is chained ahead. Move the key-holder to them to free them!', 'system');
-    toast('Find the prisoner and use the key!', 'success');
+    const _hasKeyInKit = CS.allies.some(a => a.hasLoot);
+    if (_hasKeyInKit) {
+      addLog('⛓ The prisoner awaits. Move your key-holder to them to break their chains!', 'system');
+      toast('Reach the prisoner with the key!', 'success');
+    } else {
+      addLog('⛓ The prisoner is here. Defeat the guards and escort them to the exit!', 'system');
+      toast('Free the prisoner and escape!', 'success');
+      // Auto-free for missions where there is no key mechanic on this floor
+      CS.prisoner.freed = true;
+      CS.prisonerFreed = true;
+      CS.exitsActive = true;
+      CS.objectivePhase = 'extract';
+    }
   }
 
   initMissionStats();
@@ -10220,7 +11001,13 @@ function rollArmoryWeapon(difficulty) {
 function endCombat(result) {
   if (!CS.active) return;  // already ended — block duplicate calls from queued setTimeout
   CS.active = false;
+  CS._endingCombat = false; // reset for next mission
   CS.phase = 'result';
+  // Cancel any pending pulse redraw (fire/doom animations)
+  if (typeof _pulseRAF !== 'undefined' && _pulseRAF) {
+    cancelAnimationFrame(_pulseRAF);
+    _pulseRAF = null;
+  }
   // Clear doom vignette
   const _dv = document.getElementById('doomVignette');
   if (_dv) _dv.classList.remove('doom-active');
@@ -10249,6 +11036,7 @@ function endCombat(result) {
       if (gn) {
         gn.hp = Math.max(10, Math.floor(gn.maxHp * 0.5));
         gn.carriedItems = a.carriedItems || [];
+        gn.equippedArmor = a.armorItem ? { ...a.armorItem } : null;
         gn.weapon = a.weapon ? { ...a.weapon } : null;
       }
     });
@@ -10264,9 +11052,9 @@ function endCombat(result) {
   if (result === 'victory') {
     SFX.play('sfx_mission_victory.mp3');
     applyMissionReputation('victory', mission);
-    // Achievement checks
-    const _achPartySize = CS.allies.filter(a => !a.perished).length;
-    achOnVictory(mission, _achPartySize, CS.turn);
+    // Achievement checks — count surviving (not perished) deployed allies
+    const _achPartySize = CS.allies.filter(a => !a.perished && !a.doomed).length;
+    achOnVictory(mission, Math.max(1, _achPartySize), CS.turn);
     if (!mission.isDynamic) {
       GS.completedMissions.push(mission.id);
       // Arc completion achievements (check after push so capstone is included)
@@ -10301,31 +11089,65 @@ function endCombat(result) {
     GS.gold += mission.reward;
 
     let recruitMsg = '';
-    if (mission.recruitReward) {
+    if (mission.recruitReward && mission.type === 'rescue') {
+      // Only add recruit for missions that specifically designate a recruit reward
       const rec = mission.recruitReward;
-      // Guard: don't add if already in clan (prevents double-add from race conditions)
       const alreadyInClan = GS.clan.some(n => n.name === rec.name && n.class === rec.class);
       if (!alreadyInClan) {
-      const cls = CLASSES[rec.class];
-      const special = cls.specialMoves[Math.floor(Math.random() * cls.specialMoves.length)];
-      const newNinja = {
-        id: 'ninja_' + Date.now(),
-        name: rec.name,
-        class: rec.class,
-        level: Math.max(1, Math.floor(Math.max(...GS.clan.map(n => n.level)) * 0.8)),
-        exp: 0, expToNext: 100,
-        hp: cls.baseStats.hp, maxHp: cls.baseStats.hp,
-        stamina: cls.baseStats.stamina, maxStamina: cls.baseStats.stamina,
-        chi: cls.baseStats.chi, maxChi: cls.baseStats.chi,
-        proficiency: { ...cls.proficiency },
-        specialMove: special, weapon: null, carriedItems: [],
-        training: null, isPlayer: false,
-        jobs: {}, unlockedAbilities: [],
-        equippedAbilities: { reaction: null, support: null, movement: null }
-      };
-      GS.clan.push(newNinja);
-      recruitMsg = `<br><br><b style="color:var(--jade-bright)">${cls.emoji} ${rec.name} (${cls.name}) joins your clan!</b>`;
-      } // end alreadyInClan guard
+        const cls = CLASSES[rec.class];
+        const special = cls.specialMoves[Math.floor(Math.random() * cls.specialMoves.length)];
+        const newNinja = {
+          id: 'ninja_' + Date.now(),
+          name: rec.name,
+          class: rec.class,
+          level: Math.max(1, Math.floor(Math.max(...GS.clan.map(n => n.level)) * 0.8)),
+          exp: 0, expToNext: 100,
+          hp: cls.baseStats.hp, maxHp: cls.baseStats.hp,
+          stamina: cls.baseStats.stamina, maxStamina: cls.baseStats.stamina,
+          chi: cls.baseStats.chi, maxChi: cls.baseStats.chi,
+          proficiency: { ...cls.proficiency },
+          specialMove: special, weapon: null, carriedItems: [],
+          training: null, isPlayer: false, equippedArmor: null,
+          jobs: {}, unlockedAbilities: [],
+          equippedAbilities: { reaction: null, support: null, movement: null }
+        };
+        GS.clan.push(newNinja);
+        SFX.play('sfx_recruit_join.mp3');
+        _checkClassAchievements();
+        _checkClanSizeAchievements();
+        recruitMsg = `<br><br><b style="color:var(--jade-bright)">${cls.emoji} ${rec.name} (${cls.name}) joins your clan!</b>`;
+      }
+    } else if (mission.recruitReward && mission.type !== 'rescue') {
+      // Non-rescue recruit rewards (e.g. future mission types)
+      const rec = mission.recruitReward;
+      const alreadyInClan = GS.clan.some(n => n.name === rec.name && n.class === rec.class);
+      if (!alreadyInClan) {
+        const cls = CLASSES[rec.class];
+        const special = cls.specialMoves[Math.floor(Math.random() * cls.specialMoves.length)];
+        const newNinja = {
+          id: 'ninja_' + Date.now(),
+          name: rec.name,
+          class: rec.class,
+          level: Math.max(1, Math.floor(Math.max(...GS.clan.map(n => n.level)) * 0.8)),
+          exp: 0, expToNext: 100,
+          hp: cls.baseStats.hp, maxHp: cls.baseStats.hp,
+          stamina: cls.baseStats.stamina, maxStamina: cls.baseStats.stamina,
+          chi: cls.baseStats.chi, maxChi: cls.baseStats.chi,
+          proficiency: { ...cls.proficiency },
+          specialMove: special, weapon: null, carriedItems: [],
+          training: null, isPlayer: false, equippedArmor: null,
+          jobs: {}, unlockedAbilities: [],
+          equippedAbilities: { reaction: null, support: null, movement: null }
+        };
+        GS.clan.push(newNinja);
+        SFX.play('sfx_recruit_join.mp3');
+        _checkClassAchievements();
+        _checkClanSizeAchievements();
+        recruitMsg = `<br><br><b style="color:var(--jade-bright)">${cls.emoji} ${rec.name} (${cls.name}) joins your clan!</b>`;
+      }
+    } else if (mission.type === 'rescue' && !mission.recruitReward) {
+      // Pure rescue (no recruit) — show rescue success message
+      recruitMsg = `<br><br><b style="color:var(--jade-bright)">⛓ The captive has been freed and escorted to safety.</b>`;
     }
 
     // Return uncollected doom bag items to inventory
@@ -10346,7 +11168,7 @@ function endCombat(result) {
       GS.clan = GS.clan.filter(n => n.id !== a.id);
       a.perished = true;
       a.doomed = false;
-      saveGame();
+      _saveGameDebounced();
     });
     const periIdSet = new Set(CS.allies.filter(a => a.perished).map(a => a.id));
     if (periIdSet.size) GS.clan = GS.clan.filter(n => !periIdSet.has(n.id));
@@ -10363,6 +11185,7 @@ function endCombat(result) {
         gn.maxHp = a.maxHp;
         gn.maxChi = a.maxChi;
         gn.carriedItems = a.carriedItems || [];
+        gn.equippedArmor = a.armorItem ? { ...a.armorItem } : null;
         gn.weapon = a.weapon ? { ...a.weapon } : null;
         if (a.jobs) gn.jobs = { ...a.jobs };
         if (a.unlockedAbilities) gn.unlockedAbilities = [...a.unlockedAbilities];
@@ -10442,6 +11265,7 @@ function endCombat(result) {
       if (gn) {
         gn.hp = Math.max(5, Math.floor(gn.maxHp * 0.1));
         gn.carriedItems = a.carriedItems || [];
+        gn.equippedArmor = a.armorItem ? { ...a.armorItem } : null;
         gn.weapon = a.weapon ? { ...a.weapon } : null;
         if (a.jobs) gn.jobs = { ...a.jobs };
         if (a.unlockedAbilities) gn.unlockedAbilities = [...a.unlockedAbilities];
@@ -10566,7 +11390,7 @@ function useItem(ally) {
     <div class="use-item-list">
       ${items.map((item, i) => `
         <div class="use-item-btn" onclick="executeCombatItem('${ally.gridId}', ${i})">
-          <span style="font-size:1.3rem">${item.icon}</span>
+          <span style="font-size:1.3rem">${itemImgAsync(item, '1.3rem')}</span>
           <div>
             <div class="stash-item-name">${item.name}</div>
             <div class="stash-item-desc">${item.desc}</div>
@@ -10631,6 +11455,10 @@ function executeCombatItem(gridId, itemIndex) {
         if (item.secondEffect === 'poison') e.status = 'poisoned';
       }
     });
+    // Register visible smoke cloud overlay
+    if (!CS.smokeClouds) CS.smokeClouds = [];
+    CS.smokeClouds.push({ cx: ally.x, cy: ally.y, radius, turnsLeft: blindTurns, type: 'smoke' });
+    schedulePulseRedraw();
     addLog(`\u{1F4A8} ${ally.name} throws ${item.name}! ${blinded} enemy${blinded !== 1 ? 'ies' : ''} blinded for ${blindTurns} turns.`, 'special');
     // Ally may flee — offer retreat option
     openModal('Smoke Cloud!',
@@ -10719,12 +11547,15 @@ function renderTraining() {
   const busyNinjas = GS.clan.filter(n => n.training);
   const busyCards = busyNinjas.map(n => {
     const cls = CLASSES[n.class];
-    return `<div class="ninja-card" style="opacity:0.7">
+    const timeLeft = getTrainingTimeLeft(n);
+    const isReady = Date.now() >= n.training.endTime;
+    return `<div class="ninja-card" style="opacity:${isReady ? '1' : '0.7'};${isReady ? 'border-color:rgba(61,170,125,0.4)' : ''}">
       <div class="ninja-card-header">
-        <div class="ninja-avatar" style="background:${cls.color}22;border-color:${cls.color}">${cls.emoji}</div>
+        <div class="ninja-avatar" style="background:${cls.color}22;border-color:${isReady ? 'var(--jade-bright)' : cls.color}">${cls.emoji}</div>
         <div><div class="ninja-name">${n.name}</div><div class="ninja-class">${n.training.type}</div></div>
       </div>
-      <div class="training-badge">⌛ ${getTrainingTimeLeft(n)}</div>
+      <div class="training-badge" style="${isReady ? 'color:var(--jade-bright);border-color:rgba(61,170,125,0.4)' : ''}">${isReady ? '⚡ Ready!' : '⌛ ' + timeLeft}</div>
+      ${isReady ? `<button class="training-ready-btn" onclick="collectTraining('${n.id}')">✓ Collect Training</button>` : ''}
     </div>`;
   }).join('');
 
@@ -10748,6 +11579,16 @@ function renderTraining() {
       </div>
     </div>
   `;
+}
+
+function collectTraining(ninjaId) {
+  const n = GS.clan.find(x => x.id === ninjaId);
+  if (!n || !n.training) return;
+  if (Date.now() < n.training.endTime) { toast('Training not complete yet!', 'error'); return; }
+  finishTraining(n);
+  _updateNavDots();
+  renderTraining();
+  renderClan();
 }
 
 function selectTrainingType(id) { selectedTrainingType = id; renderTraining(); }
@@ -10787,7 +11628,7 @@ function generateShopWeapons() {
 }
 
 function generateShopItems() {
-  const all = [...ITEMS.healing, ...ITEMS.costume, ...ITEMS.tactical];
+  const all = [...ITEMS.healing, ...ITEMS.armor, ...ITEMS.tactical];
   return all.sort(() => Math.random() - 0.5).slice(0, 12);
 }
 
@@ -10798,7 +11639,7 @@ function renderWeaponShop() {
   const items = GS.shopStock.weapons.map(w => `
     <div class="shop-item tier-${w.tier}" onclick="addToWeaponCart('${w.id}')">
       <div class="item-tier-bar"></div>
-      <div class="item-emoji">${w.icon}</div>
+      <div class="item-emoji">${itemImgAsync(w, '52px', 'width:52px;height:52px')}</div>
       <div class="item-name">${w.name}</div>
       <div class="item-stats">
         DMG: ${w.dmg[0]}-${w.dmg[1]}${w.range ? ' · Range: ' + w.range : ''}<br>
@@ -10822,7 +11663,7 @@ function renderWeaponShop() {
     <div class="shop-layout">
       <div>
         <div class="flex gap-1 mb-2">
-          ${Object.keys(WEAPONS).map(k => `<button class="nav-btn" onclick="filterWeaponShop('${k}')">${WEAPONS[k].icon} ${WEAPONS[k].label}</button>`).join('')}
+          ${Object.keys(WEAPONS).map(k => `<button class="nav-btn" onclick="filterWeaponShop('${k}')" style="display:inline-flex;align-items:center;gap:0.3rem"><span style="width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center">${WEAPONS[k].icon}</span>${WEAPONS[k].label}</button>`).join('')}
           <button class="nav-btn" onclick="refreshWeaponShop()">↺ Refresh (100G)</button>
         </div>
         <div class="shop-grid" id="weaponGrid">${items}</div>
@@ -10845,7 +11686,7 @@ function renderWeaponShop() {
         <div style="max-height:100px;overflow-y:auto;margin-top:0.4rem">
           ${(GS.weaponStash||[]).length === 0
             ? '<div class="text-xs text-mist">Empty</div>'
-            : (GS.weaponStash||[]).map((w,i) => `<div class="cart-item"><span class="cart-item-name" style="color:${tierColor(w.tier)}">${w.icon} ${w.name}</span></div>`).join('')
+            : (GS.weaponStash||[]).map((w,i) => `<div class="cart-item"><span style="width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${itemImgAsync(w,'20px')}</span><span class="cart-item-name" style="color:${tierColor(w.tier)}">${w.name}</span></div>`).join('')
           }
         </div>
       </div>
@@ -10896,66 +11737,73 @@ function renderItemShop() {
   if (!GS.shopStock.items.length) GS.shopStock.items = generateShopItems();
   const el = document.getElementById('section-itemShop');
 
-  const allItems = [...ITEMS.healing, ...ITEMS.costume, ...ITEMS.tactical];
-  const items = allItems.map(item => {
-    const count = GS.inventory[getCategoryForItem(item)]?.filter(x => x.id === item.id).length || 0;
-    return `
-      <div class="shop-item ${item.tier ? 'tier-'+item.tier : ''}" onclick="addToItemCart('${item.id}')">
-        <div class="item-tier-bar" style="${item.tier ? '' : 'background:var(--gold)'}"></div>
-        <div class="item-emoji">${item.icon}</div>
-        <div class="item-name" style="${item.tier ? '' : 'color:var(--white)'}">${item.name}${item.isArmor ? ' \u{1F6E1}' : ''}</div>
-        <div class="item-stats">${item.desc}${item.isArmor ? '<br><span style="color:var(--mist)">Durability: ' + (ARMOR_DURABILITY[item.tier]||5) + '</span>' : ''}<br>Owned: ${count}</div>
-        <div class="item-price"><span></span><span>G ${item.price}</span></div>
-      </div>`;
+  // Armor section
+  const armorItems = ITEMS.armor.map(item => {
+    const stashCount = (GS.inventory['armor'] || []).filter(x => x.id === item.id).length;
+    const equippedCount = GS.clan.filter(n => n.equippedArmor && n.equippedArmor.id === item.id).length;
+    const ownedLabel = stashCount + (equippedCount ? ' in stash \u00b7 ' + equippedCount + ' equipped' : ' in stash');
+    return '<div class="shop-item tier-' + item.tier + '" onclick="addToItemCart(\'' + item.id + '\')">'
+      + '<div class="item-tier-bar"></div>'
+      + '<div class="item-emoji">' + itemImgAsync(item, '38px', '', 'shop-item-img') + '</div>'
+      + '<div class="item-name" style="color:' + tierColor(item.tier) + '">' + item.name + ' \u{1F6E1}</div>'
+      + '<div class="item-stats">' + item.desc + '<br><span style="color:var(--mist)">Durability: ' + (ARMOR_DURABILITY[item.tier]||5) + '</span><br>' + ownedLabel + '</div>'
+      + '<div class="item-price"><span></span><span>G ' + item.price + '</span></div>'
+      + '</div>';
   }).join('');
 
-  const cartItems = itemCart.map((item, i) => `
-    <div class="cart-item">
-      <span class="cart-item-name">${item.name}</span>
-      <span style="color:var(--gold);font-size:0.7rem">G ${item.price}</span>
-      <button class="remove-btn" onclick="removeFromItemCart(${i})">✕</button>
-    </div>
-  `).join('');
+  // Consumable section
+  const consumableItems = [...ITEMS.healing, ...ITEMS.tactical].map(item => {
+    const cat = getCategoryForItem(item);
+    const count = (GS.inventory[cat] || []).filter(x => x.id === item.id).length;
+    return '<div class="shop-item' + (item.tier ? ' tier-'+item.tier : '') + '" onclick="addToItemCart(\'' + item.id + '\')">'
+      + '<div class="item-tier-bar" style="' + (item.tier ? '' : 'background:var(--gold)') + '"></div>'
+      + '<div class="item-emoji">' + itemImgAsync(item, '38px', '', 'shop-item-img') + '</div>'
+      + '<div class="item-name" style="' + (item.tier ? '' : 'color:var(--white)') + '">' + item.name + '</div>'
+      + '<div class="item-stats">' + item.desc + '<br>Owned: ' + count + '</div>'
+      + '<div class="item-price"><span></span><span>G ' + item.price + '</span></div>'
+      + '</div>';
+  }).join('');
+
+  const cartItems = itemCart.map((item, i) => '<div class="cart-item">'
+    + '<span class="cart-item-name">' + item.name + '</span>'
+    + '<span style="color:var(--gold);font-size:0.7rem">G ' + item.price + '</span>'
+    + '<button class="remove-btn" onclick="removeFromItemCart(' + i + ')">\u2715</button>'
+    + '</div>').join('');
   const cartTotal = itemCart.reduce((s, i) => s + i.price, 0);
 
-  el.innerHTML = `
-    <div class="section-title">Supply Cache · Consumables</div>
-    <div class="shop-layout">
-      <div>
-        <div class="text-xs text-mist mb-2">Healing Balms · Costumes · Breathing Items</div>
-        <div class="shop-grid">${items}</div>
-      </div>
-      <div class="shop-cart" id="itemShopCart">
-        <div class="mission-sidebar-handle" id="itemCartHandle" style="display:none"></div>
-        <div class="font-cinzel text-xs text-gold mb-2">Cart <span style="color:var(--mist);font-size:0.6rem">(${itemCart.length})</span></div>
-        ${cartItems || '<div class="text-xs text-mist">Empty</div>'}
-        <div class="separator"></div>
-        <div class="flex" style="justify-content:space-between">
-          <span class="font-cinzel text-xs">Total:</span>
-          <span class="text-gold font-cinzel text-xs">G ${cartTotal}</span>
-        </div>
-        <button class="buy-btn" onclick="purchaseItems()">Purchase</button>
-        <button class="configure-btn" style="margin-top:0.5rem;width:100%;text-align:center" onclick="toggleShopCart()">✕ Close Cart</button>
-        <div class="separator"></div>
-        <div class="font-cinzel text-xs text-mist">Your Inventory</div>
-        <div class="mt-1">
-          <div class="text-xs">Healing: ${GS.inventory.healing.length}</div>
-          <div class="text-xs">Costumes: ${GS.inventory.costume.length}</div>
-          <div class="text-xs">Tactical: ${GS.inventory.tactical.length}</div>
-        </div>
-      </div>
-    </div>
-  `;
+  el.innerHTML = '<div class="section-title">Supply Cache</div>'
+    + '<div class="shop-layout">'
+    + '<div>'
+    + '<div style="font-family:Cinzel,serif;font-size:0.58rem;letter-spacing:0.1em;color:var(--gold);margin-bottom:0.5rem">\u{1F6E1} BODY ARMOR</div>'
+    + '<div class="shop-grid">' + armorItems + '</div>'
+    + '<div style="font-family:Cinzel,serif;font-size:0.58rem;letter-spacing:0.1em;color:var(--gold);margin-top:1.2rem;margin-bottom:0.5rem">\u{1F9EA} CONSUMABLES</div>'
+    + '<div class="shop-grid">' + consumableItems + '</div>'
+    + '</div>'
+    + '<div class="shop-cart" id="itemShopCart">'
+    + '<div class="mission-sidebar-handle" id="itemCartHandle" style="display:none"></div>'
+    + '<div class="font-cinzel text-xs text-gold mb-2">Cart <span style="color:var(--mist);font-size:0.6rem">(' + itemCart.length + ')</span></div>'
+    + (cartItems || '<div class="text-xs text-mist">Empty</div>')
+    + '<div class="separator"></div>'
+    + '<div class="flex" style="justify-content:space-between"><span class="font-cinzel text-xs">Total:</span><span class="text-gold font-cinzel text-xs">G ' + cartTotal + '</span></div>'
+    + '<button class="buy-btn" onclick="purchaseItems()">Purchase</button>'
+    + '<button class="configure-btn" style="margin-top:0.5rem;width:100%;text-align:center" onclick="toggleShopCart()">\u2715 Close Cart</button>'
+    + '<div class="separator"></div>'
+    + '<div class="font-cinzel text-xs text-mist">Your Inventory</div>'
+    + '<div class="mt-1">'
+    + '<div class="text-xs">Healing: ' + GS.inventory.healing.length + '</div>'
+    + '<div class="text-xs">Body Armor: ' + GS.inventory.armor.length + ' in stash</div>'
+    + '<div class="text-xs">Tactical: ' + GS.inventory.tactical.length + '</div>'
+    + '</div></div></div>';
 }
 
 function getCategoryForItem(item) {
   if (ITEMS.healing.find(x => x.id === item.id)) return 'healing';
-  if (ITEMS.costume.find(x => x.id === item.id)) return 'costume';
+  if (ITEMS.armor.find(x => x.id === item.id)) return 'armor';
   return 'tactical';
 }
 
 function addToItemCart(id) {
-  const allItems = [...ITEMS.healing, ...ITEMS.costume, ...ITEMS.tactical];
+  const allItems = [...ITEMS.healing, ...ITEMS.armor, ...ITEMS.tactical];
   const item = allItems.find(x => x.id === id);
   if (!item) return;
   itemCart.push({ ...item });
@@ -11174,18 +12022,18 @@ function classImgOrEmoji(classKey, size) {
   const img = getImg(classPng(classKey));
   const cls = CLASSES[classKey];
   if (img && img.naturalWidth > 0) {
-    return '<img src="' + img.src + '" width="' + size + '" height="' + size + '" style="border-radius:50%;object-fit:cover;border:2px solid ' + (cls?.color||'#555') + '44" alt="' + (cls?.name||classKey) + '">';
+    return '<img src="' + img.src + '" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;display:block;" alt="' + (cls?.name||classKey) + '">';
   }
-  return '<span style="font-size:' + Math.round(size*0.7) + 'px;line-height:1">' + (cls?.emoji || '🥷') + '</span>';
+  return '<span style="font-size:' + Math.round(size * 0.72) + 'px;line-height:1;display:flex;align-items:center;justify-content:center;width:' + size + 'px;height:' + size + 'px">' + (cls?.emoji || '🥷') + '</span>';
 }
 
 function enemyImgOrEmoji(typeKey, size) {
   const img = getImg(enemySheetKey(typeKey));
   const et = ENEMY_TYPES[typeKey];
   if (img && img.naturalWidth > 0) {
-    return '<img src="' + img.src + '" width="' + size + '" height="' + size + '" style="border-radius:50%;object-fit:cover;border:2px solid rgba(220,80,80,0.4)" alt="' + (et?.name||typeKey) + '">';
+    return '<img src="' + img.src + '" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;object-fit:cover;display:block;" alt="' + (et?.name||typeKey) + '">';
   }
-  return '<span style="font-size:' + Math.round(size*0.7) + 'px;line-height:1">' + (et?.emoji || '👤') + '</span>';
+  return '<span style="font-size:' + Math.round(size * 0.72) + 'px;line-height:1;display:flex;align-items:center;justify-content:center;width:' + size + 'px;height:' + size + 'px">' + (et?.emoji || '👤') + '</span>';
 }
 
 function tileImgOrLabel(tileKey, size) {
@@ -11289,12 +12137,12 @@ function renderCodexContent() {
   // ── ITEMS ──
   const allItemRows = [
     { label: '🧪 Healing', items: ITEMS.healing },
-    { label: '🛡 Armor', items: ITEMS.costume },
+    { label: '🛡 Body Armor', items: ITEMS.armor },
     { label: '💨 Tactical', items: ITEMS.tactical },
   ].map(group => card(`
     <div style="font-family:'Cinzel',serif;font-size:0.8rem;color:var(--gold);margin-bottom:0.6rem">${group.label}</div>
     ${group.items.map(item => `<div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.35rem 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-      <span style="font-size:1.1rem">${item.icon}</span>
+      <span style="font-size:1.1rem">${itemImgAsync(item,'1.1rem')}</span>
       <div style="flex:1">
         <div class="text-xs" style="color:var(--white)">${item.name}${item.isArmor ? ' ' + tierPill(item.tier) : ''}</div>
         <div style="font-size:0.6rem;color:var(--mist)">${item.desc}${item.isArmor ? ' · 🛡 ' + (ARMOR_DURABILITY[item.tier]||5) + ' durability' : ''} · ⚜${item.price}</div>
@@ -11392,7 +12240,7 @@ function renderCodexContent() {
       { t: '🌍 Terrain & Height', b: 'Elevated tiles: +12–25% dmg vs lower targets. Shadow: enemy detection halved, Shinobi/Shadow +50% first-strike. Forest: heavy cover, dim light. Water: costs 3 move. Berserker (jump 1) needs stepping stones to reach H2/H3 tiles.' },
       { t: '📦 Missions & Objectives', b: 'Theft: kill carrier, pick up loot, escape. Assassination: kill marked target, escape. Rescue: get cell key, free prisoner, escort out. Agitation/Espionage: stand on orange objective tiles and press the Objective button. All types require reaching the exit.' },
       { t: '💰 Collector Gold Bags', b: 'Killing a Tax Collector drops a 💰 gold bag on the map tile where they fell. Move any ally onto the tile to collect the gold instantly. The bag pulses until picked up or combat ends.' },
-      { t: '⚔ Armor & Weapons', b: 'One armor item per kit, applied passively. Loses 1 durability per hit; destroyed at 0. Weapons have finite uses by tier. Sell weapons from the stash in the Armory — depleted sell at 50%. Armory missions may reward a bonus weapon on victory.' },
+      { t: '⚔ Armor & Weapons', b: 'Each ninja has a dedicated Body Armor slot that does not use field kit space. Equipped armor is applied passively — it loses 1 durability per hit and is destroyed at 0. Weapons have finite uses by tier. Sell weapons from the stash in the Armory — depleted sell at 50%. Armory missions may reward a bonus weapon on victory.' },
       { t: '💀 Doom & Permadeath', b: 'Allies at 0 HP enter Doom countdown. When it expires they die permanently. A Doom bag with their gear drops on the map — step on it to retrieve. Healing items can revive a Doomed ally before the countdown expires.' },
       { t: '✳ Job System', b: 'Earn JP through attacks, specials, kills, and objectives. Spend JP in a ninja\'s detail screen to unlock Reaction (triggers on hit), Support (always-on passives), and Movement abilities.' },
     ].map(function(m){ return card('<div style="font-family:Cinzel,serif;font-size:0.78rem;color:var(--gold);margin-bottom:0.4rem">' + m.t + '</div><div class="text-xs text-mist" style="line-height:1.7">' + m.b + '</div>'); }).join('') + '</div>';
@@ -11457,12 +12305,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Restore training states
   GS.clan.forEach(n => {
-    if (n.training && Date.now() > n.training.endTime) finishTraining(n);
+    if (n.training && Date.now() > n.training.endTime) checkAndFinishTraining(n);
   });
 
   // Generate initial mission pool if needed
   if (!GS.activeMissions || !GS.activeMissions.length) {
-    GS.activeMissions = generateMissionPool();
+    GS.activeMissions = generateMissionPool(); _invalidateMissionsCache();
     GS.missionNextRefresh = Date.now() + MISSION_REFRESH_INTERVAL;
   }
   if (!GS.recruitRoster || !GS.recruitRoster.length) {
@@ -11490,7 +12338,15 @@ setInterval(() => {
     const recruitSection = document.getElementById('section-recruit');
     if (recruitSection && recruitSection.classList.contains('active')) renderRecruitShop();
   }
-}, 60000);
+  // Check for completed training — complete silently and update nav dot
+  let anyFinished = false;
+  GS.clan.forEach(n => { if (checkAndFinishTraining(n)) anyFinished = true; });
+  if (anyFinished) {
+    const trainSection = document.getElementById('section-training');
+    if (trainSection && trainSection.classList.contains('active')) renderTraining();
+  }
+  _updateNavDots();
+}, 10000); // check every 10s for responsiveness
 
 // Live mission countdown timer
 setInterval(() => {
@@ -11502,7 +12358,7 @@ setInterval(() => {
   });
   // Auto-refresh when time hits zero
   if (GS.missionNextRefresh && Date.now() >= GS.missionNextRefresh) {
-    GS.activeMissions = generateMissionPool();
+    GS.activeMissions = generateMissionPool(); _invalidateMissionsCache();
     GS.missionNextRefresh = Date.now() + MISSION_REFRESH_INTERVAL;
     saveGame();
     // Re-render if on missions screen
@@ -11537,7 +12393,7 @@ function filterWeaponShop(type) {
     var rangeStr = w.range ? ' &middot; Range: ' + w.range : '';
     html += '<div class="shop-item tier-' + w.tier + '" onclick="addToWeaponCart(\''+w.id+'\')">';
     html += '<div class="item-tier-bar"></div>';
-    html += '<div class="item-emoji">' + w.icon + '</div>';
+    html += '<div class="item-emoji">' + itemImgAsync(w, '44px', 'width:44px;height:44px', 'shop-item-img') + '</div>';
     html += '<div class="item-name">' + w.name + '</div>';
     html += '<div class="item-stats">DMG: ' + w.dmg[0] + '-' + w.dmg[1] + rangeStr + '<br>' + w.tier.toUpperCase() + '</div>';
     html += '<div class="item-price"><span>' + w.desc + '</span><span>G ' + w.price + '</span></div>';
@@ -11945,24 +12801,24 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','W.rW.......W.W','E.rG.......G.W','W.WWWWWWWWWWWW','W............W','W...R..R.R...W','E............W','WGGWWWWWWWWGWW','W....W.....r.W','E....G.....r.W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','WrrW.......W.W','ErrG.......G.W','W..WWWWWWWWWWW','W............W','W...R........W','E............W','WWWWWWWWWGWWWW','W....W.......W','E..rr.......rW','W..rr.......rW','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.R.....W','E....G.R.....W','WWWWWGWWWWWWWW','W............W','W....R.R.R...W','E............W','WWWWWWWWGWWWWW','W.r.W........W','E.r.G........W','W...W........W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W..G......G..W','E..G......G..W','WWWWWWWWWWWWWW','W...R.....R..W','W...R.....R..W','E............W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W.r..W......rW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W..G......G..W','E..G......G..W','WWWWGWWWWWWWWW','W...R.....R..W','W...R.....R..W','E............W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W.rr.W.....rrW','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.1.W.......1W','E...G.........','W.1.WWWWWWWWWW','W............W','W...R.R......W','E...R........W','WGGWWWWWWGWWWW','W....W.......W','E....G.......W','W.1..W......1W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWWWWWWWWWWW','W...R.R.R.R..W','W............W','E.............','WWWWGWWWWGWWWW','W....W.......W','E....G.......W','W....W...r..rW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.SS.W.......W','E.SS.G.......W','WWWWWWWWWWWWWW','W..S.........W','W..S.R..R....W','E..S.........W','WGGWWWWWWWWWWW','W....W.rr....W','E....G.rr....W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WWW.....W','E....W.W.....W','WWWWWW.W.WWWWW','W....W...W...W','W....G...G...W','E............W','WWWWWW.WWWWWWW','W....W.......W','E....G....R..W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.rW.......rWW','E.rG.......r.W','W.WWWWWWWWWWWW','W............W','W.SS.....SS..W','E............W','WWWWWWWWWWWWWW','W.r.W......r.W','E.r.G......r.W','W...W........W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWGWWWWWWWWW','W...R.R.R.R..W','W............W','E.............','WWWWGWWWWGWWWW','W....W.......W','E....G.......W','W....W...rrrrW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.SS.W.......W','E.SS.G.......W','WWWWGWWWWWWWWW','W..S.........W','W..S.R..R....W','E..S.........W','WGGWWWWWWWWWWW','W....W.rr....W','E....G.rr....W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWGW.......W','W....W...W...W','W....G...G...W','E............W','WWWWWW.WWWWWWW','W....W.......W','E....G....R..W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.rW.......rWW','E.rG.......r.W','W.WWWWWWWWWWWW','W............W','W.SS.....SS..W','E............W','WWWWGWWWWWWWWW','W.r.G......r.W','E.r.G......r.W','W...W........W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWW.WWWWWWW','W....W.......W','W....W.......W','E....WWWGWWWWW','W....W.......W','W..rr.......rW','E..rr.......rW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....G.....WWW','E....G.....G.W','WWWWWWWWWWWWWW','W..R.........W','W..R.R.R.....W','E............W','WGGWWWWWGWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.....WWW','E....G.....G.W','WWWWGWWWWWWWWW','W..R.........W','W..R.R.R.....W','E............W','WGGWWWWWGWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.r.WWWW.....W','E.r.W..W.....W','W...G..G.....W','W...WWWW.....W','W............W','E............W','WWWWGWWWWWWWWW','W....W......rW','E....G......rW','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W.R..........W','W.R..R.R.....W','E.R..........W','WWWWWWWWWWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWGWWWWWWWWW','W.R..........W','W.R..R.R.....W','E.R..........W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...W.....W..W','E...G.....G..W','WWWWG.....GWWW','W...W.....W..W','W...........SS','E...........SS','WWWWG.....GWWW','W...W.....W..W','E...G.....G..W','W...W.....W..W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.1..W.....1.W','E....G.......W','W.1..WWWWWWWWW','W............W','W.R..R.......W','E............W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W.1..W......1W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','Wrr..W.....r.W','Err..G.....r.W','W...WWWWWWWWWW','W............W','W...R.R.R....W','E...R........W','WWWWWWWWGWWWWW','W....W.......W','E....G.......W','W..rr.......rW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWWWWWWWWWWW','W.............','W.R.R........W','E.R..........W','WWWWWWWGWWWWWW','W....W.......W','E....G.r...r.W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','Wrr..W.....r.W','Err..G.....r.W','W...WWWWWWWWWW','W............W','W...R.R.R....W','E...R........W','WWWWWWWWGWWWWW','W....W.......W','E....G.......W','W..rr......rrW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWGWWWWWWWWW','W.............','W.R.R........W','E.R..........W','WWWWWWWGWWWWWW','W....W.......W','E....G.rrr.rrW','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.S.W......S.W','E.S.G......S.W','W.SWWWWWWWWSWW','W.S..........W','W.S..R.R.....W','E............W','WWWWGWWWWGWWWW','W....W.......W','E....G.......W','W.1..W......1W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWGWWWW','W...........RW','W....R.......W','E............W','WWWWWWWWWWWWWW','W.rr.W.......W','E.rr.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWGWWWW','W...........RW','W....R.......W','E............W','WWWWGWWWWWWWWW','W.rr.W.......W','E.rr.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.r.W......r.W','E.r.G......r.W','W.r.WWWWWWWWWW','W............W','W............W','E...R.R.R....W','WGGWWWWWWWWWWW','W..r.W.......W','E..r.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.rr.W.......W','E.rr.G.......W','WWWWWWGWWWWWWW','W....W...R...W','W....G...R...W','E............W','WWWWWWWWWWWWWW','W....W.......W','E....G.......W','W.rr.W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.rr.W.......W','E.rr.G.......W','WWWWWWGWWWWWWW','W....W...R...W','W....G...R...W','E............W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W.rr.W.......W','WWWWWWWWWWWWWW'],
   ],
   // ── FORTRESS_GATE: military fortifications. Use 1(step), 2(rampart walk 1-tile wide),
   // 3(single tower peaks). Ramparts on enemy side. Allies approach through flat ground.
@@ -11971,17 +12827,17 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','W............W','E.............','WWWWWWWWWGWWWW','W..........R.W','W.R........R.W','E..........R.W','WGGWWWWWWWGWWW','W..........12W','E..........12W','W..........12W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...W......W2W','E...G......G2W','WWWWW......W2W','W.........W22W','W..........12W','E..........12W','WWWWWGWWWWWWWW','W...W......W.W','E...G......G.W','W...W......W.W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.....3WW','E....G.....2WW','WWWWWW.....2WW','W..........2.W','W..R.......2.W','E..........2.W','WWWWGWWWWWWWWW','W....W.....2WW','E....G.....3WW','W....W.....2WW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WWWWWWWWW','E....W.......W','WWWWWG.......W','W....W.......W','W....WWWWWWW2W','E..........122','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....WWWWWW22W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWWG.......W','W....W.......W','W....WWWWWWW2W','E..........122','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....WWWWWW22W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWGW2WW','W...........2W','W.R.........2W','E...........2W','WWWWWWWWWGW2WW','W....W......2W','E....G......2W','W....W......2W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W......1W','E....G......2W','WWWWWWWWWWWW2W','W............W','W.R.R........W','E...........W2','WGGWWWWWWWWW2W','W....W......1W','E....G......2W','W....W......2W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.........W2.W','E.........G2.W','WWWWGWWWWWW2.W','W..........2..','W.R.R......2..','E..........2.W','WWWWWWWWWWW2WW','W.........W2.W','E.........G2.W','W.........W2.W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWWWWWWW1WW','W.........W12W','W..........12W','E...R......12W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W.....W.W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.3.W......3WW','E.2.G......2WW','W.2.WWWWWWW2WW','W...........2W','W.R.........2W','E...........2W','WGGWWWWWWWWWWW','W.2.W......2WW','E.2.G......2WW','W.3.W......3WW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W............W','E.............','WWWWWWWWWWWWWW','W..R.......12W','W..R.......12W','E..........12W','WGGWWWWWWWWWWW','W..........12W','E..........12W','W..........12W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W............W','E.............','WWWWGWWWWWWWWW','W..R.......12W','W..R.......12W','E..........12W','WGGWWWWWWWWWWW','W..........12W','E..........12W','W..........12W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWGWWWWWWWW','W.R...........','W.R.R.....W22W','E.........W22W','WWWWGWWWWWWWWW','W.R...........','E.R.R.......2W','W...........2W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWGWWWW','W...........2W','W............W','E...........2W','WGGWWWWWWGWWWW','W..........22W','E..........12W','W..........12W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WWWWWW2WW','E....W.....2WW','WWWWWG.....2WW','W....W.....2..','W....G.....2..','E.........W2WW','WGGWWWWWWWW2WW','W....W.....2WW','E....G.....2WW','W....W.....2WW','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWWWWWWWWWW','W..R.......12W','W..R.......12W','E..........22W','WGGWWWWWWWWWWW','W............W','E.............','W..........12W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.....2WW','E....G.....2WW','WWWWWG.....2WW','W....W.....2..','W....G.....2..','E.........W2WW','WGGWWWWWWWW2WW','W....W.....2WW','E....G.....2WW','W....W.....2WW','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWGWWWWWWWWW','W..R.......12W','W..R.......12W','E..........22W','WGGWWWWWWWWWWW','W............W','E.............','W..........12W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.2.W......3.W','E.2.G......2.W','W.2.WWWWWWWWWW','W............W','W.R.R......2.W','E..........2.W','WGGWWWWWWWWWWW','W.............','E..........2.W','W..........12W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.....W.W','E....G.....G.W','WWWWWGWWWWWWWW','W..........W2W','W..R.......122','E...........12','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W....W.....W2W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWWWW2W','W.R.R.......2W','W...........2W','E...........2W','WGGWWWWWWWWW2W','W....W......2W','E....G......2W','W....WWWWWWW2W','WWWWWWWWWWWWWW'],
@@ -11991,24 +12847,24 @@ const MAP_LIBRARY = {
   // ── CASTLE_SIEGE: fortress assault / dungeon. Use 1(step) and 2(platform) as
   // interior raised areas. Single-tile 2s only. 3 very rarely as pinnacle.
   castle_siege: [
-    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W..R.........W','W..R.R...W.2.W','E........W.2.W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWGWWWWWWWWW','W..R.........W','W..R.R...W.2.W','E........W.2.W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W.SS.........W','W.SS.....W.2.W','E........G.2.W','WWWWWWWWWW.2.W','W..2.W.......W','E..2.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWWWWWWWWWWW','W.R..........W','W.R..R...W12.W','E........G12.W','WGGWWWWWWW12.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWGWWWWWWWWW','W.R..........W','W.R..R...W12.W','E........G12.W','WGGWWWWWWW12.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.S.W.......SW','E.S.G.......SW','W.SWWWWWWWWSWW','W.S..........W','W.S......W.2.W','E........G.2.W','WGGWWWWWWW.2.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W..R.........W','W..R.....WW.2W','E........WG.2W','WGGWWWWWWWW.2W','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWGWWWWWWWWW','W..R.........W','W..R.....WG.2W','E........WG.2W','WGGWWWWWWW..2W','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W............W','W.R..R...W.22W','E........G.22W','WWWWWWWWWW.22W','W....W.......W','E....G.......W','W.2..W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W.SS.W.......W','E.SS.G.......W','WWWWWWWWWWWWWW','W.SS.........W','W........W12.W','E........G12.W','WGGWWWWWWW12.W','W............W','E..2.G.......W','W..2.W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W.SS.W.......W','E.SS.G.......W','WWWWGWWWWWWWWW','W.SS.........W','W........W12.W','E........G12.W','WGGWWWWWWW12.W','W............W','E..2.G.......W','W..2.W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWWWW2W','W.R..........W','W.R......W...W','E........G...W','WGGWWWWWWWWWWW','W....W......2W','E....G......2W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....WWWWWWWWW','E....W.......W','WWWWWG.......W','W..R.W.....W.W','W....G.....G.W','E....WWWWWWWWW','WGGWW........W','W..2.W.......W','E..2.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....G.......W','WWWWWG.......W','W..R.W.....W.W','W....G.....G.W','E....WWWWWWWWW','WGGWW........W','W..2.W.......W','E..2.G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWGWWWW','W.R..........W','W.R......W12.W','E........G12.W','WGGWWWWWWW12.W','W....W.......W','E....G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.2.W........W','E.2.G........W','W.2.WWWWWWWWWW','W............W','W..R.....W12.W','E........G12.W','WWWWGWWWWWWWWW','W............W','E....G.......W','W.2..W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W.SS.........W','W.SS.....W.2.W','E........G.2.W','WGGWWWWWWWWWWW','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....G.......W','E....GG......W','WWWWWWWWWWWWWW','W..R.........W','W..R.R...W12.W','E........G12.W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W......2W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWGWWWWWWWWW','W.SS.........W','W.SS.....W.2.W','E........G.2.W','WGGWWWWWWWWWWW','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....G.......W','E....GG......W','WWWWGWWWWWWWWW','W..R.........W','W..R.R...W12.W','E........G12.W','WGGWWWWWWWWWWW','W....W.......W','E....G.......W','W....W......2W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W.R..........W','W.R......W12.W','E........W12.W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W..2.W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWWWW2W','W..R.........W','W..R.....W.12W','E........G.12W','WGGWWWWWWWWWWW','W............W','E....G.......W','W....W......2W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.S.W.......SW','E.S.G.......SW','W.SWWWWWWWWSWW','W..S.........W','W..S.....W.2.W','E........G.2.W','WGGWWWWWWW.2.W','W....W.......W','E....G.......W','W.2..W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWWWWWWWWWW','W.R..........W','W.R......W12.W','E........G12.W','WGGWWWWWWWWWWW','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W............W','W.R..R...W22.W','E........G22.W','WWWWWWWWWWWWWW','W....W.......W','E....G.......W','W.12.W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWGWWWWWWWWW','W.R..........W','W.R......W12.W','E........G12.W','WGGWWWWWWWWWWW','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W....W.......W','E....G.......W','WWWWWGWWWWWWWW','W............W','W.R..R...W22.W','E........G22.W','WWWWGWWWWWWWWW','W....W.......W','E....G.......W','W.12.W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.2.W........W','E.2.G........W','W.2.WWWWWGWWWW','W............W','W..R.....W12.W','E........G12.W','WGGWWWWWWWWWWW','W.2..W.......W','E.2..G.......W','W....W.......W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W....W......2W','E....G......2W','WWWWWWWWWGWWWW','W.R.R........W','W..R.....W12.W','E........G12.W','WGGWWWWWWWWWWW','W....W.......W','E....G......2W','W....W......2W','WWWWWWWWWWWWWW'],
   ],
@@ -12027,7 +12883,7 @@ const MAP_LIBRARY = {
     ['WWWWWWWWWWWWWW','WFFF...FFF...W','EFFF...FFF...W','W......FFF...W','W....R.......W','W....R.......W','E....R.......W','WFFF.......FFF','WFFF.......FFF','EFFF.......FFF','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...F.......FW','E...F.......FW','WFFFFFFFFFFFF ','W............W','W.RR.......RR.','E.RR.......RR.','WFFFFFFFFFFFF.','W...F.......FW','E...F.......FW','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.FF.......FF.','E.FF.......FFW','W.FF.FFFFF.FFW','W....F...F...W','W.R..F...F...W','E.R..F...F...W','W.R..F...F...W','W.FF.FFFFF.FFW','E.FF.......FFW','W............W','WWWWWWWWWWWWWW'],
-    ['WWWWWWWWWWWWWW','W...S.S.S....W','E...S.S.S....W','WWWWWWWWWWWWWW','W.FFF........W','W.FFF....FFFW.','E.FFF....FFFW.','WWWWWWWWWWWWWW','W.S.S.S.S....W','E.S.S.S.S....W','W............W','WWWWWWWWWWWWWW'],
+    ['WWWWWWWWWWWWWW','W...S.S.S....W','E...S.S.S....W','WWWWGWWWWWWWWW','W.FFF........W','W.FFF....FFFWW','E.FFF....FFFWW','WWWWGWWWWWWWWW','W.S.S.S.S....W','E.S.S.S.S....W','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.F.F.F.F.F..W','E.F.F.F.F.F..W','W.FFFFFFFFFFF.','W............W','W.R..R..R....W','E............W','WFFFFFFFFFFFFF','W............W','E.F.F.F.F.F..W','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W...F....F...W','E...F....F...W','WFFFFWWWWFFFFF','W....W.....W.W','W....G.....G.W','E....WWWWWWWWW','W............W','W.FF.......FFW','E.FF.......FFW','W............W','WWWWWWWWWWWWWW'],
     ['WWWWWWWWWWWWWW','W.FFF.FFF.FF.W','E.FFF.FFF.FF.W','W............W','W.~~.......~~W','W.~~.......~~W','E............W','WFFF.....FFFFW','WFFF.....FFFFW','EFFF.....FFFFW','W............W','WWWWWWWWWWWWWW'],
@@ -12087,6 +12943,7 @@ const MAP_LIBRARY = {
 
 function initializeTacticsEngine() {
   CS.tacticsEngineEnabled = true;
+  _prewarmItemImages(); // pre-load item/weapon PNG images
 
   // Upgrade existing TERRAIN_PRESETS to use better terrain placement
   TERRAIN_PRESETS.village   = { base: 'empty', features: ['wall','rubble','roof','shadow'] };
@@ -12117,30 +12974,6 @@ function initializeTacticsEngine() {
 // ── Hook initializeTacticsEngine into initCombat ──
 // We do this by patching the CS object after combat starts
 // showScreen hook removed — initializeTacticsEngine called directly from initCombat
-
-// ── Add Shadow Step to canvas click handler (action type) ──
-const _origCanvasClick = document.getElementById('combatCanvas').onclick;
-document.getElementById('combatCanvas').addEventListener('click', function(e) {
-  if (CS.selectedAction === 'shadow_step' && CS.phase === 'player' && CS.activeUnit) {
-    const rect = this.getBoundingClientRect();
-    const cs2 = CS.cellSize;
-    const gx = Math.floor((e.clientX - rect.left) / cs2);
-    const gy = Math.floor((e.clientY - rect.top) / cs2);
-    const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
-    if (!ally) return;
-    const reachable = CS.highlightedTiles.find(t => t.x === gx && t.y === gy);
-    if (!reachable) { toast('Cannot shadow-step there.', 'error'); e.stopPropagation(); return; }
-    ally.x = gx; ally.y = gy;
-    ally.facing = 'south';
-    CS.unitMoved = true;
-    CS.selectedAction = null;
-    CS.highlightedTiles = [];
-    addLog(ally.name + ' shadow-steps into the darkness!', 'special');
-    STEALTH.processStealthChecks();
-    renderCombat();
-    e.stopPropagation();
-  }
-}, true); // capture phase
 
 // Stealth checks run via STEALTH.processStealthChecks() in runEnemyUnitTurn directly
 
