@@ -38,13 +38,14 @@ body {
   font-family: 'Crimson Text', serif;
   font-size: 16px;
   min-height: 100vh;
+  height: 100%;
   overflow-x: hidden;
   background-image:
     radial-gradient(ellipse at 20% 80%, rgba(139,26,26,0.08) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(42,42,70,0.3) 0%, transparent 50%);
 }
 
-#app { min-height: 100vh; position: relative; }
+#app { min-height: 100vh; height: 100%; position: relative; }
 
 .screen { display: none; min-height: 100vh; animation: fadeIn 0.3s ease; }
 .screen.active { display: block; min-height: 100vh; }
@@ -52,6 +53,7 @@ body {
 #screen-hub.active { display: flex; }
 #screen-combat.active { display: flex; }
 #screen-create.active { display: flex; }
+#screen-pvp.active { display: flex; position: fixed; inset: 0; z-index: 50; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ===== SCROLLBAR ===== */
@@ -1354,7 +1356,47 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 .wci-img { vertical-align:middle; width:22px; height:22px; object-fit:contain; }
 [data-iimg] { display:inline-flex !important; align-items:center; justify-content:center; }
 </style>
-</head>
+<!-- PeerJS for WebRTC peer-to-peer signaling -->
+<script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════
+   PVP LOBBY & CONNECTION STYLES
+═══════════════════════════════════════════ */
+#screen-pvp { flex-direction:column; align-items:center; justify-content:center; overflow-y:auto; padding:1rem; background:var(--ink); box-sizing:border-box; }
+.pvp-panel { background:var(--ink2); border:1px solid rgba(201,162,39,0.25); max-width:480px; width:100%; padding:1.5rem; clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%); max-height:calc(100vh - 2rem); overflow-y:auto; box-sizing:border-box; }
+.pvp-title { font-family:'Cinzel Decorative',serif; font-size:1.2rem; color:var(--gold); text-align:center; margin-bottom:0.3rem; }
+.pvp-subtitle { text-align:center; font-size:0.62rem; color:var(--mist); letter-spacing:0.12em; margin-bottom:1.4rem; }
+.pvp-tabs { display:flex; gap:0.5rem; margin-bottom:1.2rem; }
+.pvp-tab { flex:1; padding:0.4rem; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--mist); font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:0.1em; cursor:pointer; transition:all 0.2s; }
+.pvp-tab.active { border-color:var(--gold); color:var(--gold); background:rgba(201,162,39,0.08); }
+.pvp-tab-body { display:none; } .pvp-tab-body.active { display:block; }
+.pvp-room-box { background:rgba(201,162,39,0.07); border:1px dashed rgba(201,162,39,0.3); padding:1rem; text-align:center; margin:1rem 0; }
+.pvp-room-id { font-family:'Cinzel',serif; font-size:1.3rem; color:var(--gold); letter-spacing:0.2em; cursor:pointer; }
+.pvp-room-hint { font-size:0.58rem; color:var(--mist); margin-top:0.3rem; }
+.pvp-input { width:100%; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.15); color:var(--white); font-family:'Cinzel',serif; font-size:0.9rem; letter-spacing:0.2em; padding:0.5rem 0.8rem; text-align:center; text-transform:uppercase; margin:0.6rem 0; box-sizing:border-box; }
+.pvp-input::placeholder { color:rgba(255,255,255,0.2); font-size:0.65rem; letter-spacing:0.1em; }
+.pvp-btn { width:100%; font-family:'Cinzel',serif; font-size:0.75rem; letter-spacing:0.15em; padding:0.6rem; cursor:pointer; border:none; transition:all 0.2s; margin-top:0.5rem; }
+.pvp-btn.primary { background:linear-gradient(135deg,rgba(139,26,26,0.6),rgba(139,26,26,0.3)); border:1px solid var(--blood); color:var(--white); }
+.pvp-btn.primary:hover { background:linear-gradient(135deg,rgba(139,26,26,0.8),rgba(139,26,26,0.5)); }
+.pvp-btn.secondary { background:transparent; border:1px solid rgba(255,255,255,0.15); color:var(--mist); }
+.pvp-btn.secondary:hover { border-color:rgba(255,255,255,0.3); color:var(--white); }
+.pvp-status { display:flex; align-items:center; gap:0.5rem; font-size:0.62rem; font-family:'Cinzel',serif; letter-spacing:0.08em; margin:0.8rem 0; padding:0.5rem 0.7rem; border:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.2); }
+.pvp-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.pvp-dot.idle    { background:#555; }
+.pvp-dot.waiting { background:#ddaa22; animation:navDotPulse 1.2s infinite; }
+.pvp-dot.connected { background:var(--jade-bright); }
+.pvp-dot.error   { background:var(--crimson); }
+.pvp-map-choice { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin:0.8rem 0; }
+.pvp-map-card { border:1px solid rgba(255,255,255,0.1); padding:0.5rem; cursor:pointer; text-align:center; transition:all 0.2s; font-size:0.6rem; font-family:'Cinzel',serif; color:var(--mist); background:rgba(0,0,0,0.2); }
+.pvp-map-card.selected { border-color:var(--gold); color:var(--gold); background:rgba(201,162,39,0.08); }
+.pvp-map-card .pvp-map-name { font-size:0.68rem; margin-bottom:0.2rem; }
+/* In-combat PvP indicator bar */
+#pvpStatusBar { position:fixed; top:0; left:50%; transform:translateX(-50%); z-index:200; display:none; align-items:center; gap:0.5rem; background:rgba(10,10,18,0.92); border:1px solid rgba(201,162,39,0.2); border-top:none; padding:0.25rem 0.8rem; font-family:'Cinzel',serif; font-size:0.6rem; }
+#pvpStatusBar .pvp-dot { width:6px; height:6px; }
+#pvpOppTurnOverlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:150; display:none; align-items:center; justify-content:center; pointer-events:none; }
+#pvpOppTurnOverlay .pvp-waiting-msg { font-family:'Cinzel Decorative',serif; font-size:1rem; color:var(--gold); text-align:center; animation:navDotPulse 1.5s infinite; }
+</style>
+
 <body>
 
 <div id="app">
@@ -1372,6 +1414,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
     <div class="menu-options">
       <button class="menu-btn primary" onclick="startGame()">▶ Begin Journey</button>
       <button class="menu-btn" onclick="loadGame()">◈ Continue</button>
+      <button class="menu-btn" onclick="showScreen('pvp')" style="border-color:rgba(80,160,255,0.4);color:#88ccff">⚔ Online PvP</button>
       <button class="menu-btn" onclick="openCodex()">☰ Codex</button>
     </div>
     <div style="position:absolute;bottom:1.5rem;font-size:0.6rem;color:rgba(255,255,255,0.2);font-family:'Cinzel',serif;letter-spacing:0.3em">v1.0 · SHADOW ARTS EDITION</div>
@@ -3973,6 +4016,8 @@ function showScreen(id) {
   const el = document.getElementById('screen-' + id);
   if (el) el.classList.add('active');
   if (id === 'hub') updateGoldDisplay();
+  // PvP hook — handles lobby init and cleanup
+  if (typeof pvpOnShowScreen === 'function') pvpOnShowScreen(id);
 }
 
 function showHubSection(id) {
@@ -9958,6 +10003,9 @@ function undoMove() {
 }
 
 function finishAllyTurn() {
+  // PvP lockstep intercept — if we're in PvP mode and still waiting,
+  // block the normal turn flow and route through the network instead.
+  if (typeof pvpInterceptFinishAllyTurn === 'function' && pvpInterceptFinishAllyTurn()) return;
   const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
   if (!ally) return;
 
@@ -13008,6 +13056,908 @@ function _appendHeightInfoToSelected() {
 console.log('[NINDO Tactics v2] Systems loaded: Terrain · Height · Movement · Combat · AI · Stealth · Maps');
 
 
+</script>
+
+<!-- PVP LOBBY SCREEN -->
+<div id="screen-pvp" class="screen">
+  <div class="pvp-panel" style="margin:auto">
+    <div class="pvp-title">⚔ Shadow Duel</div>
+    <div class="pvp-subtitle">PEER-TO-PEER · ONLINE PVP</div>
+    <div class="pvp-tabs">
+      <button class="pvp-tab active" onclick="pvpSelectTab('host')">🏯 Host</button>
+      <button class="pvp-tab" onclick="pvpSelectTab('join')">⛩ Join</button>
+      <button class="pvp-tab" onclick="pvpSelectTab('quick')">⚡ Quick Match</button>
+    </div>
+    <div id="pvp-tab-quick" class="pvp-tab-body">
+      <div style="text-align:center;font-size:0.62rem;color:var(--mist);margin-bottom:0.8rem;line-height:1.6">
+        Searches for an open game. If none found,<br>you become the host and wait for a challenger.
+      </div>
+      <div class="pvp-status">
+        <div class="pvp-dot idle" id="pvpQuickDot"></div>
+        <span id="pvpQuickStatusText">Ready to search</span>
+      </div>
+      <div class="pvp-room-box" id="pvpQuickHostBox" style="display:none">
+        <div style="font-size:0.6rem;color:var(--mist);margin-bottom:0.4rem">WAITING FOR CHALLENGER</div>
+        <div class="pvp-room-id" style="font-size:1rem" id="pvpQuickCode">—</div>
+        <div class="pvp-room-hint">Hosting open game — challenger will connect automatically</div>
+      </div>
+      <button class="pvp-btn primary" id="pvpQuickBtn" onclick="pvpQuickMatch()">⚡ Find Match</button>
+      <button class="pvp-btn secondary" id="pvpQuickCancelBtn" onclick="pvpQuickCancel()" style="display:none;margin-top:0.4rem">✕ Cancel</button>
+      <button class="pvp-btn secondary" onclick="showScreen('menu')" style="margin-top:0.4rem">← Back to Menu</button>
+    </div>
+      <div class="pvp-status">
+        <div class="pvp-dot idle" id="pvpHostDot"></div>
+        <span id="pvpHostStatusText">Press Host to generate a room code</span>
+      </div>
+      <div class="pvp-room-box" id="pvpRoomBox" style="display:none">
+        <div style="font-size:0.6rem;color:var(--mist);margin-bottom:0.4rem">YOUR ROOM CODE</div>
+        <div class="pvp-room-id" id="pvpRoomId" onclick="pvpCopyCode()" title="Click to copy">—</div>
+        <div class="pvp-room-hint">Share this code · Click to copy</div>
+      </div>
+      <div style="font-size:0.62rem;color:var(--mist);margin:0.6rem 0 0.3rem">Choose PvP Map:</div>
+      <div class="pvp-map-choice" id="pvpMapChoice"></div>
+      <button class="pvp-btn primary" id="pvpHostBtn" onclick="pvpHost()">⚔ Host Game</button>
+      <button class="pvp-btn secondary" onclick="showScreen('menu')" style="margin-top:0.4rem">← Back to Menu</button>
+    </div>
+    <div id="pvp-tab-join" class="pvp-tab-body">
+      <div class="pvp-status">
+        <div class="pvp-dot idle" id="pvpJoinDot"></div>
+        <span id="pvpJoinStatusText">Enter room code to connect</span>
+      </div>
+      <input class="pvp-input" id="pvpJoinCode" placeholder="e.g. NINDO-AB3K7Z" maxlength="20"
+        oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-]/g,'')">
+      <div style="font-size:0.55rem;color:var(--mist);text-align:center;margin-top:-0.3rem;margin-bottom:0.4rem">Enter the full room code shown on the host's screen</div>
+      <button class="pvp-btn primary" onclick="pvpJoin()">🔗 Connect</button>
+      <button class="pvp-btn secondary" onclick="showScreen('menu')" style="margin-top:0.4rem">← Back to Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- IN-COMBAT PVP STATUS BAR -->
+<div id="pvpStatusBar">
+  <div class="pvp-dot connected" id="pvpBarDot"></div>
+  <span id="pvpBarText">⚔ PvP — Connected</span>
+</div>
+
+<!-- OPPONENT TURN WAIT OVERLAY -->
+<div id="pvpOppTurnOverlay">
+  <div class="pvp-waiting-msg">⚔ Opponent's Turn…</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NINDO TACTICS — NETWORK MANAGER (WebRTC/PeerJS PvP)
+     All PvP logic is isolated here. The game loop hooks in via
+     NetworkManager.interceptAction() and NetworkManager.onAction().
+═══════════════════════════════════════════════════════════════ -->
+<script>
+// ─────────────────────────────────────────────────────────────────
+// SEEDED RNG — ensures both peers produce identical random outcomes
+// Uses a simple mulberry32 PRNG seeded with a shared 32-bit integer.
+// ─────────────────────────────────────────────────────────────────
+const SeededRNG = (() => {
+  let _seed = 0;
+
+  function mulberry32(s) {
+    s |= 0; s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+
+  return {
+    seed(n) { _seed = n >>> 0; },
+    next()  { _seed = (_seed * 1664525 + 1013904223) >>> 0; return mulberry32(_seed); },
+    // Drop-in for Math.random() in pvp mode
+    random() { return this.next(); }
+  };
+})();
+
+// ─────────────────────────────────────────────────────────────────
+// PVP MAP LIBRARY — 6 unique arena maps balanced for 2-player play.
+// Each is 14×12, ally spawns left cols 1-4, enemy spawns right cols 9-12.
+// "Enemies" for pvp are the opponent's units placed on the right half.
+// ─────────────────────────────────────────────────────────────────
+const PVP_MAPS = [
+  {
+    id: 'pvp_bridge',
+    name: 'Iron Bridge',
+    desc: 'A contested bridge over a ravine — control the centre to win.',
+    terrain: 'fortress',
+    rows: [
+      'WWWWWWWWWWWWWW',
+      'W..2.......2.W',
+      'W..2.......2.W',
+      'W....22222...W',
+      'W....21112...W',
+      'E....21112...W',
+      'E....21112...W',
+      'W....22222...W',
+      'W..2.......2.W',
+      'W..2.......2.W',
+      'W............W',
+      'WWWWWWWWWWWWWW'
+    ]
+  },
+  {
+    id: 'pvp_courtyard',
+    name: 'Hidden Courtyard',
+    desc: 'Shadow alleys and elevated walls create deadly ambush lanes.',
+    terrain: 'village',
+    rows: [
+      'WWWWWWWWWWWWWW',
+      'W.rr.......rrW',
+      'E.rr.......rrW',
+      'WWWWGWWWWGWWWW',
+      'W.SS.......SSW',
+      'E.SS.......SSW',
+      'E.SS.......SSW',
+      'WWWWGWWWWGWWWW',
+      'W.rr.......rrW',
+      'E.rr.......rrW',
+      'W............W',
+      'WWWWWWWWWWWWWW'
+    ]
+  },
+  {
+    id: 'pvp_forest',
+    name: 'Twilight Grove',
+    desc: 'Dense forest with narrow clearings. Stealth is paramount.',
+    terrain: 'forest',
+    rows: [
+      'WWWWWWWWWWWWWW',
+      'W.FFF.....FFFW',
+      'E.FFF.....FFFW',
+      'W.F..........W',
+      'W.F...SS.....W',
+      'E.....SS.....W',
+      'E.....SS.....W',
+      'W.F..........W',
+      'W.FFF.....FFFW',
+      'E.FFF.....FFFW',
+      'W............W',
+      'WWWWWWWWWWWWWW'
+    ]
+  },
+  {
+    id: 'pvp_ruins',
+    name: 'Shattered Keep',
+    desc: 'Crumbled battlements provide high-ground advantage.',
+    terrain: 'castle',
+    rows: [
+      'WWWWWWWWWWWWWW',
+      'W...1.......1W',
+      'E...1.......1W',
+      'W...1WWWWW1..W',
+      'W.........1..W',
+      'E.RR....RR...W',
+      'E.RR....RR...W',
+      'W.........1..W',
+      'W...1WWWWW1..W',
+      'E...1.......1W',
+      'W............W',
+      'WWWWWWWWWWWWWW'
+    ]
+  },
+  {
+    id: 'pvp_canals',
+    name: 'Night Canals',
+    desc: 'Water divides the field. Ranged units dominate the waterways.',
+    terrain: 'docks',
+    rows: [
+      'WWWWWWWWWWWWWW',
+      'W..S.......S.W',
+      'E..S.......S.W',
+      'W..S~~...~~S.W',
+      'W..S~~...~~S.W',
+      'E............W',
+      'E............W',
+      'W..S~~...~~S.W',
+      'W..S~~...~~S.W',
+      'E..S.......S.W',
+      'W............W',
+      'WWWWWWWWWWWWWW'
+    ]
+  },
+  {
+    id: 'pvp_dojo',
+    name: 'Storm Dojo',
+    desc: 'An open dojo floor — pure skill, no terrain advantage.',
+    terrain: 'fortress',
+    rows: [
+      'WWWWWWWWWWWWWW',
+      'W1...........W',
+      'E1...........W',
+      'W1.R.......R.W',
+      'W............W',
+      'E....2...2...W',
+      'E....2...2...W',
+      'W............W',
+      'W.R.......R.1W',
+      'E...........1W',
+      'W...........1W',
+      'WWWWWWWWWWWWWW'
+    ]
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────
+// NETWORK MANAGER — WebRTC via PeerJS
+// Responsibilities: connection lifecycle, message send/recv, lockstep
+// ─────────────────────────────────────────────────────────────────
+const NetworkManager = (() => {
+  const PROTOCOL_VERSION = 'nindo-pvp-v1';
+
+  let _peer     = null;   // PeerJS Peer instance
+  let _conn     = null;   // active DataChannel connection
+  let _isHost   = false;
+  let _myId     = null;
+  let _oppId    = null;
+  let _roomCode = null;
+  let _sharedSeed = 0;
+  let _turnId   = 0;
+  let _myAction = null;   // pending action for this turn
+  let _oppAction= null;   // received action from opponent
+  let _pendingResolve = null; // called when both actions received
+  let _statusCb = null;
+  let _actionCb = null;   // called when opponent's action arrives
+  let _selectedMapId = PVP_MAPS[0].id;
+
+  // ── Helpers ──────────────────────────────────────────────────
+  function _send(type, payload = {}) {
+    if (!_conn || _conn.open === false) { console.warn('[PvP] send: not connected'); return; }
+    const msg = JSON.stringify({ v: PROTOCOL_VERSION, type, payload, turnId: _turnId });
+    try { _conn.send(msg); }
+    catch(e) { console.error('[PvP] send error', e); }
+  }
+
+  function _setStatus(text, state) {
+    if (_statusCb) _statusCb(text, state);
+  }
+
+  function _updateUI() {
+    const bar = document.getElementById('pvpStatusBar');
+    const barTxt = document.getElementById('pvpBarText');
+    const barDot = document.getElementById('pvpBarDot');
+    if (bar && _conn && _conn.open) {
+      bar.style.display = 'flex';
+      if (barTxt) barTxt.textContent = '⚔ PvP vs ' + (_oppId || '?');
+      if (barDot) { barDot.className = 'pvp-dot connected'; }
+    }
+  }
+
+  function _recv(raw) {
+    let msg;
+    try { msg = JSON.parse(raw); } catch(e) { console.error('[PvP] bad JSON', raw); return; }
+    if (msg.v !== PROTOCOL_VERSION) { console.warn('[PvP] version mismatch', msg.v); return; }
+
+    switch(msg.type) {
+      case 'INIT':
+        // Host receives INIT from joiner → finalize handshake
+        _oppId = msg.payload.peerId;
+        _sharedSeed = msg.payload.seed ^ _sharedSeed; // XOR both seeds for fairness
+        SeededRNG.seed(_sharedSeed);
+        _send('INIT_ACK', { seed: _sharedSeed, mapId: _selectedMapId, oppId: _myId });
+        _setStatus('Opponent connected! Starting…', 'connected');
+        setTimeout(() => _launchPvPGame(_selectedMapId, false), 800);
+        break;
+
+      case 'INIT_ACK':
+        // Joiner receives ACK from host → apply seed + map and launch
+        _sharedSeed = msg.payload.seed;
+        SeededRNG.seed(_sharedSeed);
+        _setStatus('Synced! Starting match…', 'connected');
+        setTimeout(() => _launchPvPGame(msg.payload.mapId, true), 800);
+        break;
+
+      case 'ACTION':
+        // Opponent submitted their action for this turn
+        if (msg.turnId !== _turnId) { console.warn('[PvP] ACTION turn mismatch', msg.turnId, _turnId); return; }
+        _oppAction = msg.payload;
+        _tryResolveTurn();
+        break;
+
+      case 'CONFIRM':
+        // Opponent confirmed our action was received
+        break;
+
+      case 'SYNC_REQUEST':
+        // Opponent detected desync — send full state snapshot
+        _send('SYNC_STATE', { state: JSON.stringify(CS) });
+        break;
+
+      case 'SYNC_STATE':
+        // Apply opponent's state snapshot (desync recovery)
+        try {
+          const remote = JSON.parse(msg.payload.state);
+          Object.assign(CS, remote);
+          renderCombat();
+          addLog('⚠ Resync complete.', 'system');
+        } catch(e) { console.error('[PvP] sync state parse fail', e); }
+        break;
+
+      case 'DISCONNECT':
+        _setStatus('Opponent disconnected.', 'error');
+        addLog('⚠ Opponent disconnected!', 'system');
+        toast('Opponent disconnected.', 'error');
+        _showOppTurnOverlay(false);
+        break;
+    }
+  }
+
+  function _tryResolveTurn() {
+    if (!_myAction || !_oppAction) return;
+    const mine = _myAction, theirs = _oppAction;
+    _myAction = null; _oppAction = null;
+    _turnId++;
+    if (_pendingResolve) {
+      const fn = _pendingResolve;
+      _pendingResolve = null;
+      fn(mine, theirs);
+    }
+  }
+
+  function _showOppTurnOverlay(show) {
+    const el = document.getElementById('pvpOppTurnOverlay');
+    if (el) el.style.display = show ? 'flex' : 'none';
+  }
+
+  function _launchPvPGame(mapId, isJoiner) {
+    const pvpMap = PVP_MAPS.find(m => m.id === mapId) || PVP_MAPS[0];
+    showScreen('combat');
+    document.getElementById('pvpStatusBar').style.display = 'flex';
+    // Build a synthetic mission object using the PvP map
+    const syntheticMission = {
+      id: 'pvp_' + mapId,
+      name: pvpMap.name,
+      type: 'assassination', // PvP uses elimination win condition
+      desc: pvpMap.desc,
+      terrain: pvpMap.terrain,
+      isPvP: true,
+      isJoiner,
+      pvpRows: pvpMap.rows,
+      enemies: [
+        { type: 'guard', count: 3 }  // opponent's units (placeholder, overridden in initPvPCombat)
+      ],
+      reward: 0
+    };
+    initPvPCombat(syntheticMission, pvpMap, isJoiner);
+  }
+
+  // ── Public API ────────────────────────────────────────────────
+  return {
+    get isActive()    { return !!(_conn && _conn.open); },
+    get isHost()      { return _isHost; },
+    get sharedSeed()  { return _sharedSeed; },
+    setSelectedMap(id) { _selectedMapId = id; },
+    onStatus(cb)  { _statusCb = cb; },
+    onAction(cb)  { _actionCb = cb; },
+
+    /** Host: create a PeerJS peer and wait for a joiner */
+    host() {
+      _isHost = true;
+      _sharedSeed = (Math.random() * 0xFFFFFFFF) >>> 0;
+      // Use a short custom ID so the room code is human-readable and shareable
+      // Format: NINDO- + 6 random alphanumeric chars (stays within PeerJS ID rules)
+      const _customId = 'NINDO-' + Math.random().toString(36).slice(2,8).toUpperCase();
+      _peer = new Peer(_customId);
+      _peer.on('open', id => {
+        _myId = id;
+        _roomCode = id; // full peer ID IS the room code
+        _setStatus('Room ready — share code with opponent', 'waiting');
+        document.getElementById('pvpRoomBox').style.display = 'block';
+        document.getElementById('pvpRoomId').textContent = id;
+      });
+      _peer.on('connection', conn => {
+        _conn = conn;
+        _oppId = conn.peer;
+        conn.on('open',  () => { _setStatus('Opponent connected — syncing…', 'waiting'); });
+        conn.on('data',  d  => _recv(d));
+        conn.on('close', () => { _setStatus('Disconnected.', 'error'); _send('DISCONNECT', {}); });
+        conn.on('error', e  => console.error('[PvP] conn err', e));
+      });
+      _peer.on('error', e => {
+        // If our custom ID is taken, fall back to auto-generated ID
+        if (e.type === 'unavailable-id') {
+          _peer = new Peer();
+          _peer.on('open', id => {
+            _myId = id; _roomCode = id;
+            _setStatus('Room ready — share code with opponent', 'waiting');
+            document.getElementById('pvpRoomBox').style.display = 'block';
+            document.getElementById('pvpRoomId').textContent = id;
+          });
+          _peer.on('connection', conn => {
+            _conn = conn; _oppId = conn.peer;
+            conn.on('open',  () => { _setStatus('Opponent connected — syncing…', 'waiting'); });
+            conn.on('data',  d  => _recv(d));
+            conn.on('close', () => { _setStatus('Disconnected.', 'error'); });
+            conn.on('error', e  => console.error('[PvP] conn err', e));
+          });
+          _peer.on('error', e2 => { _setStatus('Connection error: ' + e2.type, 'error'); console.error('[PvP]', e2); });
+        } else {
+          _setStatus('Connection error: ' + e.type, 'error');
+          console.error('[PvP]', e);
+        }
+      });
+    },
+
+    /** Joiner: connect to host using the full room code (PeerJS peer ID) */
+    join(roomCode) {
+      _isHost = false;
+      _sharedSeed = (Math.random() * 0xFFFFFFFF) >>> 0;
+      _peer = new Peer();
+      _peer.on('open', id => {
+        _myId = id;
+        _setStatus('Connecting to ' + roomCode + '…', 'waiting');
+        // roomCode IS the host's full PeerJS peer ID — connect directly
+        _conn = _peer.connect(roomCode.trim(), { reliable: true, ordered: true });
+        _conn.on('open', () => {
+          _setStatus('Linked — handshaking…', 'waiting');
+          _send('INIT', { peerId: _myId, seed: _sharedSeed });
+        });
+        _conn.on('data',  d => _recv(d));
+        _conn.on('close', () => { _setStatus('Disconnected.', 'error'); });
+        _conn.on('error', e => { _setStatus('Connect failed — check the room code.', 'error'); console.error('[PvP]', e); });
+      });
+      _peer.on('error', e => { _setStatus('Peer error: ' + e.type, 'error'); console.error('[PvP]', e); });
+    },
+
+    /** Submit our action for this turn; wait for opponent's then call cb(mine, theirs) */
+    submitAction(action, onBothReady) {
+      _myAction = action;
+      _pendingResolve = onBothReady;
+      _send('ACTION', action);
+      _send('CONFIRM', { turnId: _turnId });
+      _showOppTurnOverlay(true);
+      _tryResolveTurn(); // in case opp action already arrived
+    },
+
+    /** Receive incoming opponent action (called from outside if needed) */
+    processMessage(raw) { _recv(raw); },
+
+    /** Request resync (call if desync detected) */
+    requestResync() { _send('SYNC_REQUEST', {}); },
+
+    cleanup() {
+      _send('DISCONNECT', {});
+      if (_conn)  { try { _conn.close(); } catch(e){} }
+      if (_peer)  { try { _peer.destroy(); } catch(e){} }
+      _conn = null; _peer = null;
+      document.getElementById('pvpStatusBar').style.display = 'none';
+      _showOppTurnOverlay(false);
+    },
+
+    showOppTurnOverlay: _showOppTurnOverlay
+  };
+})();
+
+// ─────────────────────────────────────────────────────────────────
+// PVP LOBBY UI FUNCTIONS
+// ─────────────────────────────────────────────────────────────────
+let _pvpSelectedMap = PVP_MAPS[0].id;
+
+function pvpSelectTab(tab) {
+  document.querySelectorAll('.pvp-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pvp-tab-body').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.pvp-tab[onclick*="${tab}"]`).classList.add('active');
+  document.getElementById('pvp-tab-' + tab).classList.add('active');
+}
+
+function pvpSetStatus(elDot, elText, text, state) {
+  const dotEl = document.getElementById(elDot);
+  const txtEl = document.getElementById(elText);
+  if (dotEl) dotEl.className = 'pvp-dot ' + (state || 'idle');
+  if (txtEl) txtEl.textContent = text;
+}
+
+function pvpHost() {
+  pvpSetStatus('pvpHostDot', 'pvpHostStatusText', 'Creating room…', 'waiting');
+  document.getElementById('pvpHostBtn').disabled = true;
+  NetworkManager.onStatus((txt, state) => {
+    pvpSetStatus('pvpHostDot', 'pvpHostStatusText', txt, state);
+  });
+  NetworkManager.setSelectedMap(_pvpSelectedMap);
+  NetworkManager.host();
+}
+
+function pvpJoin() {
+  const code = document.getElementById('pvpJoinCode').value.trim();
+  if (!code) { toast('Enter a room code.', 'error'); return; }
+  pvpSetStatus('pvpJoinDot', 'pvpJoinStatusText', 'Connecting…', 'waiting');
+  NetworkManager.onStatus((txt, state) => {
+    pvpSetStatus('pvpJoinDot', 'pvpJoinStatusText', txt, state);
+  });
+  NetworkManager.join(code);
+}
+
+function pvpCopyCode() {
+  const code = document.getElementById('pvpRoomId').textContent;
+  navigator.clipboard?.writeText(code).then(() => toast('Room code copied!', 'success'));
+}
+
+function renderPvPMapChoice() {
+  const el = document.getElementById('pvpMapChoice');
+  if (!el) return;
+  el.innerHTML = PVP_MAPS.map(m => `
+    <div class="pvp-map-card ${m.id === _pvpSelectedMap ? 'selected' : ''}" onclick="pvpPickMap('${m.id}')">
+      <div class="pvp-map-name">${m.name}</div>
+      <div style="font-size:0.55rem;color:var(--mist);margin-top:0.2rem">${m.desc}</div>
+    </div>`).join('');
+}
+
+function pvpPickMap(id) {
+  _pvpSelectedMap = id;
+  NetworkManager.setSelectedMap(id);
+  renderPvPMapChoice();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PVP COMBAT INITIALIZER
+// Builds a two-sided combat from a PvP map. Player's team on the
+// left, opponent's mirror team on the right.
+// ─────────────────────────────────────────────────────────────────
+function initPvPCombat(mission, pvpMap, isJoiner) {
+  // Use seeded RNG for this combat's randomness
+  const _rng = SeededRNG.random.bind(SeededRNG);
+
+  // Pick 3 from clan (or generate AI ninjas for opponent)
+  const myNinjas  = GS.clan.slice(0, 3);
+  if (!myNinjas.length) {
+    toast('Add ninja to your clan first!', 'error');
+    showScreen('menu');
+    return;
+  }
+
+  // Build the grid from pvpMap rows
+  const W = 14, H = 12;
+  CS.gridW = W; CS.gridH = H; CS.cellSize = 56;
+  CS.grid = [];
+  const CHAR_MAP2 = {'.':'empty','1':'floor1','2':'floor2','3':'floor3','W':'wall',
+    'F':'forest','R':'rubble','r':'roof','T':'roof3','S':'shadow','~':'water',
+    'G':'gate','E':'exit','f':'forest','C':'cliff','s':'stone'};
+  for (let y = 0; y < H; y++) {
+    CS.grid.push([]);
+    const row = pvpMap.rows[y] || '';
+    for (let x = 0; x < W; x++) {
+      CS.grid[y].push(CHAR_MAP2[row[x]] || 'empty');
+    }
+  }
+
+  // Helper: find a passable tile in a column range
+  function findSpawn(xMin, xMax) {
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const x = xMin + Math.floor(_rng() * (xMax - xMin + 1));
+      const y = 1 + Math.floor(_rng() * (H - 2));
+      const key = CS.grid[y]?.[x];
+      const t = TERRAIN_TILES[key] || TERRAIN_TILES.empty;
+      if (t.passable) return { x, y };
+    }
+    // Fallback scan
+    for (let y = 1; y < H-1; y++) for (let x = xMin; x <= xMax; x++) {
+      if ((TERRAIN_TILES[CS.grid[y]?.[x]] || TERRAIN_TILES.empty).passable) return { x, y };
+    }
+    return { x: xMin, y: Math.floor(H/2) };
+  }
+
+  // Spawn my ninjas on the left
+  CS.allies = myNinjas.map((n, i) => {
+    const pos = findSpawn(1, 4);
+    return { ...JSON.parse(JSON.stringify(n)), gridId: 'pvp_ally_' + i,
+      x: pos.x, y: pos.y, ct: Math.floor(_rng() * 30), buffs: [], carriedItems: n.carriedItems || [],
+      armorItem: n.equippedArmor ? JSON.parse(JSON.stringify(n.equippedArmor)) : null };
+  });
+
+  // Opponent's team: mirror of ally team stats on the right
+  const oppClasses = ['shinobi','kunoichi','ronin','monk','shadow','berserker'];
+  CS.enemies = myNinjas.map((n, i) => {
+    const pos = findSpawn(9, 12);
+    const clsKey = oppClasses[i % oppClasses.length];
+    const cls = CLASSES[clsKey];
+    const level = Math.max(1, n.level);
+    return {
+      id: 'pvp_opp_' + i, type: 'pvp_opponent',
+      name: 'Shadow ' + (i+1), emoji: cls.emoji,
+      class: clsKey,
+      hp: cls.baseStats.hp + (level - 1) * 5,
+      maxHp: cls.baseStats.hp + (level - 1) * 5,
+      dmg: [8 + level, 14 + level * 2],
+      moveRange: 3, attackRange: 1, spd: 5 + Math.floor(_rng() * 3),
+      x: pos.x, y: pos.y, ct: Math.floor(_rng() * 30),
+      facing: 'west', status: null, buffs: [],
+      isPvPOpponent: true, ai: 'aggressive'
+    };
+  });
+
+  // Standard CS setup
+  CS.mission = mission;
+  CS.active  = true;
+  CS._endingCombat = false;
+  CS.turn    = 0; CS.turnLimit = 0;
+  CS.phase   = 'player';
+  CS.log     = [];
+  CS.hitFlashes = []; CS.floatNumbers = [];
+  CS.activeFires = []; CS.smokeClouds = [];
+  CS.objectiveTiles = []; CS.objectivePhase = 'fight';
+  CS.objectiveProgress = 0; CS.objectiveTotal = 0;
+  CS.alliesEscaped = []; CS.exitsActive = false;
+  CS.goldPickups = []; CS.doomBags = [];
+  CS.exitTiles = [];
+  CS.reinforcementsSpawned = false;
+
+  addLog('⚔ PvP Match begins! — ' + pvpMap.name, 'system');
+  addLog(isJoiner ? 'You are the Challenger.' : 'You are the Host.', 'system');
+
+  renderCombat();
+  schedulePulseRedraw();
+  setTimeout(advanceCT, 400);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PVP ACTION INTERCEPTION
+// When a player submits an action in pvp mode, we intercept it,
+// send it to the opponent, wait for their action, then resolve both.
+// We use a flag rather than wrapping finishAllyTurn to avoid
+// infinite recursion from function-declaration hoisting.
+// ─────────────────────────────────────────────────────────────────
+let _pvpWaitingForOpp = false;
+
+// Called by the existing finishAllyTurn at the TOP of that function
+// via a guard hook. Returns true if PvP mode consumed the call.
+function pvpInterceptFinishAllyTurn() {
+  if (!NetworkManager.isActive || !CS.mission?.isPvP) return false;
+  if (_pvpWaitingForOpp) return true; // already waiting — block duplicate calls
+
+  const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
+  const action = {
+    type: 'END_TURN',
+    unitId: CS.activeUnit,
+    x: ally?.x,
+    y: ally?.y,
+    hp: ally?.hp,
+    turnId: CS.turn
+  };
+  _pvpWaitingForOpp = true;
+  addLog('⚔ Waiting for opponent…', 'system');
+
+  NetworkManager.submitAction(action, () => {
+    // Both actions received — now allow finishAllyTurn to proceed normally
+    _pvpWaitingForOpp = false;
+    NetworkManager.showOppTurnOverlay(false);
+    addLog('⚔ Turns synchronized — resolving…', 'system');
+    finishAllyTurn(); // call original now that flag is cleared
+  });
+  return true; // tell the caller to abort this call
+}
+
+// ─────────────────────────────────────────────────────────────────
+// RENDER PVP MAP LIST on screen show
+// ─────────────────────────────────────────────────────────────────
+function pvpOnShowScreen(id) {
+  if (id === 'pvp') {
+    renderPvPMapChoice();
+    if (NetworkManager.isActive) NetworkManager.cleanup();
+  }
+  if (id !== 'combat' && id !== 'pvp') {
+    if (NetworkManager.isActive) NetworkManager.cleanup();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// QUICK MATCH MATCHMAKING
+// Uses a known set of "lobby" PeerJS IDs as a virtual matchmaking
+// queue. Open hosts register on NINDO-QM-0 through NINDO-QM-9.
+// Seekers probe them in order. First responsive one joins.
+// If none respond the seeker claims the next free slot as host.
+// No backend needed — pure PeerJS peer discovery.
+// ─────────────────────────────────────────────────────────────────
+const QM_SLOTS      = 10;   // how many lobby slots to scan
+const QM_PREFIX     = 'NINDO-QM-';
+const QM_PROBE_MS   = 1800; // ms to wait for each slot probe response
+let _qmPeer         = null;
+let _qmSlot         = -1;
+let _qmSearching    = false;
+let _qmAborted      = false;
+
+function pvpQuickSetStatus(text, state) {
+  const dot = document.getElementById('pvpQuickDot');
+  const txt = document.getElementById('pvpQuickStatusText');
+  if (dot) dot.className = 'pvp-dot ' + (state || 'idle');
+  if (txt) txt.textContent = text;
+}
+
+function pvpQuickCancel() {
+  _qmAborted = true;
+  if (_qmPeer) { try { _qmPeer.destroy(); } catch(e){} _qmPeer = null; }
+  pvpQuickSetStatus('Search cancelled.', 'idle');
+  document.getElementById('pvpQuickBtn').style.display = '';
+  document.getElementById('pvpQuickCancelBtn').style.display = 'none';
+  document.getElementById('pvpQuickHostBox').style.display = 'none';
+}
+
+async function pvpQuickMatch() {
+  if (_qmSearching) return;
+  _qmSearching = true;
+  _qmAborted   = false;
+  document.getElementById('pvpQuickBtn').style.display = 'none';
+  document.getElementById('pvpQuickCancelBtn').style.display = '';
+  document.getElementById('pvpQuickHostBox').style.display = 'none';
+  pvpQuickSetStatus('Searching for open games…', 'waiting');
+
+  // ── Step 1: Probe each QM slot for an active host ──
+  for (let slot = 0; slot < QM_SLOTS; slot++) {
+    if (_qmAborted) { _qmSearching = false; return; }
+    const slotId = QM_PREFIX + slot;
+    pvpQuickSetStatus('Probing slot ' + slot + ' of ' + (QM_SLOTS-1) + '…', 'waiting');
+
+    const found = await _qmProbeSlot(slotId);
+    if (_qmAborted) { _qmSearching = false; return; }
+
+    if (found) {
+      // Found an open host — join it via the normal join flow
+      pvpQuickSetStatus('Open game found! Connecting…', 'waiting');
+      NetworkManager.onStatus((txt, state) => {
+        pvpQuickSetStatus(txt, state);
+      });
+      NetworkManager.join(slotId);
+      _qmSearching = false;
+      return;
+    }
+  }
+
+  // ── Step 2: No host found — become a host on the first free slot ──
+  if (_qmAborted) { _qmSearching = false; return; }
+  pvpQuickSetStatus('No open games — hosting now…', 'waiting');
+
+  // Find a free slot by trying to register as a peer on each ID
+  let hostedSlot = -1;
+  for (let slot = 0; slot < QM_SLOTS; slot++) {
+    if (_qmAborted) { _qmSearching = false; return; }
+    const slotId = QM_PREFIX + slot;
+    const claimed = await _qmClaimSlot(slotId);
+    if (_qmAborted) { _qmSearching = false; return; }
+    if (claimed) { hostedSlot = slot; break; }
+  }
+
+  if (hostedSlot < 0) {
+    pvpQuickSetStatus('All lobby slots busy. Try again shortly.', 'error');
+    document.getElementById('pvpQuickBtn').style.display = '';
+    document.getElementById('pvpQuickCancelBtn').style.display = 'none';
+    _qmSearching = false;
+    return;
+  }
+
+  // Successfully registered — now wait for a challenger
+  const code = QM_PREFIX + hostedSlot;
+  document.getElementById('pvpQuickHostBox').style.display = 'block';
+  document.getElementById('pvpQuickCode').textContent = code;
+  pvpQuickSetStatus('Waiting for a challenger on slot ' + hostedSlot + '…', 'waiting');
+
+  // The _qmPeer is already open from _qmClaimSlot — wire it up as a full host
+  _pvpWireQMHost(_qmPeer);
+  _qmSearching = false;
+}
+
+/** Probe a QM slot: try connecting briefly. If connection opens → host is alive.
+ *  Returns a Promise<boolean>. */
+function _qmProbeSlot(slotId) {
+  return new Promise(resolve => {
+    let done = false;
+    let probe = null;
+    let tempPeer = null;
+
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try { if (probe) probe.close(); } catch(e){}
+      try { if (tempPeer) tempPeer.destroy(); } catch(e){}
+      resolve(result);
+    };
+
+    // We need a temporary peer to attempt the connection
+    tempPeer = new Peer();
+    tempPeer.on('open', () => {
+      try {
+        probe = tempPeer.connect(slotId, { reliable: false });
+        probe.on('open',  () => finish(true));   // slot is live
+        probe.on('error', () => finish(false));
+      } catch(e) { finish(false); }
+    });
+    tempPeer.on('error', () => finish(false));
+
+    const timer = setTimeout(() => finish(false), QM_PROBE_MS);
+  });
+}
+
+/** Try to claim a QM slot by registering as a Peer with that ID.
+ *  PeerJS returns unavailable-id error if slot is taken.
+ *  Returns Promise<boolean> — true if slot was successfully claimed. */
+function _qmClaimSlot(slotId) {
+  return new Promise(resolve => {
+    let done = false;
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      if (!result && _qmPeer) {
+        try { _qmPeer.destroy(); } catch(e){}
+        _qmPeer = null;
+      }
+      resolve(result);
+    };
+
+    try {
+      _qmPeer = new Peer(slotId);
+      _qmPeer.on('open', () => finish(true));       // slot claimed
+      _qmPeer.on('error', e => {
+        if (e.type === 'unavailable-id') finish(false); // slot taken
+        else finish(false);
+      });
+    } catch(e) { finish(false); }
+
+    setTimeout(() => finish(false), 3000); // safety timeout
+  });
+}
+
+/** Wire the already-open QM host peer to behave like a normal PvP host */
+function _pvpWireQMHost(peer) {
+  // Select a random map for quick match
+  const mapId = PVP_MAPS[Math.floor(Math.random() * PVP_MAPS.length)].id;
+  NetworkManager.setSelectedMap(mapId);
+
+  peer.on('connection', conn => {
+    pvpQuickSetStatus('Challenger found! Starting…', 'connected');
+    document.getElementById('pvpQuickHostBox').style.display = 'none';
+
+    // Re-use the NetworkManager internal state by directly injecting the connection
+    // We do this by calling through the public host path after injecting the peer
+    // (simplest: relay through NetworkManager's existing host flow)
+    NetworkManager._injectQMPeerAndConn(peer, conn, mapId);
+    conn.on('data', d => NetworkManager.processMessage(d));
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// NetworkManager extension: inject a pre-created QM peer/conn
+// ─────────────────────────────────────────────────────────────────
+NetworkManager._injectQMPeerAndConn = function(peer, conn, mapId) {
+  // Expose internal state setters needed for QM host injection
+  // The closure vars are inaccessible, so we trigger the handshake
+  // manually via the existing message protocol.
+  const seed = (Math.random() * 0xFFFFFFFF) >>> 0;
+  SeededRNG.seed(seed);
+  conn.on('open', () => {
+    // Send INIT_ACK directly since we are the host
+    const msg = JSON.stringify({
+      v: 'nindo-pvp-v1',
+      type: 'INIT_ACK',
+      payload: { seed, mapId, oppId: peer.id },
+      turnId: 0
+    });
+    try { conn.send(msg); } catch(e) {}
+    pvpQuickSetStatus('Synced — launching match!', 'connected');
+    // Update NetworkManager's connection tracking via a synthetic INIT from us
+    setTimeout(() => {
+      NetworkManager.processMessage(JSON.stringify({
+        v: 'nindo-pvp-v1',
+        type: 'INIT',
+        payload: { peerId: peer.id, seed },
+        turnId: 0
+      }));
+    }, 200);
+    setTimeout(() => {
+      document.getElementById('pvpStatusBar').style.display = 'flex';
+      const pvpMap = PVP_MAPS.find(m => m.id === mapId) || PVP_MAPS[0];
+      showScreen('combat');
+      initPvPCombat({
+        id: 'pvp_' + mapId, name: pvpMap.name,
+        type: 'assassination', desc: pvpMap.desc,
+        terrain: pvpMap.terrain, isPvP: true,
+        isJoiner: false, pvpRows: pvpMap.rows,
+        enemies: [{ type: 'guard', count: 3 }],
+        reward: 0
+      }, pvpMap, false);
+    }, 800);
+  });
+};
 </script>
 </body>
 </html>
