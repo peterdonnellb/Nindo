@@ -1130,6 +1130,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
 @media (max-width: 700px) {
   /* Hide desktop hub nav, show mobile bottom bar */
   .hub-nav .nav-btn, .hub-nav .hub-logo { display: none; }
+  .hub-nav .nav-btn.menu-btn-mobile { display: flex !important; }  /* always show menu button */
   .hub-nav { justify-content: flex-end; height: 44px; padding: 0 0.8rem; background: var(--ink2); }
   .gold-display { font-size: 0.75rem; }
   .mobile-nav { display: block; }
@@ -1451,7 +1452,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
       <button class="nav-btn" onclick="openCodex()" id="nav-codex">Codex</button>
       <button onclick="saveGame(false)" title="Save game" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--mist);font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.08em;padding:0.25rem 0.7rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(201,162,39,0.4)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='var(--mist)'">&#128190; Save</button>
       <div class="gold-display">⚜ <span id="goldDisplay">0</span> Gold</div>
-      <button class="nav-btn" onclick="showScreen('menu')" style="margin-left:0.5rem;color:var(--blood)">⬡ Menu</button>
+      <button class="nav-btn menu-btn-mobile" onclick="showScreen('menu')" style="margin-left:0.5rem;color:var(--blood)">⬡ Menu</button>
     </nav>
     <div class="hub-content">
       <div id="section-clan" class="hub-section"></div>
@@ -1569,6 +1570,7 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
       <div style="width:1px;height:28px;background:rgba(255,255,255,0.1)"></div>
       <button class="action-btn" id="btnUndoMove" onclick="undoMove()" style="border-color:rgba(255,200,60,0.35);color:#ffcc33">↩ Undo<span class="kbd-hint">Z</span></button>
       <button class="action-btn end-turn" id="btnEndTurn" onclick="finishAllyTurn()">⊳ End Turn<span class="kbd-hint">Enter</span></button>
+      <button class="action-btn" id="btnPvpEndPhase" onclick="pvpEndPhase()" style="display:none;border-color:rgba(80,160,255,0.5);color:#88ccff;font-weight:bold">⚔ End Phase</button>
       <div style="display:flex;flex-direction:column;gap:2px;margin-left:0.3rem">
         <div id="actionLabel" style="font-family:'Cinzel',serif;font-size:0.65rem;color:var(--mist)"></div>
         <div id="facingLabel" style="font-family:'Cinzel',serif;font-size:0.55rem;color:rgba(201,162,39,0.6)"></div>
@@ -5972,6 +5974,8 @@ function initCombat(mission, partyIds) {
   CS.active = true;
   CS._endingCombat = false;
   CS.smokeClouds = [];
+  // Reset fog of war for the new combat
+  fogInitHook();
   CS.mission = mission;
   CS.turn = 0;
   CS.phase = 'enemy_acting';
@@ -6088,7 +6092,7 @@ function initCombat(mission, partyIds) {
       carriedItems: JSON.parse(JSON.stringify(n.carriedItems || [])),
 
       armorItem: null,
-      facing: 'south',
+      facing: 'east',
       ct: Math.floor(Math.random() * 40),  // ATB charge (0-100 = ready)
       spd: CLASSES[n.class]?.baseStats?.spd || 5,
       // Job system fields (copied from GS ninja)
@@ -7356,8 +7360,12 @@ function drawCanvas() {
     });
   }
 
-  // Draw enemies
-  CS.enemies.filter(e => e.hp > 0).forEach(e => {
+  // ── FOG OF WAR OVERLAY (after tiles, before units) ──
+  FOG.drawFog(ctx, cs);
+
+  // Draw enemies — hidden by fog unless in visible tile
+  CS.enemies.filter(e => e.hp > 0 && !e.perished).forEach(e => {
+    if (!FOG.isVisible(e.x, e.y)) return;
     const _ent = Date.now();
     const isBlinded = e.status === 'blinded' || e.status === 'confused';
     // Blinded enemies pulse with a grey overlay
@@ -7461,7 +7469,7 @@ function drawCanvas() {
 
     // Try Prisoner.png sprite (directional rotation same as other sprites)
     const _prImg = getImg('Prisoner.png');
-    const _prFacing = _pr.facing || 'south';
+    const _prFacing = _pr.facing || 'east';
     const _prAngle = FACING_ANGLE[_prFacing] ?? 0;
     const _prSize = cs * 0.82;
     if (_prImg && _prImg.naturalWidth > 0) {
@@ -7632,7 +7640,7 @@ function drawUnit(ctx, unit, fillColor, textColor, isAlly, selected = false) {
 
   // Resolve sprite image: allies use class image, enemies use type image
   const sheet = isAlly ? getImg(classPng(unit.class)) : getImg(enemySheetKey(unit.type));
-  const facing = unit.facing || 'south';
+  const facing = unit.facing || 'east';
 
   // ── Selection glow ──
   if (selected) {
@@ -7820,10 +7828,13 @@ function setAction(action) {
     CS.highlightedTiles = getReachableTiles(ally.x, ally.y, range, ally.gridId);
   } else if (action === 'attack') {
     const range = ally.weapon?.range || 1;
-    CS.highlightedTiles = getAttackTiles(ally.x, ally.y, range);
+    // Only highlight attack tiles that are in visible fog zones
+    CS.highlightedTiles = getAttackTiles(ally.x, ally.y, range)
+      .filter(t => FOG.isVisible(t.x, t.y));
   } else if (action === 'special') {
     const range = ally.weapon?.range || 2;
-    CS.highlightedTiles = getAttackTiles(ally.x, ally.y, range + 1);
+    CS.highlightedTiles = getAttackTiles(ally.x, ally.y, range + 1)
+      .filter(t => FOG.isVisible(t.x, t.y));
   } else if (action === 'item') {
     const banner2 = document.getElementById('actionModeBanner');
     if (banner2) { banner2.textContent = ''; banner2.className = ''; }
@@ -7860,12 +7871,207 @@ function hasLineOfSight(x1, y1, x2, y2) {
   return true;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// FOG OF WAR SYSTEM
+// - visibility[][]   : 0=unseen, 1=remembered(dimmed), 2=visible(clear)
+// - explored[][]     : true if tile was ever seen (for memory rendering)
+// - updateFogOfWar() : recomputes from all ally positions each turn
+// - drawFog()        : renders fog overlay onto the canvas
+// Works in both singleplayer and PvP (opponent units hidden unless visible)
+// ═══════════════════════════════════════════════════════════════
+
+const FOG = {
+  UNSEEN:     0,
+  REMEMBERED: 1,
+  VISIBLE:    2,
+
+  // Sight ranges per tile type — some terrain reduces sight
+  SIGHT_RANGE: 5,        // default tiles per unit
+  SIGHT_MODIFIERS: {
+    forest: -1, shadow: -1, rubble: -0.5
+  },
+
+  enabled: true,         // can be toggled (disabled in SP tutorial)
+
+  // Core state — reset on initCombat
+  visibility: [],        // [y][x] → 0|1|2
+  explored:   [],        // [y][x] → bool
+
+  reset(W, H) {
+    this.visibility = Array.from({length:H}, () => new Uint8Array(W));
+    this.explored   = Array.from({length:H}, () => new Uint8Array(W));
+  },
+
+  // Update visibility from all ally positions each turn
+  update() {
+    if (!this.enabled || !CS.grid || !CS.gridW) return;
+    const W = CS.gridW, H = CS.gridH;
+    if (!this.visibility.length) this.reset(W, H);
+
+    // Decay all currently-visible tiles to REMEMBERED
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++)
+        if (this.visibility[y][x] === FOG.VISIBLE)
+          this.visibility[y][x] = FOG.REMEMBERED;
+
+    // Compute from every alive ally
+    const observers = CS.allies.filter(a => isAllyAlive(a) && !a.escaped);
+    observers.forEach(a => this._computeSight(a.x, a.y, a));
+  },
+
+  _computeSight(ox, oy, unit) {
+    const W = CS.gridW, H = CS.gridH;
+    const weaponBonus = (unit?.weapon?.type === 'ranged') ? 2 : 0;
+    const ownMod = FOG.SIGHT_MODIFIERS[CS.grid[oy]?.[ox] || 'empty'] || 0;
+    const range  = Math.max(1, FOG.SIGHT_RANGE + weaponBonus + ownMod);
+    this._markVisible(ox, oy);
+
+    // Directional cone based on unit facing
+    const FACING_ANGLE = { east:0, south:Math.PI/2, west:Math.PI, north:-Math.PI/2 };
+    const fa = FACING_ANGLE[unit?.facing || 'east'] ?? 0;
+    const FORWARD = Math.PI * 2/3;  // 120° forward cone at full range
+    const PERIPH  = Math.PI;        // 180° (full forward half) at reduced range
+    const RAYS = 360;
+
+    for (let r = 0; r < RAYS; r++) {
+      const angle = (r / RAYS) * Math.PI * 2;
+      let diff = angle - fa;
+      while (diff >  Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      const abs = Math.abs(diff);
+
+      let eff;
+      if (abs <= FORWARD / 2) {
+        const c = 1 - abs / (FORWARD / 2);
+        eff = Math.round(range * (0.6 + c * 0.4));
+      } else if (abs <= PERIPH / 2) {
+        eff = Math.max(1, Math.round(range * 0.4));
+      } else {
+        eff = 1; // rear — 1 tile only
+      }
+
+      const dx = Math.cos(angle), dy = Math.sin(angle);
+      let fx = ox + 0.5, fy = oy + 0.5;
+      for (let s = 0; s < eff; s++) {
+        fx += dx; fy += dy;
+        const tx = Math.floor(fx), ty = Math.floor(fy);
+        if (tx < 0 || ty < 0 || tx >= W || ty >= H) break;
+        this._markVisible(tx, ty);
+        const k = CS.grid[ty]?.[tx] || 'empty';
+        const t = TERRAIN_TILES[k] || TERRAIN_TILES.empty;
+        if (!t.passable && k !== 'gate' && k !== 'exit') break;
+      }
+    }
+  },
+
+  _markVisible(x, y) {
+    this.visibility[y][x] = FOG.VISIBLE;
+    this.explored[y][x]   = 1;
+  },
+
+  // Returns true if tile (x,y) is currently visible to local player's team
+  isVisible(x, y) {
+    if (!this.enabled) return true;
+    if (y < 0 || x < 0 || y >= this.visibility.length) return false;
+    return this.visibility[y]?.[x] === FOG.VISIBLE;
+  },
+
+  isExplored(x, y) {
+    if (!this.enabled) return true;
+    if (y < 0 || x < 0 || y >= this.explored.length) return false;
+    return !!this.explored[y]?.[x];
+  },
+
+  // Draw fog overlay onto canvas ctx AFTER tiles but BEFORE units
+  drawFog(ctx, cs) {
+    if (!this.enabled || !this.visibility.length) return;
+    const W = CS.gridW, H = CS.gridH;
+
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const vis = this.visibility[y]?.[x] ?? FOG.UNSEEN;
+        const px  = x * cs, py = y * cs;
+
+        if (vis === FOG.UNSEEN) {
+          // Completely black — never visited
+          ctx.fillStyle = 'rgba(0,0,0,0.94)';
+          ctx.fillRect(px, py, cs, cs);
+        } else if (vis === FOG.REMEMBERED) {
+          // Explored but not currently visible — dark desaturated overlay
+          ctx.fillStyle = 'rgba(10,10,25,0.70)';
+          ctx.fillRect(px, py, cs, cs);
+          // Subtle vignette at edges of remembered zone
+          const grad = ctx.createRadialGradient(px+cs/2,py+cs/2,0,px+cs/2,py+cs/2,cs*0.7);
+          grad.addColorStop(0,'rgba(0,0,0,0)');
+          grad.addColorStop(1,'rgba(0,0,0,0.25)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(px, py, cs, cs);
+        }
+        // FOG.VISIBLE → no overlay
+      }
+    }
+
+    // Soft edge between visible and fog using a subtle blur simulation
+    // (draw a slightly-transparent ring at each visible boundary tile)
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        if ((this.visibility[y]?.[x] ?? 0) !== FOG.VISIBLE) continue;
+        const px = x * cs, py = y * cs;
+        // Check if any orthogonal neighbour is in fog
+        const adj = [[1,0],[-1,0],[0,1],[0,-1]];
+        const edgeCount = adj.filter(([dx,dy]) => {
+          const nx=x+dx, ny=y+dy;
+          return (this.visibility[ny]?.[nx] ?? FOG.UNSEEN) < FOG.VISIBLE;
+        }).length;
+        if (edgeCount > 0) {
+          // Soft vignette toward fog edge
+          const grad2 = ctx.createRadialGradient(px+cs/2,py+cs/2,cs*0.2,px+cs/2,py+cs/2,cs*0.85);
+          grad2.addColorStop(0,'rgba(0,0,0,0)');
+          grad2.addColorStop(1,'rgba(0,0,10,0.22)');
+          ctx.fillStyle = grad2;
+          ctx.fillRect(px, py, cs, cs);
+        }
+      }
+    }
+  },
+
+  // In PvP: merge visibility from a network snapshot (opponent shared vision for units in smoke etc.)
+  mergeRemoteVisibility(remoteVis) {
+    if (!remoteVis || !this.visibility.length) return;
+    const H = Math.min(remoteVis.length, this.visibility.length);
+    for (let y = 0; y < H; y++) {
+      const W = Math.min((remoteVis[y]?.length || 0), this.visibility[y]?.length || 0);
+      for (let x = 0; x < W; x++) {
+        // Take the maximum visibility of either player (shared vision)
+        const remote = remoteVis[y]?.[x] ?? 0;
+        if (remote > this.visibility[y][x]) {
+          this.visibility[y][x] = remote;
+          if (remote > 0) this.explored[y][x] = 1;
+        }
+      }
+    }
+  }
+};
+
+// ── Integration hooks ──────────────────────────────────────────
+
+// Call at start of each unit's turn to refresh visibility
+function updateFogOfWar() {
+  if (FOG.enabled && CS.active) FOG.update();
+}
+
+// Reset fog when combat starts
+const _origInitCombatFog = typeof initCombat === 'function';
+function fogInitHook() {
+  if (CS.gridW && CS.gridH) FOG.reset(CS.gridW, CS.gridH);
+  FOG.enabled = true;
+}
+
 function getReachableTiles(startX, startY, range, excludeId) {
-  // BFS with movement costs — respects terrain and height differences
+  // BFS with movement costs
   const unit = [...CS.allies, ...CS.enemies].find(u => u.gridId === excludeId || u.id === excludeId);
   const jumpStat = getUnitJump(unit);
   const ignoreDifficult = unit ? hasMovementAbility(unit, 'ignore_difficult') : false;
-
   const visited = new Map();
   const queue = [{ x: startX, y: startY, cost: 0 }];
   visited.set(startX + ',' + startY, 0);
@@ -7993,6 +8199,8 @@ document.getElementById('combatCanvas').addEventListener('click', function(e) {
     ally.x = gx; ally.y = gy;
     ally.facing = 'south';
     CS.unitMoved = true;
+  // Update fog after move so directional cone follows the unit
+  updateFogOfWar();
     CS.selectedAction = null;
     CS.highlightedTiles = [];
     addLog(ally.name + ' shadow-steps into the darkness!', 'special');
@@ -8395,6 +8603,7 @@ function handleMove(ally, tx, ty) {
     ally.facing = dy > 0 ? 'south' : 'north';
   }
   ally.x = tx; ally.y = ty;
+  if (typeof pvpBroadcastMove === 'function') pvpBroadcastMove(ally, tx, ty);
   // ── SFX: terrain step sounds ──
   const _stepTileKey = CS.grid[ty]?.[tx] || 'empty';
   if (_stepTileKey === 'water')  SFX.play('sfx_terrain_water.mp3',  0.75);
@@ -8683,6 +8892,8 @@ function handleAttack(ally, tx, ty) {
     const _wSfx = _wType ? (WEAPON_SFX[_wType] || 'sfx_blade_hit.mp3') : 'sfx_unarmed_hit.mp3';
     SFX.play(_wSfx);
     if (dmg >= 30) SFX.play('sfx_combat_crit.mp3', 0.9);
+    // PvP: broadcast attack so opponent can apply damage to their ally
+    if (typeof pvpBroadcastAttack === 'function') pvpBroadcastAttack(ally, target, dmg);
     // Ranged/thrown: delay the damage float so audio starts before the number appears
     const _atkDelay = (_wType === 'ranged' || _wType === 'thrown') ? 120 : 0;
     applyDamage(target, dmg, hitLabel, _atkDelay);
@@ -9770,10 +9981,14 @@ function advanceCT() {
 }
 
 function getAllLiveUnits() {
-  return [
-    ...CS.allies.filter(a => isAllyActive(a) && !a.escaped),
-    ...CS.enemies.filter(e => e.hp > 0)
-  ];
+  const allies = CS.allies.filter(a => isAllyActive(a) && !a.escaped);
+  // In PvP: exclude opponent's units from the local ATB — they're driven by network messages
+  const enemies = CS.enemies.filter(e => {
+    if (e.hp <= 0) return false;
+    if (CS.mission?.isPvP && e.ai === 'pvp') return false;
+    return true;
+  });
+  return [...allies, ...enemies];
 }
 
 // Calculate upcoming turn order for display (does not modify actual CT)
@@ -9798,48 +10013,50 @@ function calcTurnOrder(count) {
   return order;
 }
 
- function beginUnitTurn(unit) {
-   CS.activeUnit = unit.gridId || unit.id;
-   CS.unitMoved = false;
-   CS.unitActed = false;
-   CS.savedMove = null;
-   CS.selectedEnemy = null;
+function beginUnitTurn(unit) {
+  CS.activeUnit = unit.gridId || unit.id;
+  CS.unitMoved = false;
+  CS.unitActed = false;
+  CS.savedMove = null;
+  CS.selectedEnemy = null;
 
-   // PvP: notify which side is now active (shows/hides opponent overlay)
-   if (typeof pvpOnUnitTurnStart === 'function') pvpOnUnitTurnStart(unit);
+  // PvP: show/hide opponent overlay
+  if (typeof pvpOnUnitTurnStart === 'function') pvpOnUnitTurnStart(unit);
 
-   if (unit.gridId) {
-     // ALLY turn
-     unit.chi = Math.min(unit.maxChi, unit.chi + 1); // chi regen
-     CS.selectedAlly = unit.gridId;
-     CS.phase = 'player';
-     CS.turn++;
-     addLog('--- ' + unit.name + '\'s turn (SPD ' + (unit.spd||5) + ') ---', 'system');
-     if (CS.turnLimit > 0) {
-       const left = CS.turnLimit - CS.turn + 1;
-       if (left <= 3) addLog('\u23f3 ' + left + ' turn' + (left !== 1 ? 's' : '') + ' remaining!', 'system');
-     }
-     // Flash phase banner
-     _showPhaseBanner(unit.name + "'s Turn", '#f0c040');
-     SFX.play('sfx_ui_turn_start.mp3', 0.5);
-     renderCombat();
-     checkCombatEnd();
-   } else {
-     // ENEMY turn — in PvP the "enemy" is the opponent's real ninja
-     CS.phase = 'enemy_acting';
-     if (CS.mission?.isPvP && unit.ai === 'pvp') {
-       // Opponent's unit: show their banner, do NOT run AI
-       // Their machine will send ACTION messages; END_UNIT_TURN will resume advanceCT here
-       _showPhaseBanner(unit.name + "'s Turn", '#4488cc');
-       renderCombat();
-       // No setTimeout/runEnemyUnitTurn — we wait for network messages
-     } else {
-       _showPhaseBanner('Enemy Phase', '#e74c3c');
-       renderCombat();
-       setTimeout(() => runEnemyUnitTurn(unit), 400);
-     }
-   }
- }
+  // Refresh fog of war
+  updateFogOfWar();
+
+  if (unit.gridId) {
+    // ── ALLY turn (local player always controls CS.allies) ──
+    unit.chi = Math.min(unit.maxChi, unit.chi + 1);
+    CS.selectedAlly = unit.gridId;
+    CS.phase = 'player';
+    CS.turn++;
+    addLog('--- ' + unit.name + "'s turn (SPD " + (unit.spd||5) + ') ---', 'system');
+    if (CS.turnLimit > 0) {
+      const left = CS.turnLimit - CS.turn + 1;
+      if (left <= 3) addLog('\u23f3 ' + left + ' turn' + (left !== 1 ? 's' : '') + ' remaining!', 'system');
+    }
+    _showPhaseBanner(unit.name + "'s Turn", '#f0c040');
+    SFX.play('sfx_ui_turn_start.mp3', 0.5);
+    renderCombat();
+    checkCombatEnd();
+  } else {
+    // ── ENEMY turn ──
+    CS.phase = 'enemy_acting';
+    if (CS.mission?.isPvP && unit.ai === 'pvp') {
+      // Opponent's unit — show banner, wait for their ACTION + END_UNIT_TURN messages
+      _showPhaseBanner(unit.name + "'s Turn", '#4488cc');
+      renderCombat();
+      // The opponent's machine calls finishAllyTurn → sends END_UNIT_TURN
+      // which triggers _oppUnitTurnDone() → advanceCT on our machine
+    } else {
+      _showPhaseBanner('Enemy Phase', '#e74c3c');
+      renderCombat();
+      setTimeout(() => runEnemyUnitTurn(unit), 400);
+    }
+  }
+}
 
 function _showPhaseBanner(text, color) {
   const banner = document.getElementById('phaseBanner');
@@ -10014,10 +10231,11 @@ function undoMove() {
 }
 
 function finishAllyTurn() {
-  // PvP lockstep intercept — if we're in PvP mode and still waiting,
-  // block the normal turn flow and route through the network instead.
+  // PvP lockstep intercept — sends current unit state to opponent
   if (typeof pvpInterceptFinishAllyTurn === 'function' && pvpInterceptFinishAllyTurn()) return;
   const ally = CS.allies.find(a => a.gridId === CS.activeUnit);
+  // Mark unit as having acted this round (for PvP End Phase tracking)
+  if (ally) ally.unitActedThisRound = true;
   if (!ally) return;
 
   // Build a brief turn summary before clearing state
@@ -13079,6 +13297,38 @@ console.log('[NINDO Tactics v2] Systems loaded: Terrain · Height · Movement ·
       <button class="pvp-tab" onclick="pvpSelectTab('join')">⛩ Join</button>
       <button class="pvp-tab" onclick="pvpSelectTab('quick')">⚡ Quick Match</button>
     </div>
+
+    <!-- HOST TAB -->
+    <div id="pvp-tab-host" class="pvp-tab-body active">
+      <div class="pvp-status">
+        <div class="pvp-dot idle" id="pvpHostDot"></div>
+        <span id="pvpHostStatusText">Press Host to generate a room code</span>
+      </div>
+      <div class="pvp-room-box" id="pvpRoomBox" style="display:none">
+        <div style="font-size:0.6rem;color:var(--mist);margin-bottom:0.4rem">YOUR ROOM CODE</div>
+        <div class="pvp-room-id" id="pvpRoomId" onclick="pvpCopyCode()" title="Click to copy">—</div>
+        <div class="pvp-room-hint">Share this code · Click to copy</div>
+      </div>
+      <div style="font-size:0.62rem;color:var(--mist);margin:0.6rem 0 0.3rem">Choose PvP Map:</div>
+      <div class="pvp-map-choice" id="pvpMapChoice"></div>
+      <button class="pvp-btn primary" id="pvpHostBtn" onclick="pvpHost()">⚔ Host Game</button>
+      <button class="pvp-btn secondary" onclick="showScreen('menu')" style="margin-top:0.4rem">← Back to Menu</button>
+    </div>
+
+    <!-- JOIN TAB -->
+    <div id="pvp-tab-join" class="pvp-tab-body">
+      <div class="pvp-status">
+        <div class="pvp-dot idle" id="pvpJoinDot"></div>
+        <span id="pvpJoinStatusText">Enter room code to connect</span>
+      </div>
+      <input class="pvp-input" id="pvpJoinCode" placeholder="e.g. NINDO-AB3K7Z" maxlength="20"
+        oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-]/g,'')">
+      <div style="font-size:0.55rem;color:var(--mist);text-align:center;margin-top:-0.3rem;margin-bottom:0.4rem">Enter the full room code shown on the host's screen</div>
+      <button class="pvp-btn primary" onclick="pvpJoin()">🔗 Connect</button>
+      <button class="pvp-btn secondary" onclick="showScreen('menu')" style="margin-top:0.4rem">← Back to Menu</button>
+    </div>
+
+    <!-- QUICK MATCH TAB -->
     <div id="pvp-tab-quick" class="pvp-tab-body">
       <div style="text-align:center;font-size:0.62rem;color:var(--mist);margin-bottom:0.8rem;line-height:1.6">
         Searches for an open game. If none found,<br>you become the host and wait for a challenger.
@@ -13094,31 +13344,6 @@ console.log('[NINDO Tactics v2] Systems loaded: Terrain · Height · Movement ·
       </div>
       <button class="pvp-btn primary" id="pvpQuickBtn" onclick="pvpQuickMatch()">⚡ Find Match</button>
       <button class="pvp-btn secondary" id="pvpQuickCancelBtn" onclick="pvpQuickCancel()" style="display:none;margin-top:0.4rem">✕ Cancel</button>
-      <button class="pvp-btn secondary" onclick="showScreen('menu')" style="margin-top:0.4rem">← Back to Menu</button>
-    </div>
-      <div class="pvp-status">
-        <div class="pvp-dot idle" id="pvpHostDot"></div>
-        <span id="pvpHostStatusText">Press Host to generate a room code</span>
-      </div>
-      <div class="pvp-room-box" id="pvpRoomBox" style="display:none">
-        <div style="font-size:0.6rem;color:var(--mist);margin-bottom:0.4rem">YOUR ROOM CODE</div>
-        <div class="pvp-room-id" id="pvpRoomId" onclick="pvpCopyCode()" title="Click to copy">—</div>
-        <div class="pvp-room-hint">Share this code · Click to copy</div>
-      </div>
-      <div style="font-size:0.62rem;color:var(--mist);margin:0.6rem 0 0.3rem">Choose PvP Map:</div>
-      <div class="pvp-map-choice" id="pvpMapChoice"></div>
-      <button class="pvp-btn primary" id="pvpHostBtn" onclick="pvpHost()">⚔ Host Game</button>
-      <button class="pvp-btn secondary" onclick="showScreen('menu')" style="margin-top:0.4rem">← Back to Menu</button>
-    </div>
-    <div id="pvp-tab-join" class="pvp-tab-body">
-      <div class="pvp-status">
-        <div class="pvp-dot idle" id="pvpJoinDot"></div>
-        <span id="pvpJoinStatusText">Enter room code to connect</span>
-      </div>
-      <input class="pvp-input" id="pvpJoinCode" placeholder="e.g. NINDO-AB3K7Z" maxlength="20"
-        oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-]/g,'')">
-      <div style="font-size:0.55rem;color:var(--mist);text-align:center;margin-top:-0.3rem;margin-bottom:0.4rem">Enter the full room code shown on the host's screen</div>
-      <button class="pvp-btn primary" onclick="pvpJoin()">🔗 Connect</button>
       <button class="pvp-btn secondary" onclick="showScreen('menu')" style="margin-top:0.4rem">← Back to Menu</button>
     </div>
   </div>
@@ -13142,547 +13367,623 @@ console.log('[NINDO Tactics v2] Systems loaded: Terrain · Height · Movement ·
 ═══════════════════════════════════════════════════════════════ -->
 <script>
 // ═══════════════════════════════════════════════════════════════
-// NINDO TACTICS — PVP SYSTEM v2
-// True peer-to-peer combat: host = left side, joiner = right side.
-// Both players control their own units. Actions are transmitted
-// and applied on both machines deterministically.
+// NINDO TACTICS — PVP SYSTEM v3
+// Fixed interleaved turn order. End Turn = End Unit Turn.
+// Both sides see the same sequence; network carries unit actions.
 // ═══════════════════════════════════════════════════════════════
 
-// ─── Seeded RNG (mulberry32) ─────────────────────────────────
 const SeededRNG = (() => {
-  let _s = 0;
-  function _m32(s) {
-    s = s + 0x6D2B79F5 | 0;
-    let t = Math.imul(s ^ s>>>15, 1|s);
-    t = t + Math.imul(t ^ t>>>7, 61|t) ^ t;
-    return ((t ^ t>>>14) >>> 0) / 4294967296;
-  }
-  return {
-    seed(n) { _s = n>>>0; },
-    next()  { _s = (_s * 1664525 + 1013904223)>>>0; return _m32(_s); },
-    random(){ return this.next(); }
-  };
+  let _s=0;
+  function _m32(s){s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}
+  return{seed(n){_s=n>>>0;},next(){_s=(_s*1664525+1013904223)>>>0;return _m32(_s);},random(){return this.next();}};
 })();
 
-// ─── PvP Maps ───────────────────────────────────────────────
-const PVP_MAPS = [
-  { id:'pvp_bridge',    name:'Iron Bridge',     terrain:'fortress', desc:'Control the elevated centre to dominate.',
-    rows:['WWWWWWWWWWWWWW','W..2.......2.W','W..2.......2.W','W....22222...W','W....21112...W','E....21112...W','E....21112...W','W....22222...W','W..2.......2.W','W..2.......2.W','W............W','WWWWWWWWWWWWWW'] },
-  { id:'pvp_courtyard', name:'Hidden Courtyard', terrain:'village',  desc:'Shadow alleys and roof perches.',
-    rows:['WWWWWWWWWWWWWW','W.rr.......rrW','E.rr.......rrW','WWWWGWWWWGWWWW','W.SS.......SSW','E.SS.......SSW','E.SS.......SSW','WWWWGWWWWGWWWW','W.rr.......rrW','E.rr.......rrW','W............W','WWWWWWWWWWWWWW'] },
-  { id:'pvp_forest',    name:'Twilight Grove',  terrain:'forest',   desc:'Dense trees — stealth is paramount.',
-    rows:['WWWWWWWWWWWWWW','W.FFF.....FFFW','E.FFF.....FFFW','W.F..........W','W.F...SS.....W','E.....SS.....W','E.....SS.....W','W.F..........W','W.FFF.....FFFW','E.FFF.....FFFW','W............W','WWWWWWWWWWWWWW'] },
-  { id:'pvp_ruins',     name:'Shattered Keep',  terrain:'castle',   desc:'Crumbled walls — height wins fights.',
-    rows:['WWWWWWWWWWWWWW','W...1.......1W','E...1.......1W','W...1WWWWW1..W','W.........1..W','E.RR....RR...W','E.RR....RR...W','W.........1..W','W...1WWWWW1..W','E...1.......1W','W............W','WWWWWWWWWWWWWW'] },
-  { id:'pvp_canals',    name:'Night Canals',    terrain:'docks',    desc:'Water lanes favour ranged units.',
-    rows:['WWWWWWWWWWWWWW','W..S.......S.W','E..S.......S.W','W..S~~...~~S.W','W..S~~...~~S.W','E............W','E............W','W..S~~...~~S.W','W..S~~...~~S.W','E..S.......S.W','W............W','WWWWWWWWWWWWWW'] },
-  { id:'pvp_dojo',      name:'Storm Dojo',      terrain:'fortress', desc:'Open floor — pure skill test.',
-    rows:['WWWWWWWWWWWWWW','W1...........W','E1...........W','W1.R.......R.W','W............W','E....2...2...W','E....2...2...W','W............W','W.R.......R.1W','E...........1W','W...........1W','WWWWWWWWWWWWWW'] },
+const PVP_MAPS=[
+  {id:'pvp_bridge',name:'Iron Bridge',terrain:'fortress',desc:'Control the elevated centre.',
+   rows:['WWWWWWWWWWWWWW','W..2.......2.W','W..2.......2.W','W....22222...W','W....21112...W','E....21112...W','E....21112...W','W....22222...W','W..2.......2.W','W..2.......2.W','W............W','WWWWWWWWWWWWWW']},
+  {id:'pvp_courtyard',name:'Hidden Courtyard',terrain:'village',desc:'Shadow alleys and roof perches.',
+   rows:['WWWWWWWWWWWWWW','W.rr.......rrW','E.rr.......rrW','WWWWGWWWWGWWWW','W.SS.......SSW','E.SS.......SSW','E.SS.......SSW','WWWWGWWWWGWWWW','W.rr.......rrW','E.rr.......rrW','W............W','WWWWWWWWWWWWWW']},
+  {id:'pvp_forest',name:'Twilight Grove',terrain:'forest',desc:'Dense trees — stealth paramount.',
+   rows:['WWWWWWWWWWWWWW','W.FFF.....FFFW','E.FFF.....FFFW','W.F..........W','W.F...SS.....W','E.....SS.....W','E.....SS.....W','W.F..........W','W.FFF.....FFFW','E.FFF.....FFFW','W............W','WWWWWWWWWWWWWW']},
+  {id:'pvp_ruins',name:'Shattered Keep',terrain:'castle',desc:'Crumbled walls — height wins.',
+   rows:['WWWWWWWWWWWWWW','W...1.......1W','E...1.......1W','W...1WWWWW1..W','W.........1..W','E.RR....RR...W','E.RR....RR...W','W.........1..W','W...1WWWWW1..W','E...1.......1W','W............W','WWWWWWWWWWWWWW']},
+  {id:'pvp_canals',name:'Night Canals',terrain:'docks',desc:'Water lanes — ranged rules.',
+   rows:['WWWWWWWWWWWWWW','W..S.......S.W','E..S.......S.W','W..S~~...~~S.W','W..S~~...~~S.W','E............W','E............W','W..S~~...~~S.W','W..S~~...~~S.W','E..S.......S.W','W............W','WWWWWWWWWWWWWW']},
+  {id:'pvp_dojo',name:'Storm Dojo',terrain:'fortress',desc:'Open floor — pure skill.',
+   rows:['WWWWWWWWWWWWWW','W1...........W','E1...........W','W1.R.......R.W','W............W','E....2...2...W','E....2...2...W','W............W','W.R.......R.1W','E...........1W','W...........1W','WWWWWWWWWWWWWW']},
 ];
 
 // ─── NetworkManager ──────────────────────────────────────────
-const NetworkManager = (() => {
-  const VER = 'nindo-pvp-v2';
-  let _peer=null, _conn=null;
-  let _isHost=false, _myId=null, _oppId=null;
-  let _sharedSeed=0, _turnId=0;
-  let _pendingActions={};   // { [unitId]: action }
-  let _myTeamData=null;     // serialised clan for handshake
-  let _oppTeamData=null;    // opponent clan received in handshake
-  let _statusCb=null, _selectedMapId=PVP_MAPS[0].id;
-  let _launchPending=null;  // {mapId, isJoiner, oppTeam}
+const NetworkManager=(()=>{
+  const VER='nindo-pvp-v3';
+  let _peer=null,_conn=null,_isHost=false,_myId=null,_oppId=null;
+  let _sharedSeed=0,_turnId=0;
+  let _myTeamData=null,_oppTeamData=null;
+  let _statusCb=null,_selectedMapId=PVP_MAPS[0].id;
+  let _connOpen=false,_sendQueue=[];
 
-  function _send(type, payload={}) {
-    if (!_conn||!_conn.open) return;
-    try { _conn.send(JSON.stringify({v:VER,type,payload,turnId:_turnId})); }
-    catch(e){ console.error('[PvP] send',e); }
+  function _send(type,payload={}){
+    const msg=JSON.stringify({v:VER,type,payload,turnId:_turnId});
+    if(_connOpen&&_conn){try{_conn.send(msg);}catch(e){_sendQueue.push(msg);}}
+    else{_sendQueue.push(msg);}
   }
+  function _flush(){while(_sendQueue.length&&_conn){try{_conn.send(_sendQueue.shift());}catch(e){break;}}}
+  function _wire(conn){
+    _conn=conn;_connOpen=false;
+    conn.on('open',()=>{_connOpen=true;_flush();_status('Opponent connected — syncing…','waiting');});
+    conn.on('data',d=>_recv(d));
+    conn.on('close',()=>{_connOpen=false;_status('Disconnected.','error');});
+    conn.on('error',e=>console.error('[PvP]',e));
+  }
+  function _status(t,s){if(_statusCb)_statusCb(t,s);}
 
-  function _status(txt,state){ if(_statusCb)_statusCb(txt,state); }
-
-  // ── HANDSHAKE FLOW ──
-  // Host waits for HELLO from joiner → sends WELCOME with map+seed+hostTeam
-  // Joiner receives WELCOME → sends READY with its team → both launch
-  function _recv(raw) {
-    let msg;
-    try { msg=JSON.parse(raw); } catch(e){ return; }
-    if(msg.v!==VER){ console.warn('[PvP] proto mismatch',msg.v); return; }
-
+  function _recv(raw){
+    let msg;try{msg=JSON.parse(raw);}catch(e){return;}
+    if(msg.v!==VER){console.warn('[PvP] proto mismatch',msg.v);return;}
     switch(msg.type){
-      case 'HELLO': {
-        // Host receives joiner's presence + team
-        _oppId = msg.payload.peerId;
-        _oppTeamData = msg.payload.team;
-        // Finalise seed by XOR-ing both halves
-        _sharedSeed = (_sharedSeed ^ (msg.payload.seed>>>0))>>>0;
-        SeededRNG.seed(_sharedSeed);
-        // Send back the map, final seed, and host team
-        _send('WELCOME',{
-          seed: _sharedSeed,
-          mapId: _selectedMapId,
-          hostTeam: _myTeamData
-        });
-        _status('Opponent connected — launching…','connected');
-        setTimeout(()=>_launchBothSides(_selectedMapId, false, _oppTeamData), 800);
-        break;
+      case 'HELLO':{
+        _oppId=msg.payload.peerId;_oppTeamData=msg.payload.team;
+        _sharedSeed=(_sharedSeed^(msg.payload.seed>>>0))>>>0;SeededRNG.seed(_sharedSeed);
+        _send('WELCOME',{seed:_sharedSeed,mapId:_selectedMapId,hostTeam:_myTeamData});
+        _status('Connected — launching…','connected');
+        setTimeout(()=>_launch(_selectedMapId,false,_oppTeamData),1000);break;
       }
-      case 'WELCOME': {
-        // Joiner receives host's ack
-        _sharedSeed = msg.payload.seed>>>0;
-        SeededRNG.seed(_sharedSeed);
-        _oppTeamData = msg.payload.hostTeam;
-        _send('READY',{});
+      case 'WELCOME':{
+        _sharedSeed=msg.payload.seed>>>0;SeededRNG.seed(_sharedSeed);
+        _oppTeamData=msg.payload.hostTeam;_send('READY',{});
         _status('Synced — launching…','connected');
-        setTimeout(()=>_launchBothSides(msg.payload.mapId, true, _oppTeamData), 800);
-        break;
+        setTimeout(()=>_launch(msg.payload.mapId,true,_oppTeamData),1000);break;
       }
-      case 'READY': break; // host doesn't need to act on READY
+      case 'READY':break;
+      case 'ACTION':_applyRemoteAction(msg.payload);break;
+       case 'END_TURN':{
+         const u=msg.payload;
+         // Sync acting unit's position
+         const e=CS.enemies.find(x=>x.pvpOrigId===u.unitId||x.id===u.unitId);
+         if(e){
+           if(u.x!==undefined)e.x=u.x;
+           if(u.y!==undefined)e.y=u.y;
+           if(u.hp!==undefined)e.hp=u.hp;
+           if(u.facing)e.facing=u.facing;
+         }
+         // Apply full snapshot of ALL opponent ally units (HP, status, buffs, doom)
+         if(u.alliesSnap&&Array.isArray(u.alliesSnap)){
+           u.alliesSnap.forEach(snap=>{
+             const opp=CS.enemies.find(x=>x.pvpOrigId===snap.id||x.id===snap.id);
+             if(opp){
+               opp.hp=snap.hp; opp.maxHp=snap.maxHp;
+               opp.x=snap.x; opp.y=snap.y; opp.facing=snap.facing;
+               opp.status=snap.status||null;
+               opp.bleeds=snap.bleeds||0; opp.bleedTurns=snap.bleedTurns||0;
+               opp.buffs=snap.buffs||[];
+               opp.doomed=!!snap.doomed; opp.doomCountdown=snap.doomCountdown||0;
+             }
+           });
+         }
+         // Sync smoke/AoE clouds
+         if(u.smokesSnap&&Array.isArray(u.smokesSnap)){
+           if(!CS.smokeClouds)CS.smokeClouds=[];
+           u.smokesSnap.forEach(cloud=>{
+             const ex=CS.smokeClouds.find(c=>c.cx===cloud.cx&&c.cy===cloud.cy&&c.type===cloud.type);
+             if(!ex)CS.smokeClouds.push({...cloud});
+             else ex.turnsLeft=Math.max(ex.turnsLeft,cloud.turnsLeft);
+           });
+         }
+         // Apply HP damage to our own allies that opponent's attacks caused
+         if(u.targetSnaps&&Array.isArray(u.targetSnaps)){
+           u.targetSnaps.forEach(snap=>{
+             const ally=CS.allies.find(a=>a.id===snap.id||a.gridId===snap.gridId);
+             if(ally){
+               ally.hp=snap.hp;
+               if(snap.status)ally.status=snap.status;
+               if(snap.doomed!==undefined&&snap.doomed&&!ally.doomed&&!ally.perished){
+                 ally.doomed=true; ally.doomCountdown=3;
+               }
+               // If already doomed and HP still 0 with countdown expired, mark perished
+               if(ally.hp<=0&&ally.doomed&&(ally.doomCountdown||0)<=0&&!ally.perished){
+                 ally.perished=true;
+               }
+             }
+           });
+         }
+         renderCombat();
+         pvpAdvanceQueue();
+         break;
+       }
+        case 'MATCH_OVER':{
+          // Remote side is informing us of the outcome.
+          // If they say the winner is "me", that means THEY won.
+          // Therefore WE lost.
 
-      case 'ACTION': {
-        // Opponent sent an action — apply it on our board
-        if(msg.turnId < _turnId){ console.warn('[PvP] stale action'); return; }
-        _applyRemoteAction(msg.payload);
-        break;
-      }
-      case 'END_UNIT_TURN': {
-        // Opponent finished moving their current unit — advance CT on our side
-        _oppUnitTurnDone();
-        break;
-      }
-      case 'SYNC_REQUEST': {
-        _send('SYNC_STATE',{state:_serializeCS()});
-        break;
-      }
-      case 'SYNC_STATE': {
-        try{ Object.assign(CS,JSON.parse(msg.payload.state)); renderCombat(); } catch(e){}
-        break;
-      }
-      case 'DISCONNECT': {
-        _status('Opponent disconnected.','error');
-        addLog('⚠ Opponent disconnected!','system');
-        toast('Opponent disconnected.','error');
-        _showOppWait(false);
-        break;
-      }
+          const iWon = msg.payload.winner === 'opp';
+
+          CS._endingCombat = true;
+
+          addLog(
+            '⚔ Match over — ' + (iWon ? 'VICTORY!' : 'DEFEAT!'),
+            iWon ? 'special' : 'death'
+          );
+
+          toast(iWon ? 'Victory!' : 'Defeat!', iWon ? 'success' : 'error');
+
+          renderCombat();
+
+          setTimeout(() => {
+            endCombat(iWon ? 'victory' : 'defeat');
+          }, 600);
+
+          break;
+        }
+      case 'SYNC_REQUEST':_send('SYNC_STATE',{allies:CS.allies,enemies:CS.enemies});break;
+      case 'SYNC_STATE':{try{const d=msg.payload;if(d.allies)CS.allies=d.allies;if(d.enemies)CS.enemies=d.enemies;renderCombat();}catch(e){}break;}
+      case 'DISCONNECT':_status('Opponent disconnected.','error');addLog('\u26a0 Opponent disconnected.','system');pvpShowWait(false);break;
     }
   }
 
-  function _launchBothSides(mapId, isJoiner, oppTeam){
-    const pvpMap = PVP_MAPS.find(m=>m.id===mapId)||PVP_MAPS[0];
+  function _applyRemoteAction(action){
+    if(action.kind==='move'){
+      const e=CS.enemies.find(u=>u.pvpOrigId===action.unitId||u.id===action.unitId);
+      if(e){e.x=action.x;e.y=action.y;if(action.facing)e.facing=action.facing;}
+      renderCombat();
+    } else if(action.kind==='attack'){
+      // Find our ally being attacked — targetId is the opponent's ally's original ID
+      // which maps to our CS.allies[i].id
+      const t=CS.allies.find(a=>a.id===action.targetId||a.gridId===action.targetId);
+      const atk=CS.enemies.find(u=>u.pvpOrigId===action.unitId||u.id===action.unitId);
+      if(t&&action.dmg>0){
+        // Apply damage visually — use authoritative targetHp if provided
+        const prevHp=t.hp;
+        t.hp=action.targetHp!==undefined ? action.targetHp : Math.max(0,t.hp-action.dmg);
+        const actualDmg=prevHp-t.hp;
+        if(actualDmg>0){
+          floatAtUnit(t,'-'+actualDmg,'damage');
+          if(!CS.hitFlashes)CS.hitFlashes=[];
+          CS.hitFlashes.push({x:t.x,y:t.y,color:'rgba(255,60,60,A)',t:Date.now(),dur:320});
+          SFX.play('sfx_blade_hit.mp3',0.6);
+          addLog(atk?.name+' hits '+t.name+' for '+actualDmg+' damage!','damage');
+          schedulePulseRedraw();
+        }
+         // Mark as doomed/perished if killed
+         if(t.hp<=0&&!t.doomed&&!t.perished){
+           t.doomed=true;t.doomCountdown=3;
+           addLog(t.name+' is DOWN!','death');
+           SFX.play('sfx_combat_death_ally.mp3');
+         }
+         if(t.hp<=0&&t.doomed&&(t.doomCountdown||0)<=0&&!t.perished){
+           t.perished=true; addLog(t.name+' has fallen!','death');
+         }
+      }
+      renderCombat();
+    }
+  }
+
+  function _launch(mapId,isJoiner,oppTeam){
+    const m=PVP_MAPS.find(x=>x.id===mapId)||PVP_MAPS[0];
     showScreen('combat');
     document.getElementById('pvpStatusBar').style.display='flex';
-    initPvPCombat(pvpMap, isJoiner, oppTeam);
+    initPvPCombat(m,isJoiner,oppTeam);
   }
 
-  function _serializeCS(){
-    try{ return JSON.stringify({
-      allies:CS.allies, enemies:CS.enemies, turn:CS.turn, phase:CS.phase
-    }); } catch(e){ return '{}'; }
+  function _buildTeam(){
+    return GS.clan.slice(0,3).map(n=>({
+      id:n.id,name:n.name,class:n.class,level:n.level||1,
+      hp:n.maxHp||n.hp||50,maxHp:n.maxHp||n.hp||50,
+      chi:n.maxChi||n.chi||10,maxChi:n.maxChi||n.chi||10,
+      weapon:n.weapon?{...n.weapon}:null,
+      equippedArmor:n.equippedArmor?{...n.equippedArmor}:null,
+      specialMove:n.specialMove
+    }));
   }
 
-  function _showOppWait(show){
-    const el=document.getElementById('pvpOppTurnOverlay');
-    if(el) el.style.display=show?'flex':'none';
-  }
+  return{
+    get isActive(){return!!(_conn&&_conn.open);},
+    get isHost(){return _isHost;},
+    setSelectedMap(id){_selectedMapId=id;},
+    onStatus(cb){_statusCb=cb;},
+    processMessage(raw){_recv(raw);},
+    sendAction(action){_send('ACTION',action);},
+    sendMatchOver(iWon){ _send('MATCH_OVER', {winner: iWon ? 'me' : 'opp'}); },
 
-  // ── Remote action application ──
-  // Actions are plain objects: {kind:'move'|'attack'|'special'|'item'|'endTurn', ...args}
-  function _applyRemoteAction(action){
-    const {kind} = action;
-    // Find the unit (opponent controls "enemies" from our perspective)
-    const isPvPEnemy = !CS.mission?.isJoiner; // we are host → opponent is joiner → their units = enemies
-    // Actually: the isJoiner flag on CS.mission tells us our role.
-    // Our allies = left side. Opponent controls right side (stored as enemies on host, allies on joiner).
-    // We always store host team as CS.allies, joiner team as CS.enemies regardless of who is running.
-    // Remote actions come from the opponent, who controls the OTHER side.
-    const oppUnits = CS.enemies; // always — see initPvPCombat
-
-    const unit = oppUnits.find(u=>u.id===action.unitId);
-    if(!unit){ console.warn('[PvP] remote unit not found',action.unitId); return; }
-
-    switch(kind){
-      case 'move':
-        unit.x=action.x; unit.y=action.y; unit.facing=action.facing||'east';
-        renderCombat();
-        break;
-      case 'attack': {
-        const target = CS.allies.find(a=>a.gridId===action.targetId||a.id===action.targetId);
-        if(target){ applyDamageToAlly(target, action.dmg, unit.name); }
-        renderCombat();
-        break;
-      }
-      case 'special':
-        // For specials just apply the logged effect — complex specials deferred to sync
-        addLog('✦ '+unit.name+' uses '+action.moveName+'!','special');
-        renderCombat();
-        break;
-      case 'endTurn':
-        _oppUnitTurnDone();
-        break;
-    }
-  }
-
-  function _oppUnitTurnDone(){
-    // Called when opponent finishes a unit's turn — advance CT normally
-    _showOppWait(false);
-    if(CS.active) setTimeout(advanceCT,300);
-  }
-
-  // Public
-  return {
-    get isActive(){ return !!(_conn&&_conn.open); },
-    get isHost(){ return _isHost; },
-    get sharedSeed(){ return _sharedSeed; },
-    setSelectedMap(id){ _selectedMapId=id; },
-    onStatus(cb){ _statusCb=cb; },
-    processMessage(raw){ _recv(raw); },
-
-    sendAction(action){
-      _send('ACTION',action);
+    // Send complete unit state snapshot at end of turn — includes HP, buffs, status, smoke clouds
+    sendEndTurn(unitId,x,y,hp,facing){
+      // Full snapshot of all our allies (our current HP/status after this turn)
+      const alliesSnap = CS.allies.map(a=>({
+        id: a.id,
+        hp: a.hp, maxHp: a.maxHp,
+        x: a.x, y: a.y, facing: a.facing,
+        status: a.status||null,
+        bleeds: a.bleeds||0, bleedTurns: a.bleedTurns||0,
+        buffs: (a.buffs||[]).filter(b=>b.permanent||b.turns>0),
+        doomed: !!a.doomed, doomCountdown: a.doomCountdown||0
+      }));
+      // Snapshot of damage we dealt to the opponent's units (which are our CS.enemies)
+      // These map to the opponent's CS.allies
+      const targetSnaps = CS.enemies.map(e=>({
+        id: e.pvpOrigId||e.id,
+        gridId: e.pvpOrigId||e.id,
+        hp: e.hp,
+        status: e.status||null,
+        doomed: !!e.doomed
+      }));
+      // Smoke clouds active this turn
+      const smokesSnap = (CS.smokeClouds||[]).map(c=>({...c}));
+      _send('END_TURN',{unitId,x,y,hp,facing,alliesSnap,targetSnaps,smokesSnap});
+      _turnId++;
     },
-    sendEndUnitTurn(){
-      _send('END_UNIT_TURN',{});
-      _showOppWait(true);
+    requestResync(){_send('SYNC_REQUEST',{});},
+    showOppWait:pvpShowWait,
+
+    // Called by QM host when a challenger connects — runs the full buffered host handshake
+    _wireExternal(conn, overrideMapId){
+      _isHost=true;
+      _sharedSeed=(_sharedSeed||((Math.random()*0xFFFFFFFF)>>>0));
+      if(!_myTeamData) _myTeamData=_buildTeam();
+      if(overrideMapId) _selectedMapId=overrideMapId;
+      _oppId=conn.peer;
+      _wire(conn);
+      // After open fires + queue flushes, respond to any pending HELLO
+      // The joiner will send HELLO on open — _recv handles it and _send('WELCOME'...) goes through the now-open conn
     },
-    showOppTurnOverlay: _showOppWait,
 
     host(){
-      _isHost=true;
-      _sharedSeed=(Math.random()*0xFFFFFFFF)>>>0;
-      _myTeamData=_buildTeamData();
-      const customId='NINDO-'+Math.random().toString(36).slice(2,8).toUpperCase();
-      _peer=new Peer(customId);
-      _peer.on('open',id=>{
-        _myId=id;
-        _status('Room ready — share code with opponent','waiting');
-        const rbox=document.getElementById('pvpRoomBox');
-        if(rbox){ rbox.style.display='block'; document.getElementById('pvpRoomId').textContent=id; }
-      });
-      _peer.on('connection',conn=>{
-        _conn=conn; _oppId=conn.peer;
-        conn.on('open', ()=>_status('Opponent connected — syncing…','waiting'));
-        conn.on('data', d=>_recv(d));
-        conn.on('close',()=>_status('Disconnected.','error'));
-        conn.on('error',e=>console.error('[PvP]',e));
-      });
-      _peer.on('error',e=>{
-        if(e.type==='unavailable-id'){
-          _peer=new Peer();
-          _peer.on('open',id=>{ _myId=id; _status('Room ready — share code','waiting');
-            const rbox=document.getElementById('pvpRoomBox');
-            if(rbox){ rbox.style.display='block'; document.getElementById('pvpRoomId').textContent=id; }
-          });
-          _peer.on('connection',conn=>{_conn=conn;_oppId=conn.peer;
-            conn.on('open',()=>_status('Opponent connected — syncing…','waiting'));
-            conn.on('data',d=>_recv(d)); conn.on('close',()=>_status('Disconnected.','error'));
-          });
-          _peer.on('error',e2=>{_status('Error: '+e2.type,'error');});
-        } else { _status('Error: '+e.type,'error'); }
-      });
+      _isHost=true;_sharedSeed=(Math.random()*0xFFFFFFFF)>>>0;_myTeamData=_buildTeam();
+      const cid='NINDO-'+Math.random().toString(36).slice(2,8).toUpperCase();
+      _peer=new Peer(cid);
+      function _setupHost(p){
+        p.on('open',id=>{_myId=id;_status('Room ready','waiting');
+          const rb=document.getElementById('pvpRoomBox');
+          if(rb){rb.style.display='block';document.getElementById('pvpRoomId').textContent=id;}});
+        p.on('connection',conn=>{_oppId=conn.peer;_wire(conn);});
+        p.on('error',e2=>{if(e2.type==='unavailable-id'){_peer=new Peer();_setupHost(_peer);}
+          else _status('Error: '+e2.type,'error');});
+      }
+      _setupHost(_peer);
     },
 
     join(roomCode){
-      _isHost=false;
-      _sharedSeed=(Math.random()*0xFFFFFFFF)>>>0;
-      _myTeamData=_buildTeamData();
+      _isHost=false;_sharedSeed=(Math.random()*0xFFFFFFFF)>>>0;_myTeamData=_buildTeam();
       _peer=new Peer();
       _peer.on('open',id=>{
-        _myId=id;
-        _status('Connecting to '+roomCode+'…','waiting');
-        _conn=_peer.connect(roomCode.trim(),{reliable:true,ordered:true});
-        _conn.on('open',()=>{
-          _status('Linked — handshaking…','waiting');
-          _send('HELLO',{peerId:_myId, seed:_sharedSeed, team:_myTeamData});
-        });
-        _conn.on('data',d=>_recv(d));
-        _conn.on('close',()=>_status('Disconnected.','error'));
-        _conn.on('error',e=>{_status('Connect failed — check room code.','error');console.error('[PvP]',e);});
+        _myId=id;_status('Connecting…','waiting');
+        const jc=_peer.connect(roomCode.trim(),{reliable:true,ordered:true});
+        _wire(jc);
+        jc.on('open',()=>{_status('Linked — handshaking…','waiting');_send('HELLO',{peerId:_myId,seed:_sharedSeed,team:_myTeamData});});
+        jc.on('error',e=>{_status('Connect failed.','error');console.error('[PvP]',e);});
       });
       _peer.on('error',e=>{_status('Peer error: '+e.type,'error');console.error('[PvP]',e);});
     },
 
-    requestResync(){ _send('SYNC_REQUEST',{}); },
-
     cleanup(){
       _send('DISCONNECT',{});
-      try{ if(_conn)_conn.close(); }catch(e){}
-      try{ if(_peer)_peer.destroy(); }catch(e){}
-      _conn=null; _peer=null;
+      try{if(_conn)_conn.close();}catch(e){}
+      try{if(_peer)_peer.destroy();}catch(e){}
+      _conn=null;_peer=null;_connOpen=false;_sendQueue=[];
       document.getElementById('pvpStatusBar').style.display='none';
-      _showOppWait(false);
+      pvpShowWait(false);
     }
   };
-
-  function _buildTeamData(){
-    const ninjas = GS.clan.slice(0,3).map(n=>({
-      id: n.id, name:n.name, class:n.class, level:n.level||1,
-      hp:n.maxHp||n.hp, maxHp:n.maxHp||n.hp,
-      chi:n.maxChi||n.chi, maxChi:n.maxChi||n.chi,
-      stamina:n.maxStamina||n.stamina||10, maxStamina:n.maxStamina||n.stamina||10,
-      weapon:n.weapon?{...n.weapon}:null,
-      equippedArmor:n.equippedArmor?{...n.equippedArmor}:null,
-      specialMove:n.specialMove, emoji:CLASSES[n.class]?.emoji||'🥷',
-      color:CLASSES[n.class]?.color||'#555'
-    }));
-    return ninjas;
-  }
 })();
 
-// ─── PvP Combat Initializer ──────────────────────────────────
-// Host team → CS.allies (left, x=1-4)
-// Joiner team → CS.enemies (right, x=9-12)
-// This is consistent on BOTH machines.
-// isJoiner flag tells the local player which side they control.
-function initPvPCombat(pvpMap, isJoiner, oppTeamData){
-  const rng = SeededRNG.random.bind(SeededRNG);
-  const W=14, H=12;
-  CS.gridW=W; CS.gridH=H; CS.cellSize=56;
+// ─── PvP State ────────────────────────────────────────────────
+let _pvpQueue=[]; // [{side:'mine'|'opp', gridId?, enemyIdx?}]
+let _pvpQueueIdx=0;
+let _pvpRound=0;
 
-  // Build grid from map rows
-  const CM2={'.':'empty','1':'floor1','2':'floor2','3':'floor3','W':'wall','F':'forest',
-    'R':'rubble','r':'roof','T':'roof3','S':'shadow','~':'water','G':'gate','E':'exit',
-    'f':'forest','C':'cliff','s':'stone'};
-  CS.grid=pvpMap.rows.map(row=>[...row.padEnd(W,'W')].slice(0,W).map(c=>CM2[c]||'empty'));
+function pvpShowWait(show){
+  const el=document.getElementById('pvpOppTurnOverlay');
+  if(el)el.style.display=show?'flex':'none';
+}
 
-  function findSpawn(xMin,xMax){
-    for(let t=0;t<60;t++){
-      const x=xMin+Math.floor(rng()*(xMax-xMin+1));
-      const y=1+Math.floor(rng()*(H-2));
-      const k=CS.grid[y]?.[x]||'wall';
-      if((TERRAIN_TILES[k]||TERRAIN_TILES.empty).passable) return{x,y};
+// ─── initPvPCombat ────────────────────────────────────────────
+function initPvPCombat(pvpMap,isJoiner,oppTeamData){
+  const W=14,H=12;
+  CS.gridW=W;CS.gridH=H;CS.cellSize=56;
+  const CM={'.':'empty','1':'floor1','2':'floor2','3':'floor3','W':'wall','F':'forest',
+    'R':'rubble','r':'roof','T':'roof3','S':'shadow','~':'water','G':'gate','E':'exit','f':'forest','C':'cliff','s':'stone'};
+  CS.grid=pvpMap.rows.map(row=>[...row.padEnd(W,'W')].slice(0,W).map(c=>CM[c]||'empty'));
+
+  const MY =[isJoiner?{x:11,y:2}:{x:2,y:2},isJoiner?{x:11,y:5}:{x:2,y:5},isJoiner?{x:11,y:9}:{x:2,y:9}];
+  const OPP=[isJoiner?{x:2,y:2}:{x:11,y:2},isJoiner?{x:2,y:5}:{x:11,y:5},isJoiner?{x:2,y:9}:{x:11,y:9}];
+
+  const myRaw=GS.clan.slice(0,3);
+  const oppRaw=(oppTeamData||[]).slice(0,3);
+
+  CS.allies=myRaw.map((n,i)=>({
+    gridId:'pvp_mine_'+i,id:n.id||'pvp_mine_'+i,
+    name:n.name,class:n.class||'shinobi',
+    hp:n.maxHp||n.hp||50,maxHp:n.maxHp||n.hp||50,
+    chi:n.maxChi||n.chi||10,maxChi:n.maxChi||n.chi||10,
+    stamina:n.maxStamina||n.stamina||10,maxStamina:n.maxStamina||n.stamina||10,
+    weapon:n.weapon?{...n.weapon}:null,
+    armorItem:n.equippedArmor?{...n.equippedArmor}:null,
+    specialMove:n.specialMove,level:n.level||1,exp:0,expToNext:100,
+    x:MY[i].x,y:MY[i].y,facing:isJoiner?'west':'east',
+    ct:0,spd:5,buffs:[],carriedItems:[],doomed:false,perished:false,escaped:false
+  }));
+
+  CS.enemies=oppRaw.map((n,i)=>({
+    id:'pvp_opp_'+i,pvpOrigId:n.id||'pvp_opp_'+i,
+    name:n.name,class:n.class||'shinobi',
+    emoji:(typeof CLASSES!=='undefined'&&CLASSES[n.class])?CLASSES[n.class].emoji:'⚔',
+    type:'pvp_opponent',ai:'pvp',
+    hp:n.maxHp||n.hp||50,maxHp:n.maxHp||n.hp||50,
+    weapon:n.weapon?{...n.weapon}:null,
+    level:n.level||1,dmg:[8,14],moveRange:3,attackRange:1,spd:5,
+    x:OPP[i].x,y:OPP[i].y,facing:isJoiner?'east':'west',
+    ct:0,status:null,buffs:[]
+  }));
+
+  // Build interleaved turn queue.
+  // HOST machine:   host_unit0, join_unit0, host_unit1, join_unit1 ...
+  //   → 'mine' entries first each pair  (host acts first globally)
+  // JOINER machine: join_unit0, host_unit0, join_unit1, host_unit1 ...
+  //   → 'opp' entries first each pair   (host unit = opp on joiner's screen)
+  // This guarantees the HOST always takes the first turn on BOTH machines.
+  _pvpQueue=[];
+  const maxLen=Math.max(CS.allies.length,CS.enemies.length);
+  for(let i=0;i<maxLen;i++){
+    if(!isJoiner){
+      // HOST: my units go first
+      if(CS.allies[i])  _pvpQueue.push({side:'mine',gridId:CS.allies[i].gridId,unitId:CS.allies[i].id});
+      if(CS.enemies[i]) _pvpQueue.push({side:'opp',enemyIdx:i,unitId:CS.enemies[i].pvpOrigId});
+    } else {
+      // JOINER: host's units go first (they are 'opp' on my screen)
+      if(CS.enemies[i]) _pvpQueue.push({side:'opp',enemyIdx:i,unitId:CS.enemies[i].pvpOrigId});
+      if(CS.allies[i])  _pvpQueue.push({side:'mine',gridId:CS.allies[i].gridId,unitId:CS.allies[i].id});
     }
-    for(let y=1;y<H-1;y++) for(let x=xMin;x<=xMax;x++)
-      if((TERRAIN_TILES[CS.grid[y]?.[x]]||TERRAIN_TILES.empty).passable) return{x,y};
-    return{x:xMin,y:Math.floor(H/2)};
   }
+  _pvpQueueIdx=0;_pvpRound=1;
 
-  // My clan (left for host, but we always PUT host on left regardless)
-  // Determine which team is mine vs opponent's
-  const myRawTeam  = GS.clan.slice(0,3);
-  const oppRawTeam = oppTeamData || [];
+  CS.mission={id:'pvp_'+pvpMap.id,name:pvpMap.name,type:'pvp',isPvP:true,isJoiner:!!isJoiner,reward:0,floors:null};
+  CS.pvpRole=isJoiner?'joiner':'host';
+  CS.active=true;CS._endingCombat=false;
+  CS.turn=0;CS.turnLimit=0;CS.phase='player';
+  CS.log=[];CS.hitFlashes=[];CS.floatNumbers=[];
+  CS.activeFires=[];CS.smokeClouds=[];
+  // Reset fog of war
+  fogInitHook();
+  CS.objectiveTiles=[];CS.objectivePhase='fight';
+  CS.objectiveProgress=0;CS.objectiveTotal=0;
+  CS.alliesEscaped=[];CS.exitsActive=false;
+  CS.goldPickups=[];CS.doomBags=[];
+  CS.exitTiles=[];CS.reinforcementsSpawned=false;
 
-  // Host team → allies (x=1-4), Joiner team → enemies (x=9-12)
-  const hostRaw  = !isJoiner ? myRawTeam  : oppRawTeam;
-  const joinRaw  = isJoiner  ? myRawTeam  : oppRawTeam;
-
-  CS.allies = hostRaw.map((n,i)=>{
-    const pos=findSpawn(1,4);
-    const base = !isJoiner ? GS.clan.find(c=>c.id===n.id)||n : n;
-    return {
-      gridId:'pvp_a_'+i, id:n.id||'pvp_a_'+i,
-      name:n.name, class:n.class||'shinobi',
-      hp:n.maxHp||n.hp||50, maxHp:n.maxHp||n.hp||50,
-      chi:n.chi||n.maxChi||10, maxChi:n.maxChi||n.chi||10,
-      stamina:n.stamina||n.maxStamina||10, maxStamina:n.maxStamina||n.stamina||10,
-      weapon:n.weapon?{...n.weapon}:null,
-      armorItem:n.equippedArmor?{...n.equippedArmor}:null,
-      specialMove:n.specialMove, level:n.level||1, exp:0, expToNext:100,
-      x:pos.x, y:pos.y, facing:'east',
-      ct:Math.floor(rng()*30), spd:5, buffs:[], carriedItems:[],
-      doomed:false, perished:false, escaped:false
-    };
-  });
-
-  // Joiner team stored as CS.enemies — these are "enemy" units visually for the host
-  // but the joiner player controls them. They use enemy-style objects with extra pvp fields.
-  CS.enemies = joinRaw.map((n,i)=>{
-    const pos=findSpawn(9,12);
-    return {
-      id:'pvp_e_'+i, pvpId:n.id||'pvp_e_'+i,
-      name:n.name, class:n.class||'shinobi',
-      emoji:CLASSES[n.class]?.emoji||'⚔',
-      type:'pvp_opponent',
-      hp:n.maxHp||n.hp||50, maxHp:n.maxHp||n.hp||50,
-      chi:n.chi||n.maxChi||10, maxChi:n.maxChi||n.chi||10,
-      weapon:n.weapon?{...n.weapon}:null,
-      armorItem:n.equippedArmor?{...n.equippedArmor}:null,
-      specialMove:n.specialMove, level:n.level||1,
-      dmg:[8+(n.level||1),14+(n.level||1)*2],
-      moveRange:3, attackRange:1, spd:5,
-      x:pos.x, y:pos.y, facing:'west',
-      ct:Math.floor(rng()*30), status:null, buffs:[],
-      ai:'pvp' // special AI tag — means this unit is player-controlled remotely
-    };
-  });
-
-  // CS mission flags
-  CS.mission={
-    id:'pvp_'+pvpMap.id, name:pvpMap.name,
-    type:'pvp', isPvP:true,
-    isJoiner: !!isJoiner,   // true if the local player is the joiner
-    reward:0, floors:null
-  };
-  CS.active=true; CS._endingCombat=false;
-  CS.turn=0; CS.turnLimit=0; CS.phase='player';
-  CS.log=[]; CS.hitFlashes=[]; CS.floatNumbers=[];
-  CS.activeFires=[]; CS.smokeClouds=[];
-  CS.objectiveTiles=[]; CS.objectivePhase='fight';
-  CS.objectiveProgress=0; CS.objectiveTotal=0;
-  CS.alliesEscaped=[]; CS.exitsActive=false;
-  CS.goldPickups=[]; CS.doomBags=[];
-  CS.exitTiles=[]; CS.reinforcementsSpawned=false;
-  CS.pvpRole = isJoiner ? 'joiner' : 'host';
-
-  addLog('⚔ PvP Match: '+pvpMap.name,'system');
-  addLog(isJoiner ? 'You control the RIGHT side (blue).' : 'You control the LEFT side (red).','system');
-  addLog('Defeat all opponent ninja to win!','system');
+  addLog('\u2694 PvP \u2014 '+pvpMap.name+' (Round 1)','system');
+  addLog(isJoiner?'You are the CHALLENGER (right side).':'You are the HOST (left side).','system');
 
   renderCombat();
   schedulePulseRedraw();
-  setTimeout(advanceCT,500);
+  setTimeout(pvpStartCurrentTurn,800);
 }
 
-// ─── PvP Turn Ownership ──────────────────────────────────────
-// Host controls allies (CS.allies).
-// Joiner controls enemies (CS.enemies) using a separate action path.
-// When it's the opponent's unit's turn, show the wait overlay.
+// ─── Turn Engine ──────────────────────────────────────────────
+function pvpStartCurrentTurn(){
+  if(!CS.active||!CS.mission?.isPvP)return;
 
-let _pvpWaitingForOpp=false;
+  // Wrap around: new round
+  if(_pvpQueueIdx>=_pvpQueue.length){
+    _pvpQueueIdx=0;_pvpRound++;CS.turn++;
+    CS.allies.forEach(a=>{if(isAllyAlive(a))a.chi=Math.min(a.maxChi,a.chi+1);});
+    addLog('\u2500\u2500\u2500 Round '+_pvpRound+' \u2500\u2500\u2500','system');
+    checkCombatEnd();
+    if(!CS.active)return;
+  }
 
+  const entry=_pvpQueue[_pvpQueueIdx];
+  if(!entry){_pvpQueueIdx++;pvpStartCurrentTurn();return;}
+
+  if(entry.side==='mine'){
+    const ally=CS.allies.find(a=>a.gridId===entry.gridId);
+    if(!ally||!isAllyAlive(ally)){_pvpQueueIdx++;pvpStartCurrentTurn();return;}
+    pvpShowWait(false);
+    CS.phase='player';
+    CS.activeUnit=ally.gridId;CS.selectedAlly=ally.gridId;
+    CS.unitMoved=false;CS.unitActed=false;CS.savedMove=null;
+    const etBtn=document.getElementById('btnEndTurn');
+    if(etBtn){etBtn.disabled=false;etBtn.style.opacity='';}
+    const epBtn=document.getElementById('btnPvpEndPhase');
+    if(epBtn)epBtn.style.display='none';
+     // Refresh fog of war — directional cone from this ally's facing direction
+     updateFogOfWar();
+    addLog('\u2500 '+ally.name+"'s turn",'system');
+    _showPhaseBanner(ally.name+"'s Turn",'#f0c040');
+    SFX.play('sfx_ui_turn_start.mp3',0.5);
+    renderCombat();
+    checkCombatEnd();
+  } else {
+    const enemy=CS.enemies[entry.enemyIdx];
+    if(!enemy||enemy.hp<=0){_pvpQueueIdx++;pvpStartCurrentTurn();return;}
+    CS.phase='enemy_acting';CS.activeUnit=null;CS.selectedAlly=null;
+    const etBtn=document.getElementById('btnEndTurn');
+    if(etBtn){etBtn.disabled=true;etBtn.style.opacity='0.4';}
+    pvpShowWait(true);
+    addLog('\u2500 '+enemy.name+"'s turn (opponent)",'system');
+    _showPhaseBanner(enemy.name+"'s Turn",'#4488cc');
+    renderCombat();
+    // Wait for END_TURN network message from opponent
+  }
+}
+
+function pvpAdvanceQueue(){
+  if (!CS.active || !CS.mission?.isPvP || CS._endingCombat) {
+    _pvpQueueIdx++;
+    setTimeout(pvpStartCurrentTurn, 300);
+    return;
+  }
+
+  // Mark any dead units as perished so they vanish from canvas
+  CS.allies.forEach(a => {
+    if (a.hp <= 0 && !a.perished) {
+      if (a.doomed && (a.doomCountdown || 0) <= 0) {
+        a.perished = true;
+        addLog(a.name + ' has fallen!', 'death');
+      } else if (!a.doomed) {
+        // No doom countdown — instant perish (e.g. from snapshot sync)
+        a.doomed = true; a.doomCountdown = 0; a.perished = true;
+        addLog(a.name + ' has fallen!', 'death');
+      }
+    }
+  });
+  CS.enemies.forEach(e => {
+    if (e.hp <= 0 && !e.perished) { e.perished = true; }
+  });
+
+  // Check win/loss conditions
+  const aliveEnemies = CS.enemies.filter(e => !e.perished && e.hp > 0);
+  const aliveAllies  = CS.allies.filter(a  => !a.perished && a.hp > 0);
+
+  if (aliveEnemies.length === 0) {
+    // All opponent units dead — we won
+    CS._endingCombat = true;
+    NetworkManager.sendMatchOver(true);
+    addLog('⚔ All opponents defeated — VICTORY!', 'special');
+    toast('Victory!', 'success');
+    SFX.play('sfx_mission_victory.mp3');
+    renderCombat();
+    setTimeout(() => endCombat('victory'), 1200);
+    return;
+  }
+
+  if (aliveAllies.length === 0) {
+    // All our units dead — we lost
+    CS._endingCombat = true;
+    NetworkManager.sendMatchOver(false);
+    addLog('⚔ All your ninja have fallen — DEFEAT!', 'death');
+    toast('Defeat!', 'error');
+    renderCombat();
+    setTimeout(() => endCombat('defeat'), 1200);
+    return;
+  }
+
+  _pvpQueueIdx++;
+  setTimeout(pvpStartCurrentTurn, 300);
+}
+
+// ─── Hooks ────────────────────────────────────────────────────
+// Called at top of finishAllyTurn — returns true to intercept
 function pvpInterceptFinishAllyTurn(){
-  if(!NetworkManager.isActive||!CS.mission?.isPvP) return false;
-  if(_pvpWaitingForOpp) return true;
-  // Send our unit's final state to opponent
+  if(!NetworkManager.isActive||!CS.mission?.isPvP)return false;
   const ally=CS.allies.find(a=>a.gridId===CS.activeUnit);
   if(ally){
-    NetworkManager.sendAction({kind:'endTurn',unitId:ally.id,
-      x:ally.x, y:ally.y, hp:ally.hp, facing:ally.facing});
+    // Send final position then end-of-turn signal
+    NetworkManager.sendAction({kind:'move',unitId:ally.id,x:ally.x,y:ally.y,facing:ally.facing});
+    NetworkManager.sendEndTurn(ally.id,ally.x,ally.y,ally.hp,ally.facing);
   }
-  NetworkManager.sendEndUnitTurn();
-  return false; // let finishAllyTurn proceed normally on our machine
+  pvpAdvanceQueue();
+  return true; // block normal finishAllyTurn
 }
 
-// Override advanceCT to block control during opponent's turn
-const _pvpOrigAdvanceCT_flag = '__pvpWrapped';
-function pvpShouldBlockInput(unit){
-  if(!CS.mission?.isPvP||!NetworkManager.isActive) return false;
-  const isAllyUnit  = !!CS.allies.find(a=>a.gridId===unit?.gridId);
-  const isEnemyUnit = !!CS.enemies.find(e=>e.id===unit?.id);
-  const iAmHost   = CS.pvpRole==='host';
-  const iAmJoiner = CS.pvpRole==='joiner';
-  // Host controls allies, joiner controls enemies-as-units
-  if(iAmHost   && isAllyUnit)  return false; // my turn
-  if(iAmJoiner && isEnemyUnit) return false; // my turn (joiner controls enemies)
-  return true; // opponent's unit — block input
+function pvpBroadcastMove(ally,tx,ty){
+  if(!NetworkManager.isActive||!CS.mission?.isPvP)return;
+  NetworkManager.sendAction({kind:'move',unitId:ally.id,x:tx,y:ty,facing:ally.facing});
 }
 
-// Show/hide opponent overlay based on whose turn it is
-function pvpOnUnitTurnStart(unit){
-  if(!CS.mission?.isPvP) return;
-  const block=pvpShouldBlockInput(unit);
-  NetworkManager.showOppTurnOverlay(block);
-  if(block) addLog('⚔ Opponent is taking their turn…','system');
+function pvpBroadcastAttack(ally,target,dmg){
+  if(!NetworkManager.isActive||!CS.mission?.isPvP)return;
+  // target is a CS.enemies unit — use pvpOrigId as the canonical cross-machine ID
+  const targetId = target.pvpOrigId||target.id;
+  NetworkManager.sendAction({kind:'attack',unitId:ally.id,targetId,dmg,targetHp:target.hp});
 }
 
+function pvpOnUnitTurnStart(){}  // no-op — pvpStartCurrentTurn handles UI
 function pvpOnShowScreen(id){
-  if(id==='pvp'){ renderPvPMapChoice(); if(NetworkManager.isActive) NetworkManager.cleanup(); }
-  if(id!=='combat'&&id!=='pvp'){ if(NetworkManager.isActive) NetworkManager.cleanup(); }
+  if(id==='pvp'){renderPvPMapChoice();if(NetworkManager.isActive)NetworkManager.cleanup();}
+  if(id!=='combat'&&id!=='pvp'){if(NetworkManager.isActive)NetworkManager.cleanup();}
 }
 
-// ─── Lobby UI ────────────────────────────────────────────────
+// ─── Lobby UI ─────────────────────────────────────────────────
 let _pvpSelectedMap=PVP_MAPS[0].id;
 
 function pvpSelectTab(tab){
   document.querySelectorAll('.pvp-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.pvp-tab-body').forEach(b=>b.classList.remove('active'));
   const btn=document.querySelector('.pvp-tab[onclick*="\''+tab+'\'"]');
-  if(btn) btn.classList.add('active');
+  if(btn)btn.classList.add('active');
   const body=document.getElementById('pvp-tab-'+tab);
-  if(body) body.classList.add('active');
+  if(body)body.classList.add('active');
 }
 
 function pvpSetStatus(dotId,txtId,text,state){
-  const d=document.getElementById(dotId); if(d) d.className='pvp-dot '+(state||'idle');
-  const t=document.getElementById(txtId); if(t) t.textContent=text;
+  const d=document.getElementById(dotId);if(d)d.className='pvp-dot '+(state||'idle');
+  const t=document.getElementById(txtId);if(t)t.textContent=text;
+}
+
+function _pvpEnsureSaveLoaded(){
+  if(GS.clan.length>0)return true;
+  try{const s=localStorage.getItem('nindoTacticsSave');
+    if(s){GS=JSON.parse(s);_repairSaveData();initAchievements();_gameActive=true;return GS.clan.length>0;}
+  }catch(e){}return false;
 }
 
 function pvpHost(){
-  if(!GS.clan.length){ toast('Add ninja to your clan first!','error'); return; }
+  if(!_pvpEnsureSaveLoaded()){toast('No save — Begin Journey first!','error');return;}
   pvpSetStatus('pvpHostDot','pvpHostStatusText','Creating room…','waiting');
   document.getElementById('pvpHostBtn').disabled=true;
-  NetworkManager.onStatus((txt,state)=>pvpSetStatus('pvpHostDot','pvpHostStatusText',txt,state));
+  NetworkManager.onStatus((t,s)=>pvpSetStatus('pvpHostDot','pvpHostStatusText',t,s));
   NetworkManager.setSelectedMap(_pvpSelectedMap);
   NetworkManager.host();
 }
 
 function pvpJoin(){
-  if(!GS.clan.length){ toast('Add ninja to your clan first!','error'); return; }
+  if(!_pvpEnsureSaveLoaded()){toast('No save — Begin Journey first!','error');return;}
   const code=document.getElementById('pvpJoinCode').value.trim();
-  if(!code){ toast('Enter a room code.','error'); return; }
+  if(!code){toast('Enter a room code.','error');return;}
   pvpSetStatus('pvpJoinDot','pvpJoinStatusText','Connecting…','waiting');
-  NetworkManager.onStatus((txt,state)=>pvpSetStatus('pvpJoinDot','pvpJoinStatusText',txt,state));
+  NetworkManager.onStatus((t,s)=>pvpSetStatus('pvpJoinDot','pvpJoinStatusText',t,s));
   NetworkManager.join(code);
 }
 
-function pvpCopyCode(){
-  const code=document.getElementById('pvpRoomId').textContent;
-  navigator.clipboard?.writeText(code).then(()=>toast('Room code copied!','success'));
-}
+function pvpCopyCode(){const c=document.getElementById('pvpRoomId').textContent;navigator.clipboard?.writeText(c).then(()=>toast('Copied!','success'));}
 
 function renderPvPMapChoice(){
-  const el=document.getElementById('pvpMapChoice'); if(!el) return;
+  const el=document.getElementById('pvpMapChoice');if(!el)return;
   el.innerHTML=PVP_MAPS.map(m=>`<div class="pvp-map-card${m.id===_pvpSelectedMap?' selected':''}" onclick="pvpPickMap('${m.id}')"><div class="pvp-map-name">${m.name}</div><div style="font-size:0.55rem;color:var(--mist);margin-top:0.2rem">${m.desc}</div></div>`).join('');
 }
 
-function pvpPickMap(id){ _pvpSelectedMap=id; NetworkManager.setSelectedMap(id); renderPvPMapChoice(); }
+function pvpPickMap(id){_pvpSelectedMap=id;NetworkManager.setSelectedMap(id);renderPvPMapChoice();}
 
-// ─── Quick Match ─────────────────────────────────────────────
-const QM_SLOTS=10, QM_PREFIX='NINDO-QM-', QM_PROBE_MS=1800;
-let _qmPeer=null, _qmSearching=false, _qmAborted=false;
+// ─── Quick Match ──────────────────────────────────────────────
+const QM_SLOTS=10,QM_PREFIX='NINDO-QM-',QM_PROBE_MS=1800;
+let _qmPeer=null,_qmSearching=false,_qmAborted=false;
 
-function pvpQuickSetStatus(text,state){
-  pvpSetStatus('pvpQuickDot','pvpQuickStatusText',text,state);
-}
-
+function pvpQuickSetStatus(t,s){pvpSetStatus('pvpQuickDot','pvpQuickStatusText',t,s);}
 function pvpQuickCancel(){
-  _qmAborted=true;
-  if(_qmPeer){ try{_qmPeer.destroy();}catch(e){} _qmPeer=null; }
-  pvpQuickSetStatus('Search cancelled.','idle');
+  _qmAborted=true;if(_qmPeer){try{_qmPeer.destroy();}catch(e){}_qmPeer=null;}
+  pvpQuickSetStatus('Cancelled.','idle');
   document.getElementById('pvpQuickBtn').style.display='';
   document.getElementById('pvpQuickCancelBtn').style.display='none';
   document.getElementById('pvpQuickHostBox').style.display='none';
 }
 
 async function pvpQuickMatch(){
-  if(!GS.clan.length){ toast('Add ninja to your clan first!','error'); return; }
-  if(_qmSearching) return;
-  _qmSearching=true; _qmAborted=false;
+  if(!_pvpEnsureSaveLoaded()){toast('No save — Begin Journey first!','error');return;}
+  if(_qmSearching)return;
+  _qmSearching=true;_qmAborted=false;
   document.getElementById('pvpQuickBtn').style.display='none';
   document.getElementById('pvpQuickCancelBtn').style.display='';
-  document.getElementById('pvpQuickHostBox').style.display='none';
-  pvpQuickSetStatus('Searching for open games…','waiting');
-
-  for(let slot=0;slot<QM_SLOTS;slot++){
-    if(_qmAborted){ _qmSearching=false; return; }
-    pvpQuickSetStatus('Probing slot '+slot+'…','waiting');
-    const found=await _qmProbeSlot(QM_PREFIX+slot);
-    if(_qmAborted){ _qmSearching=false; return; }
-    if(found){
-      pvpQuickSetStatus('Open game found! Connecting…','waiting');
-      NetworkManager.onStatus((txt,state)=>pvpQuickSetStatus(txt,state));
-      NetworkManager.join(QM_PREFIX+slot);
-      _qmSearching=false; return;
+  pvpQuickSetStatus('Searching…','waiting');
+  for(let s=0;s<QM_SLOTS;s++){
+    if(_qmAborted){_qmSearching=false;return;}
+    pvpQuickSetStatus('Probing slot '+s+'…','waiting');
+    if(await _qmProbeSlot(QM_PREFIX+s)){
+      if(_qmAborted){_qmSearching=false;return;}
+      NetworkManager.onStatus((t,st)=>pvpQuickSetStatus(t,st));
+      NetworkManager.join(QM_PREFIX+s);_qmSearching=false;return;
     }
   }
-
-  if(_qmAborted){ _qmSearching=false; return; }
-  pvpQuickSetStatus('No open games — hosting…','waiting');
-
-  for(let slot=0;slot<QM_SLOTS;slot++){
-    if(_qmAborted){ _qmSearching=false; return; }
-    const claimed=await _qmClaimSlot(QM_PREFIX+slot);
-    if(_qmAborted){ _qmSearching=false; return; }
-    if(claimed){
-      const code=QM_PREFIX+slot;
+  if(_qmAborted){_qmSearching=false;return;}
+  for(let s=0;s<QM_SLOTS;s++){
+    if(_qmAborted){_qmSearching=false;return;}
+    if(await _qmClaimSlot(QM_PREFIX+s)){
+      // Initialise host state so NetworkManager is ready when joiner connects
+      NetworkManager.onStatus((t,st)=>pvpQuickSetStatus(t,st));
       document.getElementById('pvpQuickHostBox').style.display='block';
-      document.getElementById('pvpQuickCode').textContent=code;
-      pvpQuickSetStatus('Waiting for challenger on slot '+slot+'…','waiting');
-      _pvpWireQMHost(_qmPeer);
-      _qmSearching=false; return;
+      document.getElementById('pvpQuickCode').textContent=QM_PREFIX+s;
+      pvpQuickSetStatus('Waiting (slot '+s+')…','waiting');
+      _pvpWireQMHost(_qmPeer);_qmSearching=false;return;
     }
   }
-
-  pvpQuickSetStatus('All lobby slots busy. Try again.','error');
+  pvpQuickSetStatus('All slots busy.','error');
   document.getElementById('pvpQuickBtn').style.display='';
   document.getElementById('pvpQuickCancelBtn').style.display='none';
   _qmSearching=false;
@@ -13690,26 +13991,19 @@ async function pvpQuickMatch(){
 
 function _qmProbeSlot(slotId){
   return new Promise(resolve=>{
-    let done=false; let probe=null; let tp=null;
-    const finish=r=>{ if(done)return; done=true; clearTimeout(timer);
-      try{if(probe)probe.close();}catch(e){} try{if(tp)tp.destroy();}catch(e){} resolve(r); };
-    tp=new Peer();
-    tp.on('open',()=>{ try{ probe=tp.connect(slotId,{reliable:false});
-      probe.on('open',()=>finish(true)); probe.on('error',()=>finish(false)); }catch(e){finish(false);} });
-    tp.on('error',()=>finish(false));
-    const timer=setTimeout(()=>finish(false),QM_PROBE_MS);
+    let done=false;let pr=null;let tp=null;
+    const fin=r=>{if(done)return;done=true;clearTimeout(tm);try{if(pr)pr.close();}catch(e){}try{if(tp)tp.destroy();}catch(e){}resolve(r);};
+    tp=new Peer();tp.on('open',()=>{try{pr=tp.connect(slotId,{reliable:false});pr.on('open',()=>fin(true));pr.on('error',()=>fin(false));}catch(e){fin(false);}});
+    tp.on('error',()=>fin(false));const tm=setTimeout(()=>fin(false),QM_PROBE_MS);
   });
 }
 
 function _qmClaimSlot(slotId){
   return new Promise(resolve=>{
     let done=false;
-    const finish=r=>{ if(done)return; done=true; if(!r&&_qmPeer){try{_qmPeer.destroy();}catch(e){}_qmPeer=null;} resolve(r); };
-    try{ _qmPeer=new Peer(slotId);
-      _qmPeer.on('open',()=>finish(true));
-      _qmPeer.on('error',e=>finish(false));
-    }catch(e){finish(false);}
-    setTimeout(()=>finish(false),3000);
+    const fin=r=>{if(done)return;done=true;if(!r&&_qmPeer){try{_qmPeer.destroy();}catch(e){}_qmPeer=null;}resolve(r);};
+    try{_qmPeer=new Peer(slotId);_qmPeer.on('open',()=>fin(true));_qmPeer.on('error',()=>fin(false));}catch(e){fin(false);}
+    setTimeout(()=>fin(false),3000);
   });
 }
 
@@ -13717,19 +14011,14 @@ function _pvpWireQMHost(peer){
   const mapId=PVP_MAPS[Math.floor(Math.random()*PVP_MAPS.length)].id;
   NetworkManager.setSelectedMap(mapId);
   peer.on('connection',conn=>{
-    pvpQuickSetStatus('Challenger found! Launching…','connected');
+    pvpQuickSetStatus('Challenger found — syncing…','connected');
     document.getElementById('pvpQuickHostBox').style.display='none';
-    conn.on('data',d=>NetworkManager.processMessage(d));
-    conn.on('open',()=>{
-      // Re-use NetworkManager host flow via direct peer injection
-      const msg=JSON.stringify({v:'nindo-pvp-v2',type:'HELLO',
-        payload:{peerId:peer.id,seed:(Math.random()*0xFFFFFFFF)>>>0,team:[]},turnId:0});
-      NetworkManager.processMessage(msg);
-    });
+    // Use the same buffered wire path as a normal host connection
+    NetworkManager._wireExternal(conn, mapId);
   });
 }
 
-console.log('[PvP v2] NetworkManager loaded — true two-player combat');
+console.log('[PvP v3] Fixed interleaved turn queue — End Turn = End Unit Turn');
 </script>
 </body>
 </html>
