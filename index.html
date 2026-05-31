@@ -1247,22 +1247,53 @@ h4, h5, .label { font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
   .combat-main { padding: 0; flex: 1; justify-content: flex-start; overflow: auto; }
   .combat-panel-toggle { display: block; }
   #combatCanvas { display: block; }
-  .combat-header { padding: 0.35rem 0.6rem; gap: 0.4rem; flex-wrap: wrap; font-size: 0.6rem; }
-  .turn-counter { font-size: 0.65rem; }
+  .combat-header { padding: 0.3rem 0.6rem; gap: 0.3rem; flex-wrap: wrap; font-size: 0.58rem; }
+  .turn-counter { font-size: 0.6rem; }
+
+  /* ── Mobile combat controls: two rows of large touch targets ── */
   .combat-controls {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 52px;
+    gap: 0.3rem;
     padding: 0.5rem 0.5rem;
-    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0));
-    gap: 0.35rem; justify-content: center;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    background: rgba(8,8,20,0.97);
+    border-top: 1px solid rgba(201,162,39,0.18);
   }
   .action-btn {
-    padding: 0.55rem 0.7rem; font-size: 0.6rem; letter-spacing: 0.05em;
-    clip-path: none; border-radius: 3px;
-    min-width: 52px; min-height: 40px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 0.25rem 0.2rem; font-size: 0.58rem;
+    letter-spacing: 0.03em; clip-path: none;
+    border-radius: 4px; min-height: 48px;
+    gap: 2px; line-height: 1.2;
   }
+  /* Give each action button a distinct icon above the label */
+  #btnMove::before    { content: '🦶'; font-size: 1.1rem; line-height: 1; }
+  #btnAttack::before  { content: '⚔'; font-size: 1.1rem; line-height: 1; }
+  #btnSpecial::before { content: '✦'; font-size: 1.1rem; line-height: 1; }
+  #btnItem::before    { content: '🎒'; font-size: 1.1rem; line-height: 1; }
+  #btnUndoMove::before   { content: '↩'; font-size: 1.1rem; line-height: 1; }
+  #btnEndTurn::before    { content: '⊳'; font-size: 1.1rem; line-height: 1; }
+  #btnPvpEndPhase::before{ content: '⚔'; font-size: 1.1rem; line-height: 1; }
+  /* Hide the text label of duplicated emoji/arrow (already shown above) */
+  #btnMove .kbd-hint, #btnAttack .kbd-hint, #btnSpecial .kbd-hint,
+  #btnItem .kbd-hint, #btnUndoMove .kbd-hint, #btnEndTurn .kbd-hint { display: none; }
+  /* Full-width separator dividers become invisible */
+  .combat-controls > div[style*="width:1px"] { display: none; }
+  /* Facing controls: compact 2×2 grid in one cell */
+  .facing-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 2px; }
+  .facing-btn { width: 100%; height: 22px; font-size: 0.75rem; border-radius: 3px; }
+  /* End-turn and undo span two columns each for prominence */
+  #btnEndTurn    { grid-column: span 2; background: rgba(61,170,125,0.15); border-color: rgba(61,170,125,0.4); color: var(--jade-bright); }
+  #btnUndoMove   { grid-column: span 1; }
+  #btnPvpEndPhase{ grid-column: span 2; }
   .kbd-hint { display: none; }
-  #actionLabel { font-size: 0.58rem; }
+  #actionLabel { font-size: 0.55rem; }
+  #facingLabel { font-size: 0.5rem; }
   #hoverInspect { display: none !important; }
-  #actionModeBanner { font-size: 0.55rem; padding: 0.15rem 0.8rem; }
+  #actionModeBanner { font-size: 0.52rem; padding: 0.12rem 0.7rem; }
 }
 
 /* Medium phones / landscape */
@@ -1967,7 +1998,7 @@ const MISSIONS = [
   id: 'm1', name: 'The Corrupt Tax Collector', type: 'assassination',
   desc: 'A greedy official has been bleeding the village dry. Eliminate him and recover the stolen gold.',
   difficulty: 1, reward: 150, recruitReward: null, requiredLevel: 1,
-  enemies: [{ type: 'guard', count: 2 }, { type: 'collector', count: 1 }],
+  enemies: [{ type: 'guard', count: 4 }, { type: 'collector', count: 4 }],
   targetEnemy: 'collector', terrain: 'village', tags: ['assassination'],
   intro: 'The corrupt official holds court in the village square. Two guards flank him. End this.'
 },
@@ -1975,7 +2006,7 @@ const MISSIONS = [
   id: 'm2', name: 'Scroll of Dark Tides', type: 'theft',
   desc: 'Steal the warlord\'s battle plans before dawn. Guards patrol in pairs.',
   difficulty: 1, reward: 180, recruitReward: null, requiredLevel: 1,
-  enemies: [{ type: 'patrol_guard', count: 2 }, { type: 'scribe', count: 1 }],
+  enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'scribe', count: 4 }],
   carrierEnemy: 'scribe', lootItem: { name: 'Battle Scroll', icon: '📜' },
   terrain: 'castle', tags: ['theft'],
   intro: 'The scroll is kept in the inner chamber. Steal it without raising the alarm.'
@@ -1988,9 +2019,9 @@ const MISSIONS = [
   terrain: 'dungeon', tags: ['rescue', 'recruit'],
   intro: 'Kōga the Berserker is caged in the lower dungeon. Defeat the guards and break the chains.',
   floors: [
-    { enemies: [{ type: 'guard', count: 3 }, { type: 'jailer', count: 1 }], terrain: 'dungeon', name: 'Dungeon Guards',
+    { enemies: [{ type: 'guard', count: 4 }, { type: 'jailer', count: 4 }], terrain: 'dungeon', name: 'Dungeon Guards',
        carrierEnemy: 'jailer', lootItem: { name: 'Cell Key', icon: '🔑' } },
-    { enemies: [{ type: 'guard', count: 2 }], terrain: 'dungeon', name: 'Prisoner Cell',
+    { enemies: [{ type: 'guard', count: 4 }], terrain: 'dungeon', name: 'Prisoner Cell',
        isRescueFloor: true }
   ]
 },
@@ -1998,7 +2029,7 @@ const MISSIONS = [
   id: 'm4', name: 'The Merchant\'s Ledger', type: 'theft',
   desc: 'A black-market ledger exposes every corrupt deal in the region. Take it.',
   difficulty: 2, reward: 220, recruitReward: null, requiredLevel: 1,
-  enemies: [{ type: 'thug', count: 2 }, { type: 'collector', count: 1 }],
+  enemies: [{ type: 'thug', count: 4 }, { type: 'collector', count: 4 }],
   carrierEnemy: 'collector', lootItem: { name: 'Merchant Ledger', icon: '📒' },
   terrain: 'docks', tags: ['theft'],
   intro: 'The merchant keeps the ledger close. His thugs are unpredictable.'
@@ -2007,7 +2038,7 @@ const MISSIONS = [
   id: 'm5', name: 'Eyes in the Garrison', type: 'espionage',
   desc: 'Copy the patrol schedules from the garrison\'s command room. Do not be seen.',
   difficulty: 2, reward: 250, recruitReward: null, requiredLevel: 1,
-  enemies: [{ type: 'patrol_guard', count: 3 }, { type: 'scribe', count: 1 }],
+  enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'scribe', count: 4 }],
   turnLimit: 24, terrain: 'fortress', tags: ['espionage'],
   intro: 'Get in, read the schedules, get out. Speed is everything.'
 },
@@ -2015,7 +2046,7 @@ const MISSIONS = [
   id: 'm6', name: 'Silence the Informant', type: 'assassination',
   desc: 'A traitor is selling clan locations to the daimyo\'s men. Silence them permanently.',
   difficulty: 2, reward: 280, recruitReward: null, requiredLevel: 1,
-  enemies: [{ type: 'guard', count: 3 }, { type: 'scribe', count: 1 }],
+  enemies: [{ type: 'guard', count: 4 }, { type: 'scribe', count: 4 }],
   targetEnemy: 'scribe', terrain: 'village', tags: ['assassination'],
   intro: 'The informant meets contacts at the village inn. Catch them before they flee.'
 },
@@ -2023,7 +2054,7 @@ const MISSIONS = [
   id: 'm7', name: 'Burning the Armory', type: 'agitation',
   desc: 'The warlord\'s weapon stockpile threatens a peaceful clan. Destroy the armory.',
   difficulty: 2, reward: 300, recruitReward: null, requiredLevel: 1,
-  enemies: [{ type: 'guard', count: 3 }, { type: 'captain', count: 1 }],
+  enemies: [{ type: 'guard', count: 4 }, { type: 'captain', count: 4 }],
   turnLimit: 28, terrain: 'fortress', tags: ['agitation'],
   intro: 'Four guards and their captain protect the armory. Cut through them and torch it.'
 },
@@ -2035,9 +2066,9 @@ const MISSIONS = [
   terrain: 'docks', tags: ['rescue', 'recruit'],
   intro: 'Sakura is held at the dockside warehouse. Her captors are armed and paranoid.',
   floors: [
-    { enemies: [{ type: 'thug', count: 3 }, { type: 'boss_thug', count: 1 }], terrain: 'docks', name: 'Warehouse Floor',
+    { enemies: [{ type: 'thug', count: 4 }, { type: 'boss_thug', count: 4 }], terrain: 'docks', name: 'Warehouse Floor',
        carrierEnemy: 'boss_thug', lootItem: { name: 'Cell Key', icon: '🔑' } },
-    { enemies: [{ type: 'thug', count: 2 }], terrain: 'dungeon', name: 'Holding Cell',
+    { enemies: [{ type: 'thug', count: 4 }], terrain: 'dungeon', name: 'Holding Cell',
        isRescueFloor: true }
   ]
 },
@@ -2048,10 +2079,10 @@ const MISSIONS = [
   terrain: 'forest', tags: ['rescue', 'recruit'],
   intro: 'Yuki roams the deep forest, hunted by bounty hunters. Defeat her pursuers — she will judge you by how you fight.',
   floors: [
-    { enemies: [{ type: 'bounty_hunter', count: 2 }, { type: 'captain', count: 1 }, { type: 'kunoichi_boss', count: 1 }],
+    { enemies: [{ type: 'bounty_hunter', count: 4 }, { type: 'captain', count: 4 }, { type: 'kunoichi_boss', count: 4 }],
       terrain: 'forest', name: 'Forest Ambush',
       carrierEnemy: 'captain', lootItem: { name: 'Bounty Seal', icon: '📜' } },
-    { enemies: [{ type: 'bounty_hunter', count: 2 }], terrain: 'forest', name: 'Forest Escape',
+    { enemies: [{ type: 'bounty_hunter', count: 4 }], terrain: 'forest', name: 'Forest Escape',
       isRescueFloor: true }
   ]
 },
@@ -2063,9 +2094,9 @@ const MISSIONS = [
   terrain: 'fortress', tags: ['assassination', 'boss', 'multi-floor'],
   intro: 'Three floors. Dozens of soldiers. One warlord. The garrison falls tonight.',
   floors: [
-    { enemies: [{ type: 'guard', count: 4 }, { type: 'patrol_guard', count: 2 }], terrain: 'fortress', name: 'Outer Gate' },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'captain', count: 1 }], terrain: 'fortress', name: 'Inner Keep' },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'warlord', count: 1 }], terrain: 'keep', name: 'War Chamber', targetEnemy: 'warlord', isBossFloor: true }
+    { enemies: [{ type: 'guard', count: 4 }, { type: 'patrol_guard', count: 4 }], terrain: 'fortress', name: 'Outer Gate' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'fortress', name: 'Inner Keep' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'warlord', count: 4 }], terrain: 'keep', name: 'War Chamber', targetEnemy: 'warlord', isBossFloor: true }
   ]
 },
 
@@ -2077,7 +2108,7 @@ const MISSIONS = [
   id: 'm11', name: 'Harbor Rat', type: 'assassination',
   desc: 'A crime boss controls the docks and extorts every merchant. Remove him.',
   difficulty: 2, reward: 320, recruitReward: null, requiredLevel: 2,
-  enemies: [{ type: 'thug', count: 3 }, { type: 'boss_thug', count: 1 }],
+  enemies: [{ type: 'thug', count: 4 }, { type: 'boss_thug', count: 4 }],
   targetEnemy: 'boss_thug', terrain: 'docks', tags: ['assassination'],
   intro: 'The crime boss holds court under the dockside lanterns. His thugs outnumber you.'
 },
@@ -2085,7 +2116,7 @@ const MISSIONS = [
   id: 'm12', name: 'The Poison Formula', type: 'theft',
   desc: 'A warlord\'s alchemist has developed a mass-casualty poison. Steal the formula.',
   difficulty: 2, reward: 340, recruitReward: null, requiredLevel: 2,
-  enemies: [{ type: 'guard', count: 2 }, { type: 'advisor', count: 1 }],
+  enemies: [{ type: 'guard', count: 4 }, { type: 'advisor', count: 4 }],
   carrierEnemy: 'advisor', lootItem: { name: 'Poison Formula', icon: '🧪' },
   terrain: 'palace', tags: ['theft'],
   intro: 'The alchemist guards his formula jealously. His guards are paranoid.'
@@ -2098,9 +2129,9 @@ const MISSIONS = [
   terrain: 'dungeon', tags: ['rescue'],
   intro: 'The prison warden keeps his key close. Take him down and free the captives.',
   floors: [
-    { enemies: [{ type: 'guard', count: 3 }, { type: 'jailer', count: 1 }, { type: 'captain', count: 1 }], terrain: 'fortress', name: 'Prison Gatehouse',
+    { enemies: [{ type: 'guard', count: 4 }, { type: 'jailer', count: 4 }, { type: 'captain', count: 4 }], terrain: 'fortress', name: 'Prison Gatehouse',
        carrierEnemy: 'jailer', lootItem: { name: 'Cell Key', icon: '🔑' } },
-    { enemies: [{ type: 'guard', count: 3 }], terrain: 'dungeon', name: 'Cell Block',
+    { enemies: [{ type: 'guard', count: 4 }], terrain: 'dungeon', name: 'Cell Block',
        isRescueFloor: true }
   ]
 },
@@ -2108,7 +2139,7 @@ const MISSIONS = [
   id: 'm14', name: 'Sabotage the Fleet', type: 'agitation',
   desc: 'The coastal fleet prepares for an invasion. Destroy the flagship before it sails.',
   difficulty: 3, reward: 380, recruitReward: null, requiredLevel: 2,
-  enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'captain', count: 1 }],
+  enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'captain', count: 4 }],
   turnLimit: 28, terrain: 'docks', tags: ['agitation'],
   intro: 'The flagship is guarded around the clock. Burn it to the waterline.'
 },
@@ -2116,7 +2147,7 @@ const MISSIONS = [
   id: 'm15', name: 'Counting the Ships', type: 'espionage',
   desc: 'Count the fleet strength and steal the harbor charts before they change hands.',
   difficulty: 3, reward: 400, recruitReward: null, requiredLevel: 2,
-  enemies: [{ type: 'patrol_guard', count: 3 }, { type: 'advisor', count: 2 }],
+  enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'advisor', count: 4 }],
   turnLimit: 22, terrain: 'docks', tags: ['espionage'],
   intro: 'Move through the harbor district and photograph every ship log you can find.'
 },
@@ -2124,7 +2155,7 @@ const MISSIONS = [
   id: 'm16', name: 'The Merchant King', type: 'assassination',
   desc: 'A merchant prince funds the warlord\'s war effort. End his patronage permanently.',
   difficulty: 3, reward: 420, recruitReward: null, requiredLevel: 2,
-  enemies: [{ type: 'bounty_hunter', count: 2 }, { type: 'collector', count: 1 }],
+  enemies: [{ type: 'bounty_hunter', count: 4 }, { type: 'collector', count: 4 }],
   targetEnemy: 'collector', terrain: 'palace', tags: ['assassination'],
   intro: 'The merchant prince dines in his private chamber. He pays well for protection.'
 },
@@ -2136,9 +2167,9 @@ const MISSIONS = [
   terrain: 'castle', tags: ['rescue', 'recruit'],
   intro: 'Katsuro is bound in the castle cellar. His captors don\'t know who they have—yet.',
   floors: [
-    { enemies: [{ type: 'bounty_hunter', count: 2 }, { type: 'elite_guard', count: 1 }], terrain: 'castle', name: 'Castle Approach',
+    { enemies: [{ type: 'bounty_hunter', count: 4 }, { type: 'elite_guard', count: 4 }], terrain: 'castle', name: 'Castle Approach',
        carrierEnemy: 'elite_guard', lootItem: { name: 'Cell Key', icon: '\uD83D\uDD11' } },
-    { enemies: [{ type: 'elite_guard', count: 2 }], terrain: 'dungeon', name: 'Castle Cellar',
+    { enemies: [{ type: 'elite_guard', count: 4 }], terrain: 'dungeon', name: 'Castle Cellar',
        isRescueFloor: true }
   ]
 },
@@ -2146,7 +2177,7 @@ const MISSIONS = [
   id: 'm18', name: 'The Sea Captain\'s Map', type: 'theft',
   desc: 'A grizzled sea captain carries a map of every hidden cove on the coast.',
   difficulty: 3, reward: 400, recruitReward: null, requiredLevel: 2,
-  enemies: [{ type: 'thug', count: 4 }, { type: 'patrol_guard', count: 1 }],
+  enemies: [{ type: 'thug', count: 4 }, { type: 'patrol_guard', count: 4 }],
   carrierEnemy: 'patrol_guard', lootItem: { name: 'Coastal Map', icon: '🗺️' },
   terrain: 'docks', tags: ['theft'],
   intro: 'The captain drinks at the harbor inn, his map tucked beneath his coat.'
@@ -2155,7 +2186,7 @@ const MISSIONS = [
   id: 'm19', name: 'Burn the Records', type: 'agitation',
   desc: 'The coastal registry holds deeds to every allied clan\'s land. Burn it to ash.',
   difficulty: 3, reward: 440, recruitReward: null, requiredLevel: 2,
-  enemies: [{ type: 'elite_guard', count: 3 }, { type: 'scribe', count: 2 }],
+  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'scribe', count: 4 }],
   turnLimit: 26, terrain: 'castle', tags: ['agitation'],
   intro: 'Destroy every record in the archive hall before the guards can intervene.'
 },
@@ -2167,9 +2198,9 @@ const MISSIONS = [
   terrain: 'fortress', tags: ['assassination', 'boss', 'multi-floor'],
   intro: 'The Sea Fortress has never fallen. Storm it floor by floor and end the commander\'s reign.',
   floors: [
-    { enemies: [{ type: 'thug', count: 3 }, { type: 'patrol_guard', count: 3 }], terrain: 'docks', name: 'Harbor Gate' },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'bounty_hunter', count: 2 }], terrain: 'fortress', name: 'Barracks' },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'captain', count: 1 }, { type: 'warlord', count: 1 }], terrain: 'keep', name: 'Commander\'s Deck', targetEnemy: 'warlord', isBossFloor: true }
+    { enemies: [{ type: 'thug', count: 4 }, { type: 'patrol_guard', count: 4 }], terrain: 'docks', name: 'Harbor Gate' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'bounty_hunter', count: 4 }], terrain: 'fortress', name: 'Barracks' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }, { type: 'warlord', count: 4 }], terrain: 'keep', name: 'Commander\'s Deck', targetEnemy: 'warlord', isBossFloor: true }
   ]
 },
 
@@ -2181,7 +2212,7 @@ const MISSIONS = [
   id: 'm21', name: 'The Mountain Pass', type: 'espionage',
   desc: 'A rival clan monitors the only pass through the mountains. Map their positions.',
   difficulty: 3, reward: 480, recruitReward: null, requiredLevel: 3,
-  enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'advisor', count: 1 }],
+  enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'advisor', count: 4 }],
   turnLimit: 26, terrain: 'forest', tags: ['espionage'],
   intro: 'Slip past the sentries and document everything. Don\'t engage unless forced.'
 },
@@ -2189,7 +2220,7 @@ const MISSIONS = [
   id: 'm22', name: 'Iron Bridge Control', type: 'agitation',
   desc: 'Destroy the only bridge connecting the enemy\'s eastern and western forces.',
   difficulty: 3, reward: 500, recruitReward: null, requiredLevel: 3,
-  enemies: [{ type: 'guard', count: 3 }, { type: 'elite_guard', count: 2 }],
+  enemies: [{ type: 'guard', count: 4 }, { type: 'elite_guard', count: 4 }],
   turnLimit: 24, terrain: 'fortress', tags: ['agitation'],
   intro: 'The bridge guards never sleep. You\'ll need to move quickly.'
 },
@@ -2201,9 +2232,9 @@ const MISSIONS = [
   terrain: 'keep', tags: ['rescue'],
   intro: 'The elder is weak from captivity. Reach him before his captors realize help is coming.',
   floors: [
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'jailer', count: 1 }], terrain: 'keep', name: 'Mountain Gate',
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'jailer', count: 4 }], terrain: 'keep', name: 'Mountain Gate',
        carrierEnemy: 'jailer', lootItem: { name: 'Cell Key', icon: '🔑' } },
-    { enemies: [{ type: 'elite_guard', count: 2 }], terrain: 'dungeon', name: 'Summit Cell',
+    { enemies: [{ type: 'elite_guard', count: 4 }], terrain: 'dungeon', name: 'Summit Cell',
        isRescueFloor: true }
   ]
 },
@@ -2211,7 +2242,7 @@ const MISSIONS = [
   id: 'm24', name: 'Powder Storehouse', type: 'theft',
   desc: 'Steal the enemy\'s entire supply of black powder. Cripple their artillery.',
   difficulty: 4, reward: 520, recruitReward: null, requiredLevel: 3,
-  enemies: [{ type: 'guard', count: 3 }, { type: 'advisor', count: 1 }],
+  enemies: [{ type: 'guard', count: 4 }, { type: 'advisor', count: 4 }],
   carrierEnemy: 'advisor', lootItem: { name: 'Powder Cache', icon: '💣' },
   terrain: 'fortress', tags: ['theft'],
   intro: 'The powder room is guarded and ventilated. One mistake and everyone dies.'
@@ -2220,7 +2251,7 @@ const MISSIONS = [
   id: 'm25', name: 'The Spy Inside', type: 'assassination',
   desc: 'An advisor within the mountain fortress is feeding our secrets to the enemy.',
   difficulty: 3, reward: 480, recruitReward: null, requiredLevel: 3,
-  enemies: [{ type: 'elite_guard', count: 3 }, { type: 'advisor', count: 1 }],
+  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }],
   targetEnemy: 'advisor', terrain: 'castle', tags: ['assassination'],
   intro: 'The traitor moves freely through the fortress. Find him before he can warn his masters.'
 },
@@ -2228,7 +2259,7 @@ const MISSIONS = [
   id: 'm26', name: 'Map of the Hidden Fort', type: 'theft',
   desc: 'Steal the maps showing every secret installation in the mountain range.',
   difficulty: 4, reward: 540, recruitReward: null, requiredLevel: 3,
-  enemies: [{ type: 'elite_guard', count: 2 }, { type: 'patrol_guard', count: 2 }, { type: 'scribe', count: 1 }],
+  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'patrol_guard', count: 4 }, { type: 'scribe', count: 4 }],
   carrierEnemy: 'scribe', lootItem: { name: 'Fortress Map', icon: '🗺️' },
   terrain: 'palace', tags: ['theft'],
   intro: 'The scribe carries the master map. He never sleeps without a guard.'
@@ -2237,7 +2268,7 @@ const MISSIONS = [
   id: 'm27', name: 'The Summit Assassin', type: 'assassination',
   desc: 'A legendary assassin has been hired to eliminate our allies. Strike first.',
   difficulty: 4, reward: 560, recruitReward: null, requiredLevel: 3,
-  enemies: [{ type: 'bounty_hunter', count: 3 }, { type: 'kunoichi_boss', count: 1 }],
+  enemies: [{ type: 'bounty_hunter', count: 4 }, { type: 'kunoichi_boss', count: 4 }],
   targetEnemy: 'kunoichi_boss', terrain: 'forest', tags: ['assassination', 'boss'],
   intro: 'The hired blade moves at night. Ambush her before she can act.'
 },
@@ -2249,9 +2280,9 @@ const MISSIONS = [
   terrain: 'dungeon', tags: ['rescue', 'recruit'],
   intro: 'Kurogane is somewhere in the lower cells. The captain carries the only key.',
   floors: [
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'captain', count: 1 }], terrain: 'fortress', name: 'Fortress Approach',
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'fortress', name: 'Fortress Approach',
        carrierEnemy: 'captain', lootItem: { name: 'Cell Key', icon: '🔑' } },
-    { enemies: [{ type: 'elite_guard', count: 2 }], terrain: 'dungeon', name: 'Lower Cells',
+    { enemies: [{ type: 'elite_guard', count: 4 }], terrain: 'dungeon', name: 'Lower Cells',
        isRescueFloor: true }
   ]
 },
@@ -2259,7 +2290,7 @@ const MISSIONS = [
   id: 'm29', name: 'Rain of Fire', type: 'agitation',
   desc: 'The mountain garrison\'s siege weapons will destroy our allies. Destroy them first.',
   difficulty: 4, reward: 580, recruitReward: null, requiredLevel: 3,
-  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 2 }],
+  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }],
   turnLimit: 26, terrain: 'fortress', tags: ['agitation'],
   intro: 'Six armed soldiers protect three siege engines. Destroy the weapons in time.'
 },
@@ -2271,10 +2302,10 @@ const MISSIONS = [
   terrain: 'keep', tags: ['assassination', 'boss', 'multi-floor'],
   intro: 'He has never left his summit fortress. You will bring the mountain to him.',
   floors: [
-    { enemies: [{ type: 'guard', count: 4 }, { type: 'patrol_guard', count: 2 }], terrain: 'forest', name: 'Forest Approach' },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'bounty_hunter', count: 2 }], terrain: 'fortress', name: 'Outer Ramparts' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 1 }], terrain: 'castle', name: 'Inner Sanctum' },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'warlord', count: 1 }], terrain: 'keep', name: 'Summit Throne', targetEnemy: 'warlord', isBossFloor: true }
+    { enemies: [{ type: 'guard', count: 4 }, { type: 'patrol_guard', count: 4 }], terrain: 'forest', name: 'Forest Approach' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'bounty_hunter', count: 4 }], terrain: 'fortress', name: 'Outer Ramparts' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'castle', name: 'Inner Sanctum' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'warlord', count: 4 }], terrain: 'keep', name: 'Summit Throne', targetEnemy: 'warlord', isBossFloor: true }
   ]
 },
 
@@ -2286,7 +2317,7 @@ const MISSIONS = [
   id: 'm31', name: 'The Palace Gardener', type: 'espionage',
   desc: 'Disguised access to the royal palace allows intelligence gathering. Don\'t blow the cover.',
   difficulty: 4, reward: 620, recruitReward: null, requiredLevel: 4,
-  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 2 }],
+  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }],
   turnLimit: 22, terrain: 'palace', tags: ['espionage'],
   intro: 'The palace gardens are watched by eyes we haven\'t found yet. Move carefully.'
 },
@@ -2294,7 +2325,7 @@ const MISSIONS = [
   id: 'm32', name: 'The Emperor\'s Seal', type: 'theft',
   desc: 'Steal the imperial seal — whoever controls it controls every official document in the realm.',
   difficulty: 4, reward: 640, recruitReward: null, requiredLevel: 4,
-  enemies: [{ type: 'elite_guard', count: 3 }, { type: 'advisor', count: 1 }],
+  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }],
   carrierEnemy: 'advisor', lootItem: { name: 'Imperial Seal', icon: '💎' },
   terrain: 'palace', tags: ['theft'],
   intro: 'The seal is kept on the advisor\'s person at all times. Take him down quietly.'
@@ -2303,7 +2334,7 @@ const MISSIONS = [
   id: 'm33', name: 'The Pretender\'s Guard', type: 'assassination',
   desc: 'A false prince has usurped the throne with the warlord\'s backing. Expose him—permanently.',
   difficulty: 4, reward: 660, recruitReward: null, requiredLevel: 4,
-  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 1 }],
+  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }],
   targetEnemy: 'captain', terrain: 'palace', tags: ['assassination'],
   intro: 'The pretender\'s captain knows all his secrets. Silence him before he can confess—or warn anyone.'
 },
@@ -2311,7 +2342,7 @@ const MISSIONS = [
   id: 'm34', name: 'Fire in the Library', type: 'agitation',
   desc: 'The palace library contains records that legitimize the enemy\'s claim to power. Burn it.',
   difficulty: 4, reward: 640, recruitReward: null, requiredLevel: 4,
-  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'scribe', count: 3 }],
+  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'scribe', count: 4 }],
   turnLimit: 24, terrain: 'palace', tags: ['agitation'],
   intro: 'The scribes will flee the moment fire starts. The guards will not.'
 },
@@ -2323,9 +2354,9 @@ const MISSIONS = [
   terrain: 'dungeon', tags: ['rescue'],
   intro: 'The heir is deep underground. The jailer alone knows the passage.',
   floors: [
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'jailer', count: 1 }], terrain: 'palace', name: 'Palace Undercroft',
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'jailer', count: 4 }], terrain: 'palace', name: 'Palace Undercroft',
        carrierEnemy: 'jailer', lootItem: { name: 'Cell Key', icon: '🔑' } },
-    { enemies: [{ type: 'elite_guard', count: 2 }], terrain: 'dungeon', name: 'Royal Prison',
+    { enemies: [{ type: 'elite_guard', count: 4 }], terrain: 'dungeon', name: 'Royal Prison',
        isRescueFloor: true }
   ]
 },
@@ -2333,7 +2364,7 @@ const MISSIONS = [
   id: 'm36', name: 'Court of Shadows', type: 'espionage',
   desc: 'Map the palace\'s secret passages by infiltrating a hidden council meeting.',
   difficulty: 4, reward: 680, recruitReward: null, requiredLevel: 4,
-  enemies: [{ type: 'elite_guard', count: 3 }, { type: 'advisor', count: 3 }],
+  enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }],
   turnLimit: 22, terrain: 'palace', tags: ['espionage'],
   intro: 'The council meets in secret. Witness what they plan—but do not be seen.'
 },
@@ -2341,7 +2372,7 @@ const MISSIONS = [
   id: 'm37', name: 'The Blade Dancer', type: 'assassination',
   desc: 'The palace\'s master duelist trains the warlord\'s elite assassins. Stop the school.',
   difficulty: 5, reward: 720, recruitReward: null, requiredLevel: 4,
-  enemies: [{ type: 'bounty_hunter', count: 3 }, { type: 'kunoichi_boss', count: 1 }],
+  enemies: [{ type: 'bounty_hunter', count: 4 }, { type: 'kunoichi_boss', count: 4 }],
   targetEnemy: 'kunoichi_boss', terrain: 'palace', tags: ['assassination', 'boss'],
   intro: 'She is faster than anyone you have faced. Do not let her dictate the terms of the fight.'
 },
@@ -2353,9 +2384,9 @@ const MISSIONS = [
   terrain: 'dungeon', tags: ['rescue', 'recruit'],
   intro: 'Hayate is being moved at dawn. You have hours.',
   floors: [
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 1 }], terrain: 'palace', name: 'Palace Guard Post',
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'palace', name: 'Palace Guard Post',
        carrierEnemy: 'captain', lootItem: { name: 'Cell Key', icon: '🔑' } },
-    { enemies: [{ type: 'elite_guard', count: 2 }], terrain: 'dungeon', name: 'Detention Block',
+    { enemies: [{ type: 'elite_guard', count: 4 }], terrain: 'dungeon', name: 'Detention Block',
        isRescueFloor: true }
   ]
 },
@@ -2363,7 +2394,7 @@ const MISSIONS = [
   id: 'm39', name: 'Silence the Watchtower', type: 'agitation',
   desc: 'The palace watchtower signals troop movements across the entire region. Bring it down.',
   difficulty: 4, reward: 740, recruitReward: null, requiredLevel: 4,
-  enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 2 }],
+  enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 4 }],
   turnLimit: 24, terrain: 'castle', tags: ['agitation'],
   intro: 'Seven soldiers stand between you and the watchtower\'s destruction. There is no elegant way through.'
 },
@@ -2375,11 +2406,11 @@ const MISSIONS = [
   terrain: 'palace', tags: ['assassination', 'boss', 'multi-floor'],
   intro: 'Every level of the palace stands between you and the warlord\'s throne. Fight upward.',
   floors: [
-    { enemies: [{ type: 'guard', count: 4 }, { type: 'patrol_guard', count: 3 }], terrain: 'palace', name: 'Grand Entrance' },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'advisor', count: 2 }], terrain: 'palace', name: 'Council Hall' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'bounty_hunter', count: 2 }], terrain: 'castle', name: 'Guard Barracks' },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'captain', count: 2 }], terrain: 'palace', name: 'Royal Chambers' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'warlord', count: 1 }], terrain: 'keep', name: 'The Throne Room', targetEnemy: 'warlord', isBossFloor: true }
+    { enemies: [{ type: 'guard', count: 4 }, { type: 'patrol_guard', count: 4 }], terrain: 'palace', name: 'Grand Entrance' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'palace', name: 'Council Hall' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'bounty_hunter', count: 4 }], terrain: 'castle', name: 'Guard Barracks' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'palace', name: 'Royal Chambers' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'warlord', count: 4 }], terrain: 'keep', name: 'The Throne Room', targetEnemy: 'warlord', isBossFloor: true }
   ]
 },
 
@@ -2394,8 +2425,8 @@ const MISSIONS = [
   terrain: 'fortress', tags: ['assassination', 'boss', 'multi-floor'],
   intro: 'He survived the last war. He will not survive you.',
   floors: [
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'patrol_guard', count: 2 }], terrain: 'fortress', name: 'Outer Wall' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'warlord', count: 1 }], terrain: 'keep', name: 'Hidden Chamber', targetEnemy: 'warlord', isBossFloor: true }
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'patrol_guard', count: 4 }], terrain: 'fortress', name: 'Outer Wall' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'warlord', count: 4 }], terrain: 'keep', name: 'Hidden Chamber', targetEnemy: 'warlord', isBossFloor: true }
   ]
 },
 {
@@ -2405,9 +2436,9 @@ const MISSIONS = [
   terrain: 'castle', tags: ['theft', 'multi-floor'],
   intro: 'The vault was built to never be entered from outside. You will prove that wrong.',
   floors: [
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'patrol_guard', count: 3 }], terrain: 'castle', name: 'Entry Vault' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'bounty_hunter', count: 2 }], terrain: 'dungeon', name: 'Deep Vault' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 1 }], terrain: 'dungeon', name: 'Inner Sanctum', carrierEnemy: 'advisor', lootItem: { name: 'Jade Cache', icon: '💎' }, isBossFloor: true }
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'patrol_guard', count: 4 }], terrain: 'castle', name: 'Entry Vault' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'bounty_hunter', count: 4 }], terrain: 'dungeon', name: 'Deep Vault' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'dungeon', name: 'Inner Sanctum', carrierEnemy: 'advisor', lootItem: { name: 'Jade Cache', icon: '💎' }, isBossFloor: true }
   ]
 },
 {
@@ -2417,9 +2448,9 @@ const MISSIONS = [
   terrain: 'castle', tags: ['espionage', 'multi-floor'],
   intro: 'Three separate cells. One night. Leave no trace in any of them.',
   floors: [
-    { enemies: [{ type: 'patrol_guard', count: 3 }, { type: 'scribe', count: 2 }], terrain: 'village', name: 'Market Safehouse', turnLimit: 20 },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'advisor', count: 2 }], terrain: 'castle', name: 'Castle Archive', turnLimit: 20 },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 2 }], terrain: 'palace', name: 'High Council Room', turnLimit: 20, isBossFloor: true }
+    { enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'scribe', count: 4 }], terrain: 'village', name: 'Market Safehouse', turnLimit: 20 },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'castle', name: 'Castle Archive', turnLimit: 20 },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'palace', name: 'High Council Room', turnLimit: 20, isBossFloor: true }
   ]
 },
 {
@@ -2429,9 +2460,9 @@ const MISSIONS = [
   terrain: 'fortress', tags: ['agitation', 'multi-floor'],
   intro: 'Three locations. One night. Every depot in ash before dawn.',
   floors: [
-    { enemies: [{ type: 'guard', count: 4 }, { type: 'captain', count: 1 }], terrain: 'docks', name: 'Harbor Depot', turnLimit: 24 },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'captain', count: 1 }], terrain: 'fortress', name: 'Mountain Depot', turnLimit: 22 },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 2 }], terrain: 'castle', name: 'Central Depot', turnLimit: 20, isBossFloor: true }
+    { enemies: [{ type: 'guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'docks', name: 'Harbor Depot', turnLimit: 24 },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'fortress', name: 'Mountain Depot', turnLimit: 22 },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'castle', name: 'Central Depot', turnLimit: 20, isBossFloor: true }
   ]
 },
 {
@@ -2441,9 +2472,9 @@ const MISSIONS = [
   terrain: 'dungeon', tags: ['rescue', 'multi-floor'],
   intro: 'Each facility is independent. Each jailer holds their own key. Three rescues, one mission.',
   floors: [
-    { enemies: [{ type: 'guard', count: 3 }, { type: 'jailer', count: 1 }], terrain: 'dungeon', name: 'East Cell Block', carrierEnemy: 'jailer', lootItem: { name: 'Cell Key', icon: '🔑' } },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'jailer', count: 1 }], terrain: 'dungeon', name: 'West Cell Block', carrierEnemy: 'jailer', lootItem: { name: 'Cell Key', icon: '🔑' } },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'captain', count: 1 }, { type: 'jailer', count: 1 }], terrain: 'dungeon', name: 'Maximum Security', carrierEnemy: 'jailer', lootItem: { name: 'Master Key', icon: '🔑' }, isBossFloor: true }
+    { enemies: [{ type: 'guard', count: 4 }, { type: 'jailer', count: 4 }], terrain: 'dungeon', name: 'East Cell Block', carrierEnemy: 'jailer', lootItem: { name: 'Cell Key', icon: '🔑' } },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'jailer', count: 4 }], terrain: 'dungeon', name: 'West Cell Block', carrierEnemy: 'jailer', lootItem: { name: 'Cell Key', icon: '🔑' } },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }, { type: 'jailer', count: 4 }], terrain: 'dungeon', name: 'Maximum Security', carrierEnemy: 'jailer', lootItem: { name: 'Master Key', icon: '🔑' }, isBossFloor: true }
   ]
 },
 {
@@ -2453,10 +2484,10 @@ const MISSIONS = [
   terrain: 'palace', tags: ['assassination', 'multi-floor'],
   intro: 'Four floors, four targets. The council meets tonight and will not meet again.',
   floors: [
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'advisor', count: 1 }], terrain: 'palace', name: 'East Wing', targetEnemy: 'advisor' },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'advisor', count: 1 }], terrain: 'palace', name: 'West Wing', targetEnemy: 'advisor' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 1 }], terrain: 'castle', name: 'Guard Hall', targetEnemy: 'captain' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'warlord', count: 1 }], terrain: 'keep', name: 'Council Chamber', targetEnemy: 'warlord', isBossFloor: true }
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'palace', name: 'East Wing', targetEnemy: 'advisor' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'palace', name: 'West Wing', targetEnemy: 'advisor' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'castle', name: 'Guard Hall', targetEnemy: 'captain' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'warlord', count: 4 }], terrain: 'keep', name: 'Council Chamber', targetEnemy: 'warlord', isBossFloor: true }
   ]
 },
 {
@@ -2466,11 +2497,11 @@ const MISSIONS = [
   terrain: 'castle', tags: ['espionage', 'multi-floor'],
   intro: 'Every chamber must be cleared and documented. You cannot leave any room unsecured.',
   floors: [
-    { enemies: [{ type: 'patrol_guard', count: 3 }, { type: 'scribe', count: 1 }], terrain: 'village', name: 'Registry Hall', turnLimit: 20 },
-    { enemies: [{ type: 'elite_guard', count: 3 }, { type: 'scribe', count: 2 }], terrain: 'castle', name: 'Document Vault', turnLimit: 20 },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 1 }], terrain: 'palace', name: 'Intelligence Room', turnLimit: 20 },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 2 }], terrain: 'castle', name: 'Command Centre', turnLimit: 20 },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 1 }], terrain: 'keep', name: 'Master Archive', turnLimit: 20, isBossFloor: true }
+    { enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'scribe', count: 4 }], terrain: 'village', name: 'Registry Hall', turnLimit: 20 },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'scribe', count: 4 }], terrain: 'castle', name: 'Document Vault', turnLimit: 20 },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'palace', name: 'Intelligence Room', turnLimit: 20 },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'castle', name: 'Command Centre', turnLimit: 20 },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 4 }], terrain: 'keep', name: 'Master Archive', turnLimit: 20, isBossFloor: true }
   ]
 },
 {
@@ -2482,10 +2513,10 @@ const MISSIONS = [
   floors: [
     { enemies: [{ type: 'guard', count: 4 }], terrain: 'docks', name: 'Harbor Stores', turnLimit: 22 },
     { enemies: [{ type: 'patrol_guard', count: 4 }], terrain: 'village', name: 'Village Cache', turnLimit: 22 },
-    { enemies: [{ type: 'elite_guard', count: 3 }], terrain: 'fortress', name: 'Garrison Stores', turnLimit: 20 },
+    { enemies: [{ type: 'elite_guard', count: 4 }], terrain: 'fortress', name: 'Garrison Stores', turnLimit: 20 },
     { enemies: [{ type: 'elite_guard', count: 4 }], terrain: 'castle', name: 'Castle Armoury', turnLimit: 20 },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 1 }], terrain: 'palace', name: 'Palace Reserves', turnLimit: 20 },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 2 }], terrain: 'keep', name: 'Warlord\'s Arsenal', turnLimit: 18, isBossFloor: true }
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'palace', name: 'Palace Reserves', turnLimit: 20 },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 4 }], terrain: 'keep', name: 'Warlord\'s Arsenal', turnLimit: 18, isBossFloor: true }
   ]
 },
 {
@@ -2495,14 +2526,14 @@ const MISSIONS = [
   terrain: 'fortress', tags: ['assassination', 'boss', 'multi-floor'],
   intro: 'Eight floors. No reinforcements. No retreat. The Shadow Dynasty ends tonight.',
   floors: [
-    { enemies: [{ type: 'guard', count: 4 }, { type: 'captain', count: 1 }], terrain: 'docks', name: 'Harbor Command', targetEnemy: 'captain' },
-    { enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'captain', count: 1 }], terrain: 'village', name: 'Village HQ', targetEnemy: 'captain' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 1 }], terrain: 'fortress', name: 'Western Fort', targetEnemy: 'advisor' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 1 }], terrain: 'castle', name: 'Eastern Keep', targetEnemy: 'advisor' },
-    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 1 }], terrain: 'palace', name: 'Palace Guard', targetEnemy: 'captain' },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 1 }], terrain: 'palace', name: 'Inner Circle', targetEnemy: 'captain' },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'kunoichi_boss', count: 1 }], terrain: 'castle', name: 'Shadow Master', targetEnemy: 'kunoichi_boss' },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'warlord', count: 1 }], terrain: 'keep', name: 'Dynasty Throne', targetEnemy: 'warlord', isBossFloor: true }
+    { enemies: [{ type: 'guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'docks', name: 'Harbor Command', targetEnemy: 'captain' },
+    { enemies: [{ type: 'patrol_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'village', name: 'Village HQ', targetEnemy: 'captain' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'fortress', name: 'Western Fort', targetEnemy: 'advisor' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }], terrain: 'castle', name: 'Eastern Keep', targetEnemy: 'advisor' },
+    { enemies: [{ type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }], terrain: 'palace', name: 'Palace Guard', targetEnemy: 'captain' },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 4 }], terrain: 'palace', name: 'Inner Circle', targetEnemy: 'captain' },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'kunoichi_boss', count: 4 }], terrain: 'castle', name: 'Shadow Master', targetEnemy: 'kunoichi_boss' },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'warlord', count: 4 }], terrain: 'keep', name: 'Dynasty Throne', targetEnemy: 'warlord', isBossFloor: true }
   ]
 },
 {
@@ -2513,16 +2544,16 @@ const MISSIONS = [
   terrain: 'keep', tags: ['assassination', 'boss', 'multi-floor'],
   intro: 'Ten floors. No mercy. The realm\'s fate rests on your blades. End it.',
   floors: [
-    { enemies: [{ type: 'guard', count: 5 }, { type: 'patrol_guard', count: 3 }], terrain: 'village', name: 'Outer Village' },
-    { enemies: [{ type: 'patrol_guard', count: 5 }, { type: 'captain', count: 1 }], terrain: 'docks', name: 'Harbor Approach' },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'bounty_hunter', count: 2 }], terrain: 'fortress', name: 'Fortress Gate' },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 1 }], terrain: 'castle', name: 'Castle Walls' },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'advisor', count: 2 }], terrain: 'palace', name: 'Grand Hall' },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 2 }], terrain: 'palace', name: 'Royal Guard Hall' },
-    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'kunoichi_boss', count: 1 }], terrain: 'castle', name: 'Shadow Council' },
-    { enemies: [{ type: 'elite_guard', count: 6 }, { type: 'captain', count: 2 }], terrain: 'keep', name: 'Keep Ramparts' },
-    { enemies: [{ type: 'elite_guard', count: 6 }, { type: 'warlord', count: 1 }], terrain: 'keep', name: 'Antechamber', targetEnemy: 'warlord' },
-    { enemies: [{ type: 'elite_guard', count: 6 }, { type: 'captain', count: 2 }, { type: 'warlord', count: 1 }], terrain: 'keep', name: 'Supreme Throne', targetEnemy: 'warlord', isBossFloor: true }
+    { enemies: [{ type: 'guard', count: 5 }, { type: 'patrol_guard', count: 4 }], terrain: 'village', name: 'Outer Village' },
+    { enemies: [{ type: 'patrol_guard', count: 5 }, { type: 'captain', count: 4 }], terrain: 'docks', name: 'Harbor Approach' },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'bounty_hunter', count: 4 }], terrain: 'fortress', name: 'Fortress Gate' },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 4 }], terrain: 'castle', name: 'Castle Walls' },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'advisor', count: 4 }], terrain: 'palace', name: 'Grand Hall' },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'captain', count: 4 }], terrain: 'palace', name: 'Royal Guard Hall' },
+    { enemies: [{ type: 'elite_guard', count: 5 }, { type: 'kunoichi_boss', count: 4 }], terrain: 'castle', name: 'Shadow Council' },
+    { enemies: [{ type: 'elite_guard', count: 6 }, { type: 'captain', count: 4 }], terrain: 'keep', name: 'Keep Ramparts' },
+    { enemies: [{ type: 'elite_guard', count: 6 }, { type: 'warlord', count: 4 }], terrain: 'keep', name: 'Antechamber', targetEnemy: 'warlord' },
+    { enemies: [{ type: 'elite_guard', count: 6 }, { type: 'captain', count: 4 }, { type: 'warlord', count: 4 }], terrain: 'keep', name: 'Supreme Throne', targetEnemy: 'warlord', isBossFloor: true }
   ]
 },
 ];
@@ -2548,10 +2579,10 @@ const MISSION_TEMPLATES = {
     ],
     tags: ['assassination'],
     enemyGroups: [
-      [{ type: 'guard', count: 2 }, { type: 'collector', count: 1 }],
-      [{ type: 'patrol_guard', count: 2 }, { type: 'advisor', count: 1 }],
-      [{ type: 'guard', count: 3 }, { type: 'captain', count: 1 }],
-      [{ type: 'elite_guard', count: 2 }, { type: 'advisor', count: 1 }]
+      [{ type: 'guard', count: 4 }, { type: 'collector', count: 4 }],
+      [{ type: 'patrol_guard', count: 4 }, { type: 'advisor', count: 4 }],
+      [{ type: 'guard', count: 4 }, { type: 'captain', count: 4 }],
+      [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }]
     ]
   },
   theft: {
@@ -2570,10 +2601,10 @@ const MISSION_TEMPLATES = {
     tags: ['theft'],
     // All groups MUST include a scribe or advisor (valid carrier types for theft)
     enemyGroups: [
-      [{ type: 'guard', count: 2 }, { type: 'scribe', count: 1 }],
-      [{ type: 'patrol_guard', count: 3 }, { type: 'scribe', count: 1 }],
-      [{ type: 'guard', count: 2 }, { type: 'advisor', count: 1 }],
-      [{ type: 'elite_guard', count: 2 }, { type: 'scribe', count: 1 }]
+      [{ type: 'guard', count: 4 }, { type: 'scribe', count: 4 }],
+      [{ type: 'patrol_guard', count: 4 }, { type: 'scribe', count: 4 }],
+      [{ type: 'guard', count: 4 }, { type: 'advisor', count: 4 }],
+      [{ type: 'elite_guard', count: 4 }, { type: 'scribe', count: 4 }]
     ]
   },
   espionage: {
@@ -2591,10 +2622,10 @@ const MISSION_TEMPLATES = {
     ],
     tags: ['espionage'],
     enemyGroups: [
-      [{ type: 'patrol_guard', count: 2 }, { type: 'scribe', count: 2 }],
-      [{ type: 'guard', count: 3 }, { type: 'advisor', count: 1 }],
-      [{ type: 'elite_guard', count: 2 }, { type: 'advisor', count: 1 }],
-      [{ type: 'patrol_guard', count: 3 }, { type: 'scribe', count: 1 }]
+      [{ type: 'patrol_guard', count: 4 }, { type: 'scribe', count: 4 }],
+      [{ type: 'guard', count: 4 }, { type: 'advisor', count: 4 }],
+      [{ type: 'elite_guard', count: 4 }, { type: 'advisor', count: 4 }],
+      [{ type: 'patrol_guard', count: 4 }, { type: 'scribe', count: 4 }]
     ]
   },
   agitation: {
@@ -2612,10 +2643,10 @@ const MISSION_TEMPLATES = {
     ],
     tags: ['agitation'],
     enemyGroups: [
-      [{ type: 'guard', count: 3 }, { type: 'captain', count: 1 }],
+      [{ type: 'guard', count: 4 }, { type: 'captain', count: 4 }],
       [{ type: 'thug', count: 4 }],
-      [{ type: 'guard', count: 2 }, { type: 'elite_guard', count: 1 }, { type: 'captain', count: 1 }],
-      [{ type: 'patrol_guard', count: 3 }, { type: 'boss_thug', count: 1 }]
+      [{ type: 'guard', count: 4 }, { type: 'elite_guard', count: 4 }, { type: 'captain', count: 4 }],
+      [{ type: 'patrol_guard', count: 4 }, { type: 'boss_thug', count: 4 }]
     ]
   },
   rescue: {
@@ -2633,10 +2664,10 @@ const MISSION_TEMPLATES = {
     ],
     tags: ['rescue'],
     enemyGroups: [
-      [{ type: 'guard', count: 2 }, { type: 'jailer', count: 1 }],
-      [{ type: 'patrol_guard', count: 2 }, { type: 'jailer', count: 1 }],
-      [{ type: 'guard', count: 3 }, { type: 'jailer', count: 1 }, { type: 'captain', count: 1 }],
-      [{ type: 'elite_guard', count: 2 }, { type: 'jailer', count: 1 }, { type: 'advisor', count: 1 }]
+      [{ type: 'guard', count: 4 }, { type: 'jailer', count: 4 }],
+      [{ type: 'patrol_guard', count: 4 }, { type: 'jailer', count: 4 }],
+      [{ type: 'guard', count: 4 }, { type: 'jailer', count: 4 }, { type: 'captain', count: 4 }],
+      [{ type: 'elite_guard', count: 4 }, { type: 'jailer', count: 4 }, { type: 'advisor', count: 4 }]
     ]
   }
 };
@@ -2690,7 +2721,7 @@ function generateDynamicMission(seed, difficultyBias, forcedType) {
     }
     // Safety: ensure at least one carrier-type enemy exists in the group
     if (carrierEnemy && !scaledEnemies.some(g => g.type === carrierEnemy)) {
-      scaledEnemies.push({ type: carrierEnemy, count: 1 });
+      scaledEnemies.push({ type: carrierEnemy, count: 4 });
     }
   } else if (tKey === 'espionage') {
     turnLimit = 16 + difficulty * 4;
@@ -3977,7 +4008,7 @@ let CS = {
   selectedAction: null,
   log: [],
   highlightedTiles: [],
-  gridW: 14, gridH: 12,
+  gridW: 20, gridH: 19,
   cellSize: 56,
 
   // ATB / CT system
@@ -6021,7 +6052,7 @@ function initCombat(mission, partyIds) {
   _ensureMapReachability(CS.grid, CS.gridW, CS.gridH, exitSide);
 
   // Carve exit openings (activate later when conditions met)
-  const exitYs = [2, Math.floor(CS.gridH / 2), CS.gridH - 3];
+  const exitYs = [2, 7, Math.floor(CS.gridH / 2), CS.gridH - 7, CS.gridH - 3];
   CS.exitTiles = exitYs.map(y => ({ x: exitCol, y }));
   CS.exitTiles.forEach(t => {
     if (CS.grid[t.y]) CS.grid[t.y][t.x] = 'exit';
@@ -6537,7 +6568,7 @@ function _ensureMapReachability(grid, W, H, exitSide) {
 
   // Step 2: BFS from the ally SPAWN zone (always left cols 1-4), verify path to exit side
   // Exits may be on either side, but allies always spawn on the left.
-  const spawnXs = [1, 2, 3, 4];
+  const spawnXs = [1, 2, 3, 4, 5];
   const exitXs  = exitSide === 'left' ? [1] : [W - 2]; // inner column of exits
 
   // Find a good spawn seed — first passable tile in spawn zone
@@ -12708,13 +12739,46 @@ function decodeMap(rows) {
     'T': 'roof3',  'S': 'shadow', '~': 'water',   'G': 'gate',
     'E': 'exit',   'f': 'forest', 'C': 'cliff',   's': 'stone',
   };
+  const origW = rows[0]?.length || 14;
+  const origH = rows.length;
+  const targetW = CS.gridW;
+  const targetH = CS.gridH;
+  // Padding amounts
+  const padLeft   = 0;                            // keep original left wall at x=0
+  const padRight  = targetW - origW;              // add columns on right
+  const padTop    = 0;                            // keep original top
+  const padBottom = targetH - origH;              // add rows at bottom
+
   const grid = [];
-  for (let y = 0; y < CS.gridH; y++) {
+  for (let y = 0; y < targetH; y++) {
     grid.push([]);
-    const row = rows[y] || '';
-    for (let x = 0; x < CS.gridW; x++) {
-      const ch = row[x] || '.';
-      grid[y].push(CHAR_MAP[ch] || 'empty');
+    const srcY = y - padTop;
+    const row  = (srcY >= 0 && srcY < origH) ? (rows[srcY] || '') : '';
+    for (let x = 0; x < targetW; x++) {
+      const srcX = x - padLeft;
+      // Border forced to wall
+      if (y === 0 || y === targetH - 1 || x === 0 || x === targetW - 1) {
+        grid[y].push('wall');
+      } else if (srcX >= 0 && srcX < origW && srcY >= 0 && srcY < origH) {
+        // Original tile
+        const ch = row[srcX] || '.';
+        grid[y].push(CHAR_MAP[ch] || 'empty');
+      } else if (srcY < 0 || srcY >= origH) {
+        // Expanded rows — mirror last real interior row for continuity
+        const mirrorSrcY = srcY < 0 ? 1 : origH - 2;
+        const mirrorRow  = rows[mirrorSrcY] || '';
+        const mirrorX    = Math.max(0, Math.min(srcX, origW - 1));
+        const ch         = mirrorRow[mirrorX] || '.';
+        const decoded    = CHAR_MAP[ch] || 'empty';
+        // Don't propagate exits/gates into padding — use empty instead
+        grid[y].push(decoded === 'exit' || decoded === 'gate' ? 'empty' : decoded);
+      } else {
+        // Expanded columns — extend the rightmost interior column
+        const mirrorX = origW - 2; // last interior column
+        const ch      = row[mirrorX] || '.';
+        const decoded = CHAR_MAP[ch] || 'empty';
+        grid[y].push(decoded === 'exit' || decoded === 'gate' ? 'empty' : decoded);
+      }
     }
   }
   return grid;
@@ -13490,30 +13554,14 @@ const NetworkManager=(()=>{
          pvpAdvanceQueue();
          break;
        }
-        case 'MATCH_OVER':{
-          // Remote side is informing us of the outcome.
-          // If they say the winner is "me", that means THEY won.
-          // Therefore WE lost.
-
-          const iWon = msg.payload.winner === 'opp';
-
-          CS._endingCombat = true;
-
-          addLog(
-            '⚔ Match over — ' + (iWon ? 'VICTORY!' : 'DEFEAT!'),
-            iWon ? 'special' : 'death'
-          );
-
-          toast(iWon ? 'Victory!' : 'Defeat!', iWon ? 'success' : 'error');
-
-          renderCombat();
-
-          setTimeout(() => {
-            endCombat(iWon ? 'victory' : 'defeat');
-          }, 600);
-
-          break;
-        }
+      case 'MATCH_OVER':{
+        // Opponent declared victory — we lost
+        const won = msg.payload.winner === 'me'; // from opponent's perspective — they won, we lost
+        CS._endingCombat = true;
+        addLog('⚔ Match over — ' + (won ? 'VICTORY!' : 'DEFEAT!'), won ? 'special' : 'death');
+        setTimeout(() => endCombat(won ? 'victory' : 'defeat'), 600);
+        break;
+      }
       case 'SYNC_REQUEST':_send('SYNC_STATE',{allies:CS.allies,enemies:CS.enemies});break;
       case 'SYNC_STATE':{try{const d=msg.payload;if(d.allies)CS.allies=d.allies;if(d.enemies)CS.enemies=d.enemies;renderCombat();}catch(e){}break;}
       case 'DISCONNECT':_status('Opponent disconnected.','error');addLog('\u26a0 Opponent disconnected.','system');pvpShowWait(false);break;
@@ -13676,14 +13724,22 @@ function pvpShowWait(show){
 
 // ─── initPvPCombat ────────────────────────────────────────────
 function initPvPCombat(pvpMap,isJoiner,oppTeamData){
-  const W=14,H=12;
-  CS.gridW=W;CS.gridH=H;CS.cellSize=56;
+  const W=20,H=19;
+  CS.gridW=W;CS.gridH=H;CS.cellSize=52;
   const CM={'.':'empty','1':'floor1','2':'floor2','3':'floor3','W':'wall','F':'forest',
     'R':'rubble','r':'roof','T':'roof3','S':'shadow','~':'water','G':'gate','E':'exit','f':'forest','C':'cliff','s':'stone'};
-  CS.grid=pvpMap.rows.map(row=>[...row.padEnd(W,'W')].slice(0,W).map(c=>CM[c]||'empty'));
+  CS.grid=pvpMap.rows.map((row,y)=>{
+    const arr=[];
+    for(let x=0;x<W;x++){
+      if(x===0||x===W-1){arr.push('wall');}
+      else if(x<row.length){arr.push(CM[row[x]]||'empty');}
+      else{arr.push(CM[row[row.length-1]||'W']||'wall');}
+    }
+    return arr;
+  });
 
-  const MY =[isJoiner?{x:11,y:2}:{x:2,y:2},isJoiner?{x:11,y:5}:{x:2,y:5},isJoiner?{x:11,y:9}:{x:2,y:9}];
-  const OPP=[isJoiner?{x:2,y:2}:{x:11,y:2},isJoiner?{x:2,y:5}:{x:11,y:5},isJoiner?{x:2,y:9}:{x:11,y:9}];
+  const MY =[isJoiner?{x:17,y:3}:{x:2,y:3},isJoiner?{x:17,y:9}:{x:2,y:9},isJoiner?{x:17,y:15}:{x:2,y:15}];
+  const OPP=[isJoiner?{x:2,y:3}:{x:17,y:3},isJoiner?{x:2,y:9}:{x:17,y:9},isJoiner?{x:2,y:15}:{x:17,y:15}];
 
   const myRaw=GS.clan.slice(0,3);
   const oppRaw=(oppTeamData||[]).slice(0,3);
