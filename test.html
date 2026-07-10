@@ -7140,61 +7140,45 @@ function schedulePulseRedraw() {
 function drawCanvas() {
   const canvas = document.getElementById('combatCanvas');
   const cs = CS.cellSize;
-  const newW = CS.gridW * cs, newH = CS.gridH * cs;
-  if (canvas.width !== newW) canvas.width = newW;
-  if (canvas.height !== newH) canvas.height = newH;
+  if (!canvas || !cs) return;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, newW, newH);
+  const W = CS.gridW || 20, H = CS.gridH || 19;
+  canvas.width = W * cs;
+  canvas.height = H * cs;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw grid
-  for (let y = 0; y < CS.gridH; y++) {
-    for (let x = 0; x < CS.gridW; x++) {
+  // ─── Draw tiles using TileRenderer ───
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
       const tileKey = CS.grid[y]?.[x] || 'empty';
-      const tile = TERRAIN_TILES[tileKey];
-      // Skip exit tiles here — drawn later with glow
+      // Skip exit tiles — they are drawn later with glow
       if (tileKey === 'exit') continue;
       const px = x * cs, py = y * cs;
-      const tImg = getImg(tilePng(tileKey));
-      if (tImg) {
-        ctx.drawImage(tImg, px, py, cs, cs);
-        // Darken walls so they read as impassable
-        if (tileKey === 'wall') {
-          ctx.fillStyle = 'rgba(0,0,0,0.25)';
-          ctx.fillRect(px, py, cs, cs);
-        } else {
-          // Passable floor/forest/rubble: subtle bright overlay so they stand out
-          ctx.fillStyle = 'rgba(255,255,255,0.07)';
-          ctx.fillRect(px, py, cs, cs);
-        }
+
+      // Use procedural tile renderer
+      const tileCanvas = TileRenderer.getTile(tileKey, x, y, cs);
+      if (tileCanvas) {
+        ctx.drawImage(tileCanvas, px, py);
       } else {
-        // Fallback: solid color + slight brightening for passable tiles
+        // Fallback: solid color
+        const tile = TERRAIN_TILES[tileKey] || TERRAIN_TILES.empty;
         ctx.fillStyle = tile.color;
         ctx.fillRect(px, py, cs, cs);
-        if (tile.passable) {
-          ctx.fillStyle = 'rgba(255,255,255,0.06)';
-          ctx.fillRect(px, py, cs, cs);
-        }
-        if (tile.label && tile.label.length === 1 && tile.label !== '▪') {
-          ctx.fillStyle = 'rgba(255,255,255,0.15)';
-          ctx.font = `${cs * 0.4}px serif`;
-          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillText(tile.label, px + cs / 2, py + cs / 2);
-        }
       }
-      // Grid lines: brighter on walls to show boundaries clearly
-      ctx.strokeStyle = tile.passable ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.35)';
-      ctx.lineWidth = 1;
+
+      // Grid lines (light)
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = 0.5;
       ctx.strokeRect(px, py, cs, cs);
     }
   }
 
-  // Draw objective tiles (agitation / espionage missions)
+  // ─── Draw objective tiles ───
   if (CS.objectiveTiles && CS.objectiveTiles.length) {
     const _opulse = 0.6 + 0.4 * Math.sin(Date.now() / 400);
     CS.objectiveTiles.forEach(function(ot) {
       const ox = ot.x * cs, oy = ot.y * cs;
       if (ot.done) {
-        // Completed: faint green fill + checkmark
         ctx.fillStyle = 'rgba(61,170,125,0.25)';
         ctx.fillRect(ox, oy, cs, cs);
         ctx.fillStyle = 'rgba(61,170,125,0.9)';
@@ -7205,17 +7189,14 @@ function drawCanvas() {
         ctx.lineWidth = 2;
         ctx.strokeRect(ox + 1, oy + 1, cs - 2, cs - 2);
       } else {
-        // Pending: pulsing orange border + large emoji icon
         ctx.fillStyle = 'rgba(255,140,0,' + (0.12 + _opulse * 0.12) + ')';
         ctx.fillRect(ox, oy, cs, cs);
         ctx.strokeStyle = 'rgba(255,160,0,' + (0.7 + _opulse * 0.3) + ')';
         ctx.lineWidth = 2.5;
         ctx.strokeRect(ox + 1, oy + 1, cs - 2, cs - 2);
-        // Draw icon
         ctx.font = Math.round(cs * 0.5) + 'px serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(ot.icon, ox + cs / 2, oy + cs * 0.46);
-        // Draw label below icon
         ctx.fillStyle = 'rgba(255,200,100,' + (0.7 + _opulse * 0.3) + ')';
         ctx.font = 'bold ' + Math.round(cs * 0.14) + 'px sans-serif';
         ctx.textBaseline = 'middle';
@@ -7224,246 +7205,13 @@ function drawCanvas() {
     });
   }
 
-  // Draw active fire tiles
-  if (CS.activeFires && CS.activeFires.length > 0) {
-    const _now = Date.now();
-    const _burnedAll = getActiveBurnedSet();
-    // Also track which tiles are the origin and still in their grace period
-    const _originSafe = new Set();
-    CS.activeFires.forEach(function(fire) {
-      const age = CS.turn - fire.turnIgnited;
-      if (age < FIRE_ORIGIN_DELAY) _originSafe.add(fire.ox + ',' + fire.oy);
-    });
-
-    _burnedAll.forEach(function(key) {
-      const parts = key.split(',');
-      const fx = parseInt(parts[0]), fy = parseInt(parts[1]);
-      const px = fx * cs, py = fy * cs;
-
-      // Flicker: two sine waves at different speeds give an organic feel
-      const _flicker1 = 0.5 + 0.5 * Math.sin(_now / 180 + fx * 1.7 + fy * 2.3);
-      const _flicker2 = 0.5 + 0.5 * Math.sin(_now / 110 + fx * 3.1 - fy * 1.4);
-      const _flicker  = (_flicker1 + _flicker2) / 2;
-
-      // Base: deep red-orange fill
-      const _alpha = 0.45 + _flicker * 0.25;
-      ctx.fillStyle = 'rgba(220,60,0,' + _alpha.toFixed(2) + ')';
-      ctx.fillRect(px, py, cs, cs);
-
-      // Bright amber inner glow
-      const _glow = ctx.createRadialGradient(
-        px + cs * 0.5, py + cs * 0.7, 0,
-        px + cs * 0.5, py + cs * 0.5, cs * 0.55
-      );
-      _glow.addColorStop(0, 'rgba(255,200,50,' + (0.35 + _flicker * 0.30).toFixed(2) + ')');
-      _glow.addColorStop(1, 'rgba(255,80,0,0)');
-      ctx.fillStyle = _glow;
-      ctx.fillRect(px, py, cs, cs);
-
-      // Fire emoji — scaled with cell size
-      ctx.font = Math.round(cs * 0.48) + 'px serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      // Slight vertical bob
-      const _bob = Math.sin(_now / 200 + fx * 2.1 + fy * 1.9) * cs * 0.04;
-      ctx.fillText('🔥', px + cs * 0.5, py + cs * 0.46 + _bob);
-
-      // Hot border
-      ctx.strokeStyle = 'rgba(255,140,0,' + (0.6 + _flicker * 0.4).toFixed(2) + ')';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(px + 1, py + 1, cs - 2, cs - 2);
-    });
-
-    // Draw "smouldering — about to ignite" warning on origin tiles still in grace period
-    _originSafe.forEach(function(key) {
-      if (_burnedAll.has(key)) return; // already fully on fire — skip warning
-      const parts = key.split(',');
-      const fx = parseInt(parts[0]), fy = parseInt(parts[1]);
-      const px = fx * cs, py = fy * cs;
-      const _warn = 0.4 + 0.6 * Math.abs(Math.sin(_now / 300));
-      ctx.fillStyle = 'rgba(255,120,0,' + (_warn * 0.35).toFixed(2) + ')';
-      ctx.fillRect(px, py, cs, cs);
-      ctx.strokeStyle = 'rgba(255,160,0,' + (_warn * 0.9).toFixed(2) + ')';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(px + 1, py + 1, cs - 2, cs - 2);
-      // Warning label
-      ctx.font = 'bold ' + Math.round(cs * 0.14) + 'px sans-serif';
-      ctx.fillStyle = 'rgba(255,220,80,' + (_warn * 0.95).toFixed(2) + ')';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('IGNITING', px + cs * 0.5, py + cs * 0.84);
-      ctx.font = Math.round(cs * 0.38) + 'px serif';
-      ctx.fillText('💨', px + cs * 0.5, py + cs * 0.44);
-    });
-  }
-
-  // Highlight tiles
-  CS.highlightedTiles.forEach(({ x, y, color }) => {
-    ctx.fillStyle = color;
-    ctx.fillRect(x * cs, y * cs, cs, cs);
-    // Subtle inner border
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x * cs + 1, y * cs + 1, cs - 2, cs - 2);
-  });
-
-  // Active unit glow tile (drawn under the unit sprite)
-  if (CS.activeUnit) {
-    const activeAlly = CS.allies.find(a => a.gridId === CS.activeUnit && a.hp > 0 && !a.perished);
-    if (activeAlly) {
-      const _gPulse = 0.55 + 0.45 * Math.sin(Date.now() / 500);
-      const _gx = activeAlly.x * cs, _gy = activeAlly.y * cs;
-      // Soft gold glow beneath active ally
-      const _grad = ctx.createRadialGradient(_gx + cs/2, _gy + cs/2, 0, _gx + cs/2, _gy + cs/2, cs * 0.52);
-      _grad.addColorStop(0, `rgba(201,162,39,${(0.18 + _gPulse * 0.12).toFixed(2)})`);
-      _grad.addColorStop(1, 'rgba(201,162,39,0)');
-      ctx.fillStyle = _grad;
-      ctx.fillRect(_gx, _gy, cs, cs);
-      // Gold corner brackets
-      const _bl = cs * 0.22;
-      ctx.strokeStyle = `rgba(201,162,39,${(0.65 + _gPulse * 0.35).toFixed(2)})`;
-      ctx.lineWidth = 2;
-      const _corners = [[_gx, _gy], [_gx + cs, _gy], [_gx, _gy + cs], [_gx + cs, _gy + cs]];
-      const _dirs = [[1,1], [-1,1], [1,-1], [-1,-1]];
-      _corners.forEach(([cx2, cy2], i) => {
-        const [dx2, dy2] = _dirs[i];
-        ctx.beginPath(); ctx.moveTo(cx2 + dx2 * _bl, cy2); ctx.lineTo(cx2, cy2); ctx.lineTo(cx2, cy2 + dy2 * _bl); ctx.stroke();
-      });
-    }
-  }
-
-  // ── SMOKE / DARKNESS CLOUD OVERLAYS ──
-  if (CS.smokeClouds && CS.smokeClouds.length > 0) {
-    const _now2 = Date.now();
-    CS.smokeClouds.forEach(cloud => {
-      const isDarkness = cloud.type === 'darkness';
-      // Draw tiles within radius
-      for (let dy2 = -cloud.radius; dy2 <= cloud.radius; dy2++) {
-        for (let dx2 = -cloud.radius; dx2 <= cloud.radius; dx2++) {
-          const dist = Math.abs(dx2) + Math.abs(dy2);
-          if (dist > cloud.radius) continue;
-          const tx2 = cloud.cx + dx2, ty2 = cloud.cy + dy2;
-          if (tx2 < 0 || ty2 < 0 || tx2 >= CS.gridW || ty2 >= CS.gridH) continue;
-          const px2 = tx2 * cs, py2 = ty2 * cs;
-          // Fade toward edges of cloud
-          const edgeFade = 1 - (dist / (cloud.radius + 0.5));
-          // Flicker
-          const flick = 0.5 + 0.5 * Math.sin(_now2 / 220 + tx2 * 1.3 + ty2 * 2.1);
-          const baseAlpha = isDarkness ? 0.52 : 0.42;
-          const alpha = (baseAlpha + flick * 0.18) * edgeFade;
-          // Base colour: dark charcoal for smoke, deep indigo for darkness
-          const r = isDarkness ? 20 : 40, g = isDarkness ? 10 : 40, b = isDarkness ? 45 : 45;
-          ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
-          ctx.fillRect(px2, py2, cs, cs);
-          // Wispy inner detail
-          const wispAlpha = (0.12 + flick * 0.1) * edgeFade;
-          const wispGrad = ctx.createRadialGradient(
-            px2 + cs * 0.5, py2 + cs * 0.5, 0,
-            px2 + cs * 0.5, py2 + cs * 0.5, cs * 0.6
-          );
-          const wisp1 = isDarkness ? `rgba(80,40,120,${wispAlpha.toFixed(2)})` : `rgba(160,160,160,${wispAlpha.toFixed(2)})`;
-          wispGrad.addColorStop(0, wisp1);
-          wispGrad.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = wispGrad;
-          ctx.fillRect(px2, py2, cs, cs);
-          // Emoji every 3rd tile for texture
-          if ((tx2 + ty2) % 3 === 0) {
-            ctx.font = Math.round(cs * 0.4) + 'px serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.globalAlpha = wispAlpha * 2.5;
-            ctx.fillStyle = isDarkness ? '#220033' : '#777';
-            ctx.fillText(isDarkness ? '🌑' : '💨', px2 + cs * 0.5, py2 + cs * 0.5);
-            ctx.globalAlpha = 1;
-          }
-          // Border
-          ctx.strokeStyle = isDarkness ? `rgba(60,20,80,${(edgeFade * 0.4).toFixed(2)})` : `rgba(100,100,100,${(edgeFade * 0.35).toFixed(2)})`;
-          ctx.lineWidth = 1;
-          ctx.strokeRect(px2 + 1, py2 + 1, cs - 2, cs - 2);
-        }
-      }
-      // Turns remaining label at cloud centre
-      const labelX = cloud.cx * cs + cs * 0.5;
-      const labelY = cloud.cy * cs + cs * 0.18;
-      ctx.font = 'bold ' + Math.round(cs * 0.16) + 'px sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = isDarkness ? 'rgba(180,120,255,0.75)' : 'rgba(220,220,220,0.75)';
-      ctx.fillText((isDarkness ? '🌑 ' : '💨 ') + cloud.turnsLeft + 't', labelX, labelY);
-    });
-  }
-
-  // ── FOG OF WAR OVERLAY (after tiles, before units) ──
-  FOG.drawFog(ctx, cs);
-
-  // Draw enemies — hidden by fog unless in visible tile
-  CS.enemies.filter(e => e.hp > 0 && !e.perished).forEach(e => {
-    if (!FOG.isVisible(e.x, e.y)) return;
-    const _ent = Date.now();
-    const isBlinded = e.status === 'blinded' || e.status === 'confused';
-    // Blinded enemies pulse with a grey overlay
-    if (isBlinded) {
-      const bp = 0.5 + 0.5 * Math.sin(_ent / 250);
-      ctx.fillStyle = `rgba(120,120,120,${(0.18 + bp * 0.12).toFixed(2)})`;
-      ctx.fillRect(e.x * cs, e.y * cs, cs, cs);
-    }
-    drawUnit(ctx, e, '#8b1a1a', '#ff4444', false);
-    // Target marker
-    if (e.isTarget) {
-      ctx.strokeStyle = '#ff2222';
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([4, 3]);
-      ctx.beginPath();
-      ctx.arc(e.x * cs + cs / 2, e.y * cs + cs / 2, cs * 0.46, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-    // Carrier marker
-    if (e.isCarrier && e.carriedLoot) {
-      ctx.font = `${cs * 0.28}px serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      ctx.fillText(e.carriedLoot.icon, e.x * cs + cs * 0.75, e.y * cs + 2);
-    }
-  });
-
-  // Draw loot on floor
-  if (CS.lootOnFloor) {
-    const lx = CS.lootOnFloor.x * cs + cs / 2;
-    const ly = CS.lootOnFloor.y * cs + cs / 2;
-    const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 300);
-    ctx.fillStyle = `rgba(240,200,0,${0.15 + pulse * 0.15})`;
-    ctx.beginPath(); ctx.arc(lx, ly, cs * 0.4, 0, Math.PI * 2); ctx.fill();
-    ctx.font = `${cs * 0.5}px serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(CS.lootOnFloor.icon, lx, ly);
-  }
-
-  // Draw collector gold bags on floor (outside lootOnFloor block)
-  if (CS.goldPickups && CS.goldPickups.length) {
-    var _p2 = 0.5 + 0.5 * Math.sin(Date.now() / 250 + 1);
-    CS.goldPickups.forEach(function(bag) {
-      var bx = bag.x * cs + cs / 2, by = bag.y * cs + cs / 2;
-      ctx.fillStyle = 'rgba(255,210,0,' + (0.18 + _p2 * 0.18) + ')';
-      ctx.beginPath(); ctx.arc(bx, by, cs * 0.36, 0, Math.PI * 2); ctx.fill();
-      ctx.font = Math.round(cs * 0.5) + 'px serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('💰', bx, by);
-      ctx.fillStyle = '#ffd700';
-      ctx.font = 'bold ' + Math.round(cs * 0.18) + 'px sans-serif';
-      ctx.fillText(bag.amount + 'G', bx, by + cs * 0.38);
-    });
-  }
-
-  // Draw exit tiles with glow when active
+  // ─── Draw exit tiles ───
   CS.exitTiles.forEach(exit => {
-    const ex = exit.x * cs;
-    const ey = exit.y * cs;
-    // Draw floor PNG (or fallback color) underneath
-    const floorImg = getImg(tilePng('empty'));
-    if (floorImg) {
-      ctx.drawImage(floorImg, ex, ey, cs, cs);
-    } else {
-      ctx.fillStyle = TERRAIN_TILES.empty.color;
-      ctx.fillRect(ex, ey, cs, cs);
-    }
+    const ex = exit.x * cs, ey = exit.y * cs;
+    // Floor underlay (use empty tile)
+    const floorCanvas = TileRenderer.getTile('empty', exit.x, exit.y, cs);
+    if (floorCanvas) ctx.drawImage(floorCanvas, ex, ey);
+    else { ctx.fillStyle = TERRAIN_TILES.empty.color; ctx.fillRect(ex, ey, cs, cs); }
     if (CS.exitsActive) {
       const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 400);
       ctx.fillStyle = `rgba(61,170,125,${0.22 + pulse * 0.18})`;
@@ -7485,54 +7233,208 @@ function drawCanvas() {
     }
   });
 
-  // Draw prisoner (rescue floor 2)
+  // ─── Fire tiles (active fires) ───
+  if (CS.activeFires && CS.activeFires.length > 0) {
+    const _now = Date.now();
+    const _burnedAll = getActiveBurnedSet();
+    const _originSafe = new Set();
+    CS.activeFires.forEach(function(fire) {
+      const age = CS.turn - fire.turnIgnited;
+      if (age < FIRE_ORIGIN_DELAY) _originSafe.add(fire.ox + ',' + fire.oy);
+    });
+    _burnedAll.forEach(function(key) {
+      const parts = key.split(','); const fx = parseInt(parts[0]), fy = parseInt(parts[1]);
+      const px = fx * cs, py = fy * cs;
+      const _flicker1 = 0.5 + 0.5 * Math.sin(_now / 180 + fx * 1.7 + fy * 2.3);
+      const _flicker2 = 0.5 + 0.5 * Math.sin(_now / 110 + fx * 3.1 - fy * 1.4);
+      const _flicker  = (_flicker1 + _flicker2) / 2;
+      const _alpha = 0.45 + _flicker * 0.25;
+      ctx.fillStyle = 'rgba(220,60,0,' + _alpha.toFixed(2) + ')';
+      ctx.fillRect(px, py, cs, cs);
+      const _glow = ctx.createRadialGradient(px + cs * 0.5, py + cs * 0.7, 0, px + cs * 0.5, py + cs * 0.5, cs * 0.55);
+      _glow.addColorStop(0, 'rgba(255,200,50,' + (0.35 + _flicker * 0.30).toFixed(2) + ')');
+      _glow.addColorStop(1, 'rgba(255,80,0,0)');
+      ctx.fillStyle = _glow; ctx.fillRect(px, py, cs, cs);
+      ctx.font = Math.round(cs * 0.48) + 'px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const _bob = Math.sin(_now / 200 + fx * 2.1 + fy * 1.9) * cs * 0.04;
+      ctx.fillText('🔥', px + cs * 0.5, py + cs * 0.46 + _bob);
+      ctx.strokeStyle = 'rgba(255,140,0,' + (0.6 + _flicker * 0.4).toFixed(2) + ')';
+      ctx.lineWidth = 1.5; ctx.strokeRect(px + 1, py + 1, cs - 2, cs - 2);
+    });
+    _originSafe.forEach(function(key) {
+      if (_burnedAll.has(key)) return;
+      const parts = key.split(','); const fx = parseInt(parts[0]), fy = parseInt(parts[1]);
+      const px = fx * cs, py = fy * cs;
+      const _warn = 0.4 + 0.6 * Math.abs(Math.sin(Date.now() / 300));
+      ctx.fillStyle = 'rgba(255,120,0,' + (_warn * 0.35).toFixed(2) + ')';
+      ctx.fillRect(px, py, cs, cs);
+      ctx.strokeStyle = 'rgba(255,160,0,' + (_warn * 0.9).toFixed(2) + ')';
+      ctx.lineWidth = 2; ctx.strokeRect(px + 1, py + 1, cs - 2, cs - 2);
+      ctx.font = 'bold ' + Math.round(cs * 0.14) + 'px sans-serif';
+      ctx.fillStyle = 'rgba(255,220,80,' + (_warn * 0.95).toFixed(2) + ')';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('IGNITING', px + cs * 0.5, py + cs * 0.84);
+      ctx.font = Math.round(cs * 0.38) + 'px serif';
+      ctx.fillText('💨', px + cs * 0.5, py + cs * 0.44);
+    });
+  }
+
+  // ─── Smoke clouds ───
+  if (CS.smokeClouds && CS.smokeClouds.length > 0) {
+    const _now2 = Date.now();
+    CS.smokeClouds.forEach(cloud => {
+      const isDarkness = cloud.type === 'darkness';
+      for (let dy2 = -cloud.radius; dy2 <= cloud.radius; dy2++) {
+        for (let dx2 = -cloud.radius; dx2 <= cloud.radius; dx2++) {
+          const dist = Math.abs(dx2) + Math.abs(dy2);
+          if (dist > cloud.radius) continue;
+          const tx2 = cloud.cx + dx2, ty2 = cloud.cy + dy2;
+          if (tx2 < 0 || ty2 < 0 || tx2 >= CS.gridW || ty2 >= CS.gridH) continue;
+          const px2 = tx2 * cs, py2 = ty2 * cs;
+          const edgeFade = 1 - (dist / (cloud.radius + 0.5));
+          const flick = 0.5 + 0.5 * Math.sin(_now2 / 220 + tx2 * 1.3 + ty2 * 2.1);
+          const baseAlpha = isDarkness ? 0.52 : 0.42;
+          const alpha = (baseAlpha + flick * 0.18) * edgeFade;
+          const r = isDarkness ? 20 : 40, g = isDarkness ? 10 : 40, b = isDarkness ? 45 : 45;
+          ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
+          ctx.fillRect(px2, py2, cs, cs);
+          const wispAlpha = (0.12 + flick * 0.1) * edgeFade;
+          const wispGrad = ctx.createRadialGradient(px2 + cs * 0.5, py2 + cs * 0.5, 0, px2 + cs * 0.5, py2 + cs * 0.5, cs * 0.6);
+          const wisp1 = isDarkness ? `rgba(80,40,120,${wispAlpha.toFixed(2)})` : `rgba(160,160,160,${wispAlpha.toFixed(2)})`;
+          wispGrad.addColorStop(0, wisp1); wispGrad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = wispGrad; ctx.fillRect(px2, py2, cs, cs);
+          if ((tx2 + ty2) % 3 === 0) {
+            ctx.font = Math.round(cs * 0.4) + 'px serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.globalAlpha = wispAlpha * 2.5;
+            ctx.fillStyle = isDarkness ? '#220033' : '#777';
+            ctx.fillText(isDarkness ? '🌑' : '💨', px2 + cs * 0.5, py2 + cs * 0.5);
+            ctx.globalAlpha = 1;
+          }
+          ctx.strokeStyle = isDarkness ? `rgba(60,20,80,${(edgeFade * 0.4).toFixed(2)})` : `rgba(100,100,100,${(edgeFade * 0.35).toFixed(2)})`;
+          ctx.lineWidth = 1; ctx.strokeRect(px2 + 1, py2 + 1, cs - 2, cs - 2);
+        }
+      }
+      const labelX = cloud.cx * cs + cs * 0.5;
+      const labelY = cloud.cy * cs + cs * 0.18;
+      ctx.font = 'bold ' + Math.round(cs * 0.16) + 'px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = isDarkness ? 'rgba(180,120,255,0.75)' : 'rgba(220,220,220,0.75)';
+      ctx.fillText((isDarkness ? '🌑 ' : '💨 ') + cloud.turnsLeft + 't', labelX, labelY);
+    });
+  }
+
+  // ─── Highlight tiles ───
+  CS.highlightedTiles.forEach(({ x, y, color }) => {
+    ctx.fillStyle = color; ctx.fillRect(x * cs, y * cs, cs, cs);
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1; ctx.strokeRect(x * cs + 1, y * cs + 1, cs - 2, cs - 2);
+  });
+
+  // ─── Active unit glow ───
+  if (CS.activeUnit) {
+    const activeAlly = CS.allies.find(a => a.gridId === CS.activeUnit && a.hp > 0 && !a.perished);
+    if (activeAlly) {
+      const _gPulse = 0.55 + 0.45 * Math.sin(Date.now() / 500);
+      const _gx = activeAlly.x * cs, _gy = activeAlly.y * cs;
+      const _grad = ctx.createRadialGradient(_gx + cs/2, _gy + cs/2, 0, _gx + cs/2, _gy + cs/2, cs * 0.52);
+      _grad.addColorStop(0, `rgba(201,162,39,${(0.18 + _gPulse * 0.12).toFixed(2)})`);
+      _grad.addColorStop(1, 'rgba(201,162,39,0)');
+      ctx.fillStyle = _grad; ctx.fillRect(_gx, _gy, cs, cs);
+      const _bl = cs * 0.22;
+      ctx.strokeStyle = `rgba(201,162,39,${(0.65 + _gPulse * 0.35).toFixed(2)})`;
+      ctx.lineWidth = 2;
+      const _corners = [[_gx, _gy], [_gx + cs, _gy], [_gx, _gy + cs], [_gx + cs, _gy + cs]];
+      const _dirs = [[1,1], [-1,1], [1,-1], [-1,-1]];
+      _corners.forEach(([cx2, cy2], i) => {
+        const [dx2, dy2] = _dirs[i];
+        ctx.beginPath(); ctx.moveTo(cx2 + dx2 * _bl, cy2); ctx.lineTo(cx2, cy2); ctx.lineTo(cx2, cy2 + dy2 * _bl); ctx.stroke();
+      });
+    }
+  }
+
+  // ─── Fog of war ───
+  FOG.drawFog(ctx, cs);
+
+  // ─── Draw enemies ───
+  CS.enemies.filter(e => e.hp > 0 && !e.perished).forEach(e => {
+    if (!FOG.isVisible(e.x, e.y)) return;
+    const _ent = Date.now();
+    const isBlinded = e.status === 'blinded' || e.status === 'confused';
+    if (isBlinded) {
+      const bp = 0.5 + 0.5 * Math.sin(_ent / 250);
+      ctx.fillStyle = `rgba(120,120,120,${(0.18 + bp * 0.12).toFixed(2)})`;
+      ctx.fillRect(e.x * cs, e.y * cs, cs, cs);
+    }
+    drawUnit(ctx, e, '#8b1a1a', '#ff4444', false);
+    if (e.isTarget) {
+      ctx.strokeStyle = '#ff2222'; ctx.lineWidth = 2.5; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.arc(e.x * cs + cs / 2, e.y * cs + cs / 2, cs * 0.46, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    if (e.isCarrier && e.carriedLoot) {
+      ctx.font = `${cs * 0.28}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(e.carriedLoot.icon, e.x * cs + cs * 0.75, e.y * cs + 2);
+    }
+  });
+
+  // ─── Loot on floor ───
+  if (CS.lootOnFloor) {
+    const lx = CS.lootOnFloor.x * cs + cs / 2, ly = CS.lootOnFloor.y * cs + cs / 2;
+    const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 300);
+    ctx.fillStyle = `rgba(240,200,0,${0.15 + pulse * 0.15})`;
+    ctx.beginPath(); ctx.arc(lx, ly, cs * 0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.font = `${cs * 0.5}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(CS.lootOnFloor.icon, lx, ly);
+  }
+
+  // ─── Gold pickups ───
+  if (CS.goldPickups && CS.goldPickups.length) {
+    var _p2 = 0.5 + 0.5 * Math.sin(Date.now() / 250 + 1);
+    CS.goldPickups.forEach(function(bag) {
+      var bx = bag.x * cs + cs / 2, by = bag.y * cs + cs / 2;
+      ctx.fillStyle = 'rgba(255,210,0,' + (0.18 + _p2 * 0.18) + ')';
+      ctx.beginPath(); ctx.arc(bx, by, cs * 0.36, 0, Math.PI * 2); ctx.fill();
+      ctx.font = Math.round(cs * 0.5) + 'px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('💰', bx, by);
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold ' + Math.round(cs * 0.18) + 'px sans-serif';
+      ctx.fillText(bag.amount + 'G', bx, by + cs * 0.38);
+    });
+  }
+
+  // ─── Prisoner ───
   if (CS.prisoner && !CS.prisoner.escaped) {
-    const _pr = CS.prisoner;
-    const _prx = _pr.x * cs, _pry = _pr.y * cs;
+    const _pr = CS.prisoner; const _prx = _pr.x * cs, _pry = _pr.y * cs;
     const _prCx = _prx + cs / 2, _prCy = _pry + cs / 2;
     const _prPulse = 0.5 + 0.5 * Math.sin(Date.now() / 400);
-
-    // Pulsing tile glow
-    ctx.fillStyle = _pr.freed
-      ? 'rgba(61,170,125,' + (0.2 + _prPulse * 0.15) + ')'
-      : 'rgba(200,100,0,' + (0.15 + _prPulse * 0.12) + ')';
+    ctx.fillStyle = _pr.freed ? 'rgba(61,170,125,' + (0.2 + _prPulse * 0.15) + ')' : 'rgba(200,100,0,' + (0.15 + _prPulse * 0.12) + ')';
     ctx.fillRect(_prx, _pry, cs, cs);
-
-    // Try Prisoner.png sprite (directional rotation same as other sprites)
     const _prImg = getImg('Prisoner.png');
     const _prFacing = _pr.facing || 'east';
     const _prAngle = FACING_ANGLE[_prFacing] ?? 0;
     const _prSize = cs * 0.82;
     if (_prImg && _prImg.naturalWidth > 0) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(_prCx, _prCy, cs * 0.40, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.translate(_prCx, _prCy);
-      ctx.rotate(_prAngle);
+      ctx.save(); ctx.beginPath(); ctx.arc(_prCx, _prCy, cs * 0.40, 0, Math.PI * 2); ctx.clip();
+      ctx.translate(_prCx, _prCy); ctx.rotate(_prAngle);
       ctx.drawImage(_prImg, -_prSize / 2, -_prSize / 2, _prSize, _prSize);
       ctx.restore();
-      // Ring — orange when chained, green when freed
       ctx.strokeStyle = _pr.freed ? 'rgba(61,170,125,0.7)' : 'rgba(220,140,0,0.7)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(_prCx, _prCy, cs * 0.40, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(_prCx, _prCy, cs * 0.40, 0, Math.PI * 2); ctx.stroke();
     } else {
-      // Emoji fallback
       ctx.font = (cs * 0.52) + 'px serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(_pr.freed ? '\uD83E\uDDD1' : '\u26D3\uFE0F', _prCx, _prCy);
     }
-
-    // Label strip
     ctx.fillStyle = _pr.freed ? '#88ffcc' : '#ffaa44';
     ctx.font = 'bold ' + Math.round(cs * 0.17) + 'px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(_pr.freed ? 'FREED' : 'PRISONER', _prCx, _pry + 2);
   }
 
-  // Draw doom bags (fallen ally loot)
+  // ─── Doom bags ───
   CS.doomBags.forEach(bag => {
     const bx = bag.x * cs, by = bag.y * cs;
     const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 350);
@@ -7551,7 +7453,7 @@ function drawCanvas() {
     }
   });
 
-  // Draw allies (doomed flash red; escaped ghost; invisible shimmer; normal otherwise)
+  // ─── Draw allies ───
   CS.allies.filter(a => !a.perished).forEach(a => {
     const cls = CLASSES[a.class];
     const selected = CS.selectedAlly === a.gridId;
@@ -7564,29 +7466,24 @@ function drawCanvas() {
     const acx = apx + cs / 2, acy = apy + cs / 2;
     const _nt = Date.now();
 
-    // Pre-unit auras (drawn under the unit)
     if (isRaging) {
       const ragePulse = 0.5 + 0.5 * Math.sin(_nt / 160);
       ctx.fillStyle = `rgba(200,30,0,${(0.15 + ragePulse * 0.12).toFixed(2)})`;
       ctx.fillRect(apx, apy, cs, cs);
-      // Red border shimmer
       ctx.strokeStyle = `rgba(255,80,0,${(0.5 + ragePulse * 0.5).toFixed(2)})`;
-      ctx.lineWidth = 2.5;
-      ctx.strokeRect(apx + 1, apy + 1, cs - 2, cs - 2);
+      ctx.lineWidth = 2.5; ctx.strokeRect(apx + 1, apy + 1, cs - 2, cs - 2);
     }
     if (isDefending) {
       const defPulse = 0.5 + 0.5 * Math.sin(_nt / 350);
       ctx.fillStyle = `rgba(30,80,200,${(0.12 + defPulse * 0.08).toFixed(2)})`;
       ctx.fillRect(apx, apy, cs, cs);
       ctx.strokeStyle = `rgba(80,160,255,${(0.45 + defPulse * 0.45).toFixed(2)})`;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(apx + 1, apy + 1, cs - 2, cs - 2);
+      ctx.lineWidth = 2; ctx.strokeRect(apx + 1, apy + 1, cs - 2, cs - 2);
     }
     if (hasMirror) {
       const mirPulse = 0.5 + 0.5 * Math.sin(_nt / 280);
       ctx.strokeStyle = `rgba(200,200,255,${(0.3 + mirPulse * 0.4).toFixed(2)})`;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([3, 3]);
+      ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
       ctx.beginPath(); ctx.arc(acx, acy, cs * 0.44, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -7609,18 +7506,14 @@ function drawCanvas() {
       ctx.font = (cs * 0.24) + 'px serif';
       ctx.fillText('💀', acx, a.y * cs + cs * 0.12);
     } else if (isInvisible) {
-      // Invisible: drawn at low alpha with a blue-grey shimmer ring
       const invPulse = 0.5 + 0.5 * Math.sin(_nt / 240);
       ctx.globalAlpha = 0.22 + invPulse * 0.12;
       drawUnit(ctx, a, cls.color, '#aaccff', true, selected);
       ctx.globalAlpha = 1;
-      // Shimmer ring
       ctx.strokeStyle = `rgba(140,200,255,${(0.35 + invPulse * 0.45).toFixed(2)})`;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
       ctx.beginPath(); ctx.arc(acx, acy, cs * 0.42, _nt / 600, _nt / 600 + Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
-      // Small eye-slash icon
       ctx.font = Math.round(cs * 0.26) + 'px serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
       ctx.globalAlpha = 0.55 + invPulse * 0.3;
@@ -7635,30 +7528,32 @@ function drawCanvas() {
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       ctx.fillText('📦', a.x * cs + cs * 0.75, a.y * cs + 2);
     }
-
-    // Decoy marker
     if (isDecoy) {
       ctx.font = Math.round(cs * 0.22) + 'px serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       ctx.fillText('🪆', apx + cs * 0.2, apy + cs * 0.02);
     }
-
   });
 
-  // ── Hit flash overlays (damage/heal pulses on tiles) ──
+  // ─── Hit flashes ───
   if (!CS.hitFlashes) CS.hitFlashes = [];
   const now = Date.now();
   CS.hitFlashes = CS.hitFlashes.filter(f => now - f.t < f.dur);
   CS.hitFlashes.forEach(f => {
-    const age = (now - f.t) / f.dur;  // 0→1
+    const age = (now - f.t) / f.dur;
     const alpha = (1 - age) * 0.65;
     ctx.fillStyle = f.color.replace('A', String(alpha.toFixed(2)));
     ctx.fillRect(f.x * cs, f.y * cs, cs, cs);
-    // Bright rim
     ctx.strokeStyle = f.color.replace('A', String(Math.min(1, alpha * 1.8).toFixed(2)));
     ctx.lineWidth = 2;
     ctx.strokeRect(f.x * cs + 1, f.y * cs + 1, cs - 2, cs - 2);
   });
+
+  // ─── Height overlay ───
+  _drawHeightOverlay(ctx, cs);
+
+  // ─── CT queue in header ───
+  renderCTQueue();
 }
 
 function drawUnit(ctx, unit, fillColor, textColor, isAlly, selected = false) {
