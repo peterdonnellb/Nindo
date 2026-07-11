@@ -1929,6 +1929,20 @@ function itemImgAsync(item, size, extraStyle, cls) {
     + item.icon + '</span>';
 }
 
+function generateShopWeapons() {
+  const allWeapons = [];
+  Object.entries(WEAPONS).forEach(([type, cat]) => {
+    cat.items.forEach(w => allWeapons.push({ ...w, type }));
+  });
+  const shuffled = allWeapons.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 10);
+}
+
+function generateShopItems() {
+  const all = [...ITEMS.healing, ...ITEMS.armor, ...ITEMS.tactical];
+  return all.sort(() => Math.random() - 0.5).slice(0, 12);
+}
+
 const MISSIONS = [
 
 // ══════════════════════════════════════════
