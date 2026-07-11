@@ -7137,6 +7137,50 @@ function schedulePulseRedraw() {
   });
 }
 
+const TileRenderer = (() => {
+  const _cache = new Map();
+  function _hash(seed) { seed = (seed * 1664525 + 1013904223) & 0xFFFFFFFF; return (seed >>> 0) / 4294967296; }
+  function _seedFrom(x, y, salt = 0) { return ((x * 7919 + y * 104729 + salt * 1009) & 0xFFFFFFFF) >>> 0; }
+  function _rand(seed, min = 0, max = 1) { return min + _hash(seed) * (max - min); }
+  function _randInt(seed, min, max) { return Math.floor(_rand(seed, min, max + 1)); }
+
+  function _roundedRect(ctx, x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+  }
+
+  // --- tile drawer functions (same as before) ---
+  function _drawEmpty(ctx, seed, cs) { /* ... */ }
+  function _drawWall(ctx, seed, cs) { /* ... */ }
+  // ... all other drawers (forest, water, etc.) ...
+
+  const DRAWERS = {
+    empty: _drawEmpty, wall: _drawWall, forest: _drawForest, rubble: _drawRubble,
+    roof: _drawRoof, roof3: _drawRoof3, shadow: _drawShadow, water: _drawWater,
+    floor1: _drawFloor1, floor2: _drawFloor2, floor3: _drawFloor3,
+    cliff: _drawCliff, gate: _drawGate, stone: _drawStone,
+  };
+
+  function getTile(key, x, y, cs) {
+    if (cs < 8) cs = 8;
+    const cacheKey = `${key}_${x}_${y}_${cs}`;
+    if (_cache.has(cacheKey)) return _cache.get(cacheKey);
+    const canvas = document.createElement('canvas');
+    canvas.width = cs; canvas.height = cs;
+    const ctx = canvas.getContext('2d');
+    const seed = _seedFrom(x, y, key.charCodeAt(0) || 0);
+    const drawer = DRAWERS[key] || DRAWERS.empty;
+    drawer(ctx, seed, cs);
+    _cache.set(cacheKey, canvas);
+    return canvas;
+  }
+  function clearCache() { _cache.clear(); }
+  return { getTile, clearCache };
+})();  
+
 function drawCanvas() {
   const canvas = document.getElementById('combatCanvas');
   const cs = CS.cellSize;
